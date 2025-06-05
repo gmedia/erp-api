@@ -1,0 +1,52 @@
+/erp-api
+├── /src
+│   ├── /api
+│   │   ├── /v1
+│   │   │   ├── /inventory
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── handlers.rs
+│   │   │   │   ├── models.rs
+│   │   │   │   └── routes.rs
+│   │   │   ├── /employee
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── handlers.rs
+│   │   │   │   ├── models.rs
+│   │   │   │   └── routes.rs
+│   │   │   ├── /order
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── handlers.rs
+│   │   │   │   ├── models.rs
+│   │   │   │   └── routes.rs
+│   │   │   └── mod.rs
+│   │   └── mod.rs
+│   ├── /config
+│   │   ├── mod.rs
+│   │   └── settings.rs
+│   ├── /db
+│   │   ├── mod.rs
+│   │   └── mysql.rs
+│   ├── /search
+│   │   ├── mod.rs
+│   │   └── meilisearch.rs
+│   ├── /middleware
+│   │   ├── mod.rs
+│   │   └── auth.rs
+│   ├── /utils
+│   │   ├── mod.rs
+│   │   └── errors.rs
+│   ├── main.rs
+│   └── lib.rs
+├── /tests
+│   ├── common.rs
+│   ├── inventory_tests.rs
+│   ├── employee_tests.rs
+│   └── order_tests.rs
+├── /migrations
+│   ├── 20250604_create_inventory.sql
+│   ├── 20250604_create_employees.sql
+│   └── 20250604_create_orders.sql
+├── Cargo.toml
+├── Dockerfile
+├── README.md
+├── .env
+└── docker-compose.yml
