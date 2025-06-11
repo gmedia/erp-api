@@ -1,8 +1,25 @@
 {
     "cSpell.words": [
         "actix",
+        "addrs",
+        "autorestart",
+        "dotenv",
+        "healthcheck",
+        "initdb",
+        "innodb",
+        "iputils",
+        "jsonwebtoken",
+        "libmariadb",
+        "logfile",
         "meili",
         "meilisearch",
-        "sqlx"
+        "nodaemon",
+        "pidfile",
+        "reqwest",
+        "serde",
+        "sqlx",
+        "startsecs",
+        "supervisord",
+        "utoipa"
     ]
 }

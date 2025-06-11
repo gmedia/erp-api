@@ -1,12 +1,35 @@
 services:
 
+  app:
+    image: registry.gmedia.id/gmd/erp-api:rust
+    ports:
+      - "8081:8080"
+    environment:
+      - DATABASE_URL=mysql://user:password@mariadb:3306/erp_db
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - MEILISEARCH_API_KEY=masterKey
+      - APP_ENV=production
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    networks:
+      - erp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/inventory/search"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
   mariadb:
     image: mariadb:latest
     environment:
-      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - MARIADB_DATABASE=${DB_DATABASE}
-      - MARIADB_USER=${DB_USER}
-      - MARIADB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=rootpassword
+      - MARIADB_DATABASE=erp_db
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=password
     ports:
       - "3306:3306"
     volumes:
@@ -26,7 +49,7 @@ services:
   meilisearch:
     image: getmeili/meilisearch:latest
     environment:
-      - MEILI_MASTER_KEY=${MEILISEARCH_API_KEY}
+      - MEILI_MASTER_KEY=masterKey
     ports:
       - "7700:7700"
     volumes:

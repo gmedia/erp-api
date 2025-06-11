@@ -8,6 +8,18 @@ use super::models::{CreateInventoryItem, InventoryItem};
 use crate::db::mysql::DbPool;
 use crate::db::schema::inventory::dsl::*;
 
+#[utoipa::path(
+    post,
+    path = "/inventory/create",
+    request_body = CreateInventoryItem,
+    responses(
+        (status = 200, description = "Item created successfully", body = InventoryItem),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearerAuth" = [])
+    )
+)]
 pub async fn create_item(
     pool: web::Data<DbPool>,
     meili_client: web::Data<Client>,
@@ -41,6 +53,20 @@ pub async fn create_item(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/inventory/search",
+    params(
+        ("q" = String, Query, description = "Search query for inventory items")
+    ),
+    responses(
+        (status = 200, description = "Search results", body = Vec<InventoryItem>),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearerAuth" = [])
+    )
+)]
 pub async fn search_items(
     meili_client: web::Data<Client>,
     query: web::Query<serde_json::Value>,

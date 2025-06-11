@@ -5,6 +5,39 @@ use erp_api::config::settings::Settings;
 use erp_api::db::mysql::init_db_pool;
 use erp_api::search::meilisearch::init_meilisearch;
 use std::env;
+use utoipa::{OpenApi, Modify};
+use utoipa_scalar::{Scalar, Servable};
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        erp_api::api::v1::inventory::handlers::create_item,
+        erp_api::api::v1::inventory::handlers::search_items,
+    ),
+    components(
+        schemas(
+            erp_api::api::v1::inventory::models::InventoryItem,
+            erp_api::api::v1::inventory::models::CreateInventoryItem,
+        )
+    ),
+    modifiers(&SecurityAddon)
+)]
+struct ApiDoc;
+
+struct SecurityAddon;
+
+impl Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "bearerAuth",
+                utoipa::openapi::security::SecurityScheme::Http(
+                    utoipa::openapi::security::Http::new(utoipa::openapi::security::HttpAuthScheme::Bearer),
+                ),
+            )
+        }
+    }
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,8 +62,9 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(db_pool.clone()))
             .app_data(web::Data::new(meili_client.clone()))
             .configure(inventory::routes::init_routes)
+            .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .run()
     .await
 }
