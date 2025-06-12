@@ -52,7 +52,7 @@ pub async fn create_item(
                 .await
                 .expect("Failed to index in Meilisearch");
             HttpResponse::Ok().json(item_for_meili)
-        }
+        },
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }

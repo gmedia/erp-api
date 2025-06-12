@@ -5,45 +5,9 @@ use erp_api::config::settings::Settings;
 use erp_api::db::mysql::init_db_pool;
 use erp_api::search::meilisearch::init_meilisearch;
 use std::env;
-use utoipa::{OpenApi, Modify};
+use erp_api::api::openapi::ApiDoc;
+use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
-
-#[derive(OpenApi)]
-#[openapi(
-    paths(
-        erp_api::api::v1::inventory::handlers::create_item,
-        erp_api::api::v1::inventory::handlers::search_items,
-        erp_api::api::v1::employee::handlers::create_employee,
-        erp_api::api::v1::order::handlers::create_order,
-    ),
-    components(
-        schemas(
-            erp_api::api::v1::inventory::models::InventoryItem,
-            erp_api::api::v1::inventory::models::CreateInventoryItem,
-            erp_api::api::v1::employee::models::Employee,
-            erp_api::api::v1::employee::models::CreateEmployee,
-            erp_api::api::v1::order::models::Order,
-            erp_api::api::v1::order::models::CreateOrder,
-        )
-    ),
-    modifiers(&SecurityAddon)
-)]
-struct ApiDoc;
-
-struct SecurityAddon;
-
-impl Modify for SecurityAddon {
-    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
-        if let Some(components) = openapi.components.as_mut() {
-            components.add_security_scheme(
-                "bearerAuth",
-                utoipa::openapi::security::SecurityScheme::Http(
-                    utoipa::openapi::security::Http::new(utoipa::openapi::security::HttpAuthScheme::Bearer),
-                ),
-            )
-        }
-    }
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

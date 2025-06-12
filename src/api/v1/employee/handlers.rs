@@ -40,7 +40,7 @@ pub async fn create_employee(
         Ok(inserted_employee) => {
             let employee_response: Employee = inserted_employee.into();
             HttpResponse::Ok().json(employee_response)
-        }
+        },
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }

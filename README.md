@@ -38,7 +38,8 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
    ```
 2. Jalankan laporan coverage:
    ```bash
-   cargo tarpaulin --all-targets --ignore-tests --out Html --exclude-files "migrations/*" --exclude-files "src/config/*"
+   chmod +x test.sh
+   ./test.sh
    ```
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
