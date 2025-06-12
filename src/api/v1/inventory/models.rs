@@ -1,15 +1,8 @@
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use crate::db::entities::inventory;
 
-#[derive(Serialize, Deserialize, Queryable, Insertable, ToSchema)]
-#[diesel(table_name = crate::db::schema::inventory)]
-pub struct InventoryItem {
-    pub id: String,
-    pub name: String,
-    pub quantity: i32,
-    pub price: f64,
-}
+pub type InventoryItem = inventory::Model;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct CreateInventoryItem {

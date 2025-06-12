@@ -1,12 +1,12 @@
 use actix_web::{web, HttpResponse, Responder};
-use diesel::prelude::*;
 use meilisearch_sdk::client::Client;
+use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 use serde_json;
 
 use super::models::{CreateInventoryItem, InventoryItem};
-use crate::db::mysql::DbPool;
-use crate::db::schema::inventory::dsl::*;
+use crate::db::entities::inventory;
+use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
     post,
@@ -21,33 +21,30 @@ use crate::db::schema::inventory::dsl::*;
     )
 )]
 pub async fn create_item(
-    pool: web::Data<DbPool>,
+    db: web::Data<DatabaseConnection>,
     meili_client: web::Data<Client>,
     item: web::Json<CreateInventoryItem>,
 ) -> impl Responder {
     let new_uuid = Uuid::new_v4();
-    let new_item = InventoryItem {
-        id: new_uuid.to_string(),
-        name: item.name.clone(),
-        quantity: item.quantity,
-        price: item.price,
+    let new_item = inventory::ActiveModel {
+        id: Set(new_uuid.to_string()),
+        name: Set(item.name.clone()),
+        quantity: Set(item.quantity),
+        price: Set(item.price),
     };
 
-    let conn = &mut pool.get().expect("Gagal mendapatkan koneksi database");
-
-    let result = diesel::insert_into(inventory)
-        .values(&new_item)
-        .execute(conn);
+    let result = new_item.insert(db.get_ref()).await;
 
     match result {
-        Ok(_) => {
+        Ok(inserted_item) => {
             // Add to Meilisearch for indexing
             let index = meili_client.index("inventory");
+            let item_for_meili: InventoryItem = inserted_item.into();
             index
-                .add_documents(&[&new_item], Some("id"))
+                .add_documents(&[&item_for_meili], Some("id"))
                 .await
                 .expect("Failed to index in Meilisearch");
-            HttpResponse::Ok().json(new_item)
+            HttpResponse::Ok().json(item_for_meili)
         }
         Err(_) => HttpResponse::InternalServerError().finish(),
     }

@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 actix-web = "4.11.0"
-diesel = { version = "2.2.10", features = ["mysql", "r2d2"] }
+sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }
 dotenv = "0.15.0"
 env_logger = "0.11.8"
 jsonwebtoken = "9.3.1"
@@ -14,7 +14,8 @@ meilisearch-sdk = "0.28.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 tokio = { version = "1.45.1", features = ["full"] }
-utoipa = { version = "5.3.1", features = ["actix_extras"] }
+chrono = { version = "0.4", features = ["serde"] }
+utoipa = { version = "5.3.1", features = ["actix_extras", "chrono"] }
 utoipa-scalar = { version = "0.3.0", features = ["actix-web"] }
 uuid = { version = "1.17.0", features = ["serde", "v4"] }
 
