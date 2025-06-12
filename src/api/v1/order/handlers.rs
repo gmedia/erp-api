@@ -39,6 +39,9 @@ pub async fn create_order(
             let order_response: Order = inserted_order.into();
             HttpResponse::Ok().json(order_response)
         }
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Err(e) => {
+            log::error!("Failed to create order: {:?}", e);
+            HttpResponse::InternalServerError().finish()
+        }
     }
 }
