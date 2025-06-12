@@ -21,6 +21,7 @@ impl Modify for SecurityAddon {
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        // Register your handlers here
         crate::api::v1::inventory::handlers::create_item,
         crate::api::v1::inventory::handlers::search_items,
         crate::api::v1::employee::handlers::create_employee,
@@ -28,6 +29,7 @@ impl Modify for SecurityAddon {
     ),
     components(
         schemas(
+            // Register your models here
             crate::api::v1::inventory::models::InventoryItem,
             crate::api::v1::inventory::models::CreateInventoryItem,
             crate::api::v1::employee::models::Employee,

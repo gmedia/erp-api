@@ -3,7 +3,7 @@ use dotenv::dotenv;
 use erp_api::api::v1::{employee, inventory, order};
 use erp_api::config::settings::Settings;
 use erp_api::db::mysql::init_db_pool;
-use erp_api::search::meilisearch::init_meilisearch;
+use erp_api::search::meilisearch::{init_meilisearch, configure_index};
 use std::env;
 use erp_api::api::openapi::ApiDoc;
 use utoipa::OpenApi;
@@ -22,17 +22,20 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to init Meilisearch");
 
-    // Inisialisasi indeks Meilisearch
-    let index = meili_client.index("inventory");
-    index
-        .set_searchable_attributes(&["name"])
+    // Register your Meilisearch indeks for initialization here
+    configure_index(&meili_client, "inventory", &["name"])
         .await
-        .expect("Failed to configure Meilisearch index");
+        .expect("Failed to configure 'inventory' index");
+
+    configure_index(&meili_client, "orders", &["item", "customer_name"])
+        .await
+        .expect("Failed to configure 'orders' index");
 
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(db_pool.clone()))
             .app_data(web::Data::new(meili_client.clone()))
+            // Register your routes here
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
