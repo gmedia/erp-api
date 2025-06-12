@@ -38,7 +38,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
    ```
 2. Jalankan laporan coverage:
    ```bash
-   cargo tarpaulin --out Html
+   cargo tarpaulin --all-targets --ignore-tests --out Html --exclude-files "migrations/*" --exclude-files "src/config/*"
    ```
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
@@ -92,9 +92,13 @@ docker-compose down
 │   │   ├── mod.rs
 │   │   └── settings.rs
 │   ├── /db
+│   │   ├── entities
+│   │   │   ├── mod.rs
+│   │   │   ├── inventory.rs
+│   │   │   ├── employees.rs
+│   │   │   └── orders.rs
 │   │   ├── mod.rs
-│   │   ├── mysql.rs
-│   │   └── schema.rs
+│   │   └── mysql.rs
 │   ├── /search
 │   │   ├── mod.rs
 │   │   └── meilisearch.rs
@@ -102,8 +106,7 @@ docker-compose down
 │   │   ├── mod.rs
 │   │   └── auth.rs
 │   ├── /utils
-│   │   ├── mod.rs
-│   │   └── errors.rs
+│   │   └── mod.rs
 │   ├── main.rs
 │   └── lib.rs
 ├── /tests
@@ -121,8 +124,8 @@ docker-compose down
 │   ├── 2025-06-04-000002_create_orders
 │   │   ├── up.sql
 │   │   └── down.sql
-├── Cargo.toml
-├── README.md
 ├── .env
-└── docker-compose.yml
+├── Cargo.toml
+├── docker-compose.yml
+└── README.md
 ```

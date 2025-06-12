@@ -3,6 +3,7 @@
         "actix",
         "addrs",
         "autorestart",
+        "chrono",
         "dotenv",
         "healthcheck",
         "initdb",

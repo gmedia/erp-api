@@ -57,3 +57,47 @@ async fn test_create_and_search_inventory() {
     assert_eq!(search_results.len(), 1);
     assert_eq!(search_results[0].name, "Laptop Test");
 }
+
+#[tokio::test]
+#[serial]
+async fn test_create_inventory_negative_quantity() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+
+    let new_item = json!({
+        "name": "Invalid Item",
+        "quantity": -5,
+        "price": 10.0
+    });
+
+    let response = client
+        .post(&format!("{}/inventory/create", server_url))
+        .json(&new_item)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+#[serial]
+async fn test_create_inventory_negative_price() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+
+    let new_item = json!({
+        "name": "Invalid Item 2",
+        "quantity": 5,
+        "price": -10.0
+    });
+
+    let response = client
+        .post(&format!("{}/inventory/create", server_url))
+        .json(&new_item)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+}

@@ -23,6 +23,10 @@ pub async fn create_order(
     db: web::Data<DatabaseConnection>,
     order: web::Json<CreateOrder>,
 ) -> impl Responder {
+    if order.total_amount < 0.0 {
+        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Total amount cannot be negative" }));
+    }
+
     let new_uuid = Uuid::new_v4();
     let now = Utc::now().naive_utc();
     let new_order = orders::ActiveModel {

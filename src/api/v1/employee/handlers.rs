@@ -22,6 +22,10 @@ pub async fn create_employee(
     db: web::Data<DatabaseConnection>,
     employee: web::Json<CreateEmployee>,
 ) -> impl Responder {
+    if !employee.email.contains('@') {
+        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Invalid email format" }));
+    }
+
     let new_uuid = Uuid::new_v4();
     let new_employee = employees::ActiveModel {
         id: Set(new_uuid.to_string()),

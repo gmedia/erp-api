@@ -25,6 +25,13 @@ pub async fn create_item(
     meili_client: web::Data<Client>,
     item: web::Json<CreateInventoryItem>,
 ) -> impl Responder {
+    if item.quantity < 0 {
+        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Quantity cannot be negative" }));
+    }
+    if item.price < 0.0 {
+        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Price cannot be negative" }));
+    }
+
     let new_uuid = Uuid::new_v4();
     let new_item = inventory::ActiveModel {
         id: Set(new_uuid.to_string()),

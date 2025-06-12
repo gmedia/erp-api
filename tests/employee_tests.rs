@@ -37,3 +37,25 @@ async fn test_create_employee() {
     assert_eq!(created_employee.role, "Software Engineer");
     assert_eq!(created_employee.email, "john.doe@example.com");
 }
+
+#[tokio::test]
+#[serial]
+async fn test_create_employee_invalid_email() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+
+    let new_employee = json!({
+        "name": "Jane Doe",
+        "role": "Product Manager",
+        "email": "jane.doe"
+    });
+
+    let response = client
+        .post(&format!("{}/employee/create", server_url))
+        .json(&new_employee)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+}
