@@ -1,6 +1,6 @@
 # ERP API
 
-API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch, dengan Diesel-RS untuk ORM, Supervisord untuk manajemen proses, dan Utoipa dengan Scalar untuk dokumentasi API, dijalankan dengan Docker.
+API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch, dengan SeaORM untuk ORM, Supervisord untuk manajemen proses, dan Utoipa dengan Scalar untuk dokumentasi API, dijalankan dengan Docker.
 
 ## Prasyarat
 - Docker
