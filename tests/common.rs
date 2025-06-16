@@ -1,7 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use erp_api::api::v1::{employee, inventory, order};
 use erp_api::config::settings::Settings;
-use erp_api::db::mysql::init_db_pool;
+use db::mysql::init_db_pool;
 use erp_api::search::meilisearch::init_meilisearch;
 use meilisearch_sdk::client::Client;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};

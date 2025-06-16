@@ -1,0 +1,7 @@
+[package]
+name = "db"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros" ] }

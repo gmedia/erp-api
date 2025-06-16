@@ -697,6 +697,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "db"
+version = "0.1.0"
+dependencies = [
+ "sea-orm",
+]
+
+[[package]]
 name = "der"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -847,6 +854,7 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "chrono",
+ "db",
  "dotenv",
  "entity",
  "env_logger",
