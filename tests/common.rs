@@ -1,6 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use erp_api::api::v1::{employee, inventory, order};
-use erp_api::config::settings::Settings;
+use config::db::Db;
+use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;
 use search::meilisearch::init_meilisearch;
 use search::Client;
@@ -9,10 +10,11 @@ use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
     dotenv::dotenv().ok();
     let _ = env_logger::try_init();
-    let settings = Settings::new("test");
+    let config_db = Db::new("test");
+    let config_meilisearch = Meilisearch::new("test");
 
     // Inisialisasi database
-    let db_pool = init_db_pool(&settings.database_url)
+    let db_pool = init_db_pool(&config_db.url)
         .await
         .expect("Gagal inisialisasi pool database");
 
@@ -41,7 +43,7 @@ pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
 
     // Inisialisasi Meilisearch
     let meili_client =
-        init_meilisearch(&settings.meilisearch_host, &settings.meilisearch_api_key)
+        init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
             .await
             .expect("Gagal inisialisasi Meilisearch untuk tes");
 

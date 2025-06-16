@@ -2,7 +2,8 @@ use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use serde_json::json;
 use dotenv::dotenv;
 use erp_api::api::v1::{employee, inventory, order};
-use erp_api::config::settings::Settings;
+use config::db::Db;
+use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;
 use search::meilisearch::{init_meilisearch, configure_index};
 use std::env;
@@ -19,11 +20,14 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::init();
 
-    let settings = Settings::new(&env::var("APP_ENV").unwrap_or("production".to_string()));
-    let db_pool = init_db_pool(&settings.database_url)
+    let env = env::var("APP_ENV").unwrap_or("production".to_string());
+    let config_db = Db::new(&env);
+    let config_meilisearch = Meilisearch::new(&env);
+    
+    let db_pool = init_db_pool(&config_db.url)
         .await
         .expect("Gagal inisialisasi pool database");
-    let meili_client = init_meilisearch(&settings.meilisearch_host, &settings.meilisearch_api_key)
+    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
         .await
         .expect("Failed to init Meilisearch");
 
