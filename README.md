@@ -98,11 +98,6 @@ docker-compose down
 │   │   ├── mod.rs
 │   │   └── settings.rs
 │   ├── /db
-│   │   ├── entities
-│   │   │   ├── mod.rs
-│   │   │   ├── inventory.rs
-│   │   │   ├── employees.rs
-│   │   │   └── orders.rs
 │   │   ├── mod.rs
 │   │   └── mysql.rs
 │   ├── /search
@@ -121,6 +116,7 @@ docker-compose down
 │   ├── employee_tests.rs
 │   └── order_tests.rs
 ├── /migration
+├── /entity
 ├── .env
 ├── Cargo.toml
 ├── docker-compose.yml
