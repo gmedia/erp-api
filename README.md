@@ -15,6 +15,11 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
    docker-compose up -d
    ```
    Pastikan semua service healthy.
+5. Jalankan database migration:
+   ```bash
+   cargo install --locked sea-orm-cli
+   sea-orm-cli migrate up
+   ```
 5. Jalankan aplikasi:
    ```bash
    cargo run
@@ -109,17 +114,17 @@ docker-compose down
 │   └── Cargo.toml
 ├── /entity
 │   ├── /src
-│   │   ├── employees.rs
+│   │   ├── employee.rs
 │   │   ├── inventory.rs
-│   │   ├── orders.rs
+│   │   ├── order.rs
 │   │   ├── prelude.rs
 │   │   └── lib.rs
 │   └── Cargo.toml
 ├── /migration
 │   ├── /src
 │   │   ├── m20250604_000000_create_inventory.rs
-│   │   ├── m20250604_000001_create_employees.rs
-│   │   ├── m20250604_000002_create_orders.rs
+│   │   ├── m20250604_000001_create_employee.rs
+│   │   ├── m20250604_000002_create_order.rs
 │   │   ├── main.rs
 │   │   └── lib.rs
 │   └── Cargo.toml

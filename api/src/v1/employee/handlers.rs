@@ -3,7 +3,7 @@ use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 
 use super::models::{CreateEmployee, Employee};
-use entity::employees;
+use entity::employee;
 use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
@@ -27,7 +27,7 @@ pub async fn create_employee(
     }
 
     let new_uuid = Uuid::new_v4();
-    let new_employee = employees::ActiveModel {
+    let new_employee = employee::ActiveModel {
         id: Set(new_uuid.to_string()),
         name: Set(employee.name.clone()),
         role: Set(employee.role.clone()),

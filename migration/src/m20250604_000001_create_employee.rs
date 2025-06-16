@@ -9,21 +9,21 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Orders::Table)
+                    .table(Employee::Table)
                     .if_not_exists()
                     .col(
-                        ColumnDef::new(Orders::Id)
+                        ColumnDef::new(Employee::Id)
                             .char_len(36)
                             .not_null()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Orders::CustomerId).char_len(36).not_null())
-                    .col(ColumnDef::new(Orders::TotalAmount).double().not_null())
+                    .col(ColumnDef::new(Employee::Name).string().not_null())
+                    .col(ColumnDef::new(Employee::Role).string_len(100).not_null())
                     .col(
-                        ColumnDef::new(Orders::CreatedAt)
-                            .date_time()
+                        ColumnDef::new(Employee::Email)
+                            .string()
                             .not_null()
-                            .default(Expr::current_timestamp()),
+                            .unique_key(),
                     )
                     .to_owned(),
             )
@@ -32,16 +32,16 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Orders::Table).to_owned())
+            .drop_table(Table::drop().table(Employee::Table).to_owned())
             .await
     }
 }
 
 #[derive(DeriveIden)]
-enum Orders {
+enum Employee {
     Table,
     Id,
-    CustomerId,
-    TotalAmount,
-    CreatedAt,
+    Name,
+    Role,
+    Email,
 }

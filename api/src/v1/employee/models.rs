@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use entity::employees;
+use entity::employee;
 
-pub type Employee = employees::Model;
+pub type Employee = employee::Model;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct CreateEmployee {

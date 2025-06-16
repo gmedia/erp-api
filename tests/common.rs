@@ -22,24 +22,24 @@ pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
     db_pool
         .execute(Statement::from_string(
             db_pool.get_database_backend(),
-            "TRUNCATE TABLE inventory;",
+            "TRUNCATE TABLE `inventory`;",
         ))
         .await
         .expect("Gagal membersihkan tabel inventory");
     db_pool
         .execute(Statement::from_string(
             db_pool.get_database_backend(),
-            "TRUNCATE TABLE employees;",
+            "TRUNCATE TABLE `employee`;",
         ))
         .await
-        .expect("Gagal membersihkan tabel employees");
+        .expect("Gagal membersihkan tabel employee");
     db_pool
         .execute(Statement::from_string(
             db_pool.get_database_backend(),
-            "TRUNCATE TABLE orders;",
+            "TRUNCATE TABLE `order`;",
         ))
         .await
-        .expect("Gagal membersihkan tabel orders");
+        .expect("Gagal membersihkan tabel order");
 
     // Inisialisasi Meilisearch
     let meili_client =

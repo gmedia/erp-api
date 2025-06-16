@@ -21,6 +21,7 @@
         "sqlx",
         "startsecs",
         "supervisord",
-        "utoipa"
+        "utoipa",
+        "watchexec"
     ]
 }

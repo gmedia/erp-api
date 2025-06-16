@@ -4,7 +4,7 @@ use uuid::Uuid;
 use chrono::Utc;
 
 use super::models::{CreateOrder, Order};
-use entity::orders;
+use entity::order;
 use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
@@ -29,7 +29,7 @@ pub async fn create_order(
 
     let new_uuid = Uuid::new_v4();
     let now = Utc::now().naive_utc();
-    let new_order = orders::ActiveModel {
+    let new_order = order::ActiveModel {
         id: Set(new_uuid.to_string()),
         customer_id: Set(order.customer_id.clone()),
         total_amount: Set(order.total_amount),

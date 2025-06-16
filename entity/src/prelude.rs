@@ -1,3 +1,3 @@
 pub use super::inventory::Entity as Inventory;
-pub use super::employees::Entity as Employee;
-pub use super::orders::Entity as Order;
+pub use super::employee::Entity as Employee;
+pub use super::order::Entity as Order;

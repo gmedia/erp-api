@@ -1,4 +1,4 @@
-pub mod employees;
+pub mod employee;
 pub mod inventory;
-pub mod orders;
+pub mod order;
 pub mod prelude;

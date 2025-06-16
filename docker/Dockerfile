@@ -6,8 +6,13 @@ WORKDIR /usr/src/erp-api
 
 # Salin file konfigurasi dan source code
 COPY Cargo.toml .
+COPY api ./api
+COPY config ./config
+COPY db ./db
+COPY entity ./entity
+COPY migration ./migration
+COPY search ./search
 COPY src ./src
-COPY migrations ./migrations
 
 # Install diesel_cli untuk migrasi
 RUN cargo install diesel_cli --no-default-features --features mysql
@@ -37,7 +42,7 @@ WORKDIR /app
 
 # Salin binary dan migrasi dari builder
 COPY --from=builder /usr/src/erp-api/target/release/erp-api /app/erp-api
-COPY --from=builder /usr/src/erp-api/migrations /app/migrations
+COPY --from=builder /usr/src/erp-api/migration /app/migration
 
 # Salin diesel_cli untuk migrasi
 COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel

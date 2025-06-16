@@ -36,9 +36,9 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to configure 'inventory' index");
 
-    configure_index(&meili_client, "orders", &["item", "customer_name"])
+    configure_index(&meili_client, "order", &["item", "customer_name"])
         .await
-        .expect("Failed to configure 'orders' index");
+        .expect("Failed to configure 'order' index");
 
     HttpServer::new(move || {
         App::new()

@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use entity::orders;
+use entity::order;
 
-pub type Order = orders::Model;
+pub type Order = order::Model;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct CreateOrder {
