@@ -24,6 +24,7 @@ impl Modify for SecurityAddon {
         // Register your handlers here
         crate::api::v1::inventory::handlers::create_item,
         crate::api::v1::inventory::handlers::search_items,
+        crate::api::v1::inventory::handlers::update_item,
         crate::api::v1::employee::handlers::create_employee,
         crate::api::v1::order::handlers::create_order,
     ),
@@ -32,6 +33,7 @@ impl Modify for SecurityAddon {
             // Register your models here
             crate::api::v1::inventory::models::InventoryItem,
             crate::api::v1::inventory::models::CreateInventoryItem,
+            crate::api::v1::inventory::models::UpdateInventoryItem,
             crate::api::v1::employee::models::Employee,
             crate::api::v1::employee::models::CreateEmployee,
             crate::api::v1::order::models::Order,
