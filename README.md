@@ -1,6 +1,6 @@
 # ERP API
 
-API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch, dengan SeaORM untuk ORM, Supervisord untuk manajemen proses, dan Utoipa dengan Scalar untuk dokumentasi API, dijalankan dengan Docker.
+API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
 
 ## Prasyarat
 - Docker
@@ -8,9 +8,9 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
 
 ## Setup dengan Docker
 1. Clone repository ini.
-2. Pastikan Docker dan Docker Compose terinstall.
+2. Pastikan Docker dan Docker Compose ter-install.
 3. Salin file `.env.example` ke `.env` dan sesuaikan jika perlu.
-4. MariaDB, dan Meilisearch menggunakan Docker Compose:
+4. Jalankan MariaDB dan Meilisearch menggunakan Docker Compose:
    ```bash
    docker-compose up -d
    ```
@@ -36,24 +36,23 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
 - Spesifikasi OpenAPI tersedia di: `http://localhost:8080/api-docs/openapi.json` (otomatis disajikan oleh `utoipa-scalar`).
 
 ## Menjalankan Tes
-1. Jalankan tes:
-   ```bash
-   cargo test
-   ```
+```bash
+cargo test
+```
 
 ## Menghasilkan Laporan Code Coverage
 1. Install `cargo-tarpaulin`:
    ```bash
    cargo install cargo-tarpaulin
    ```
-2. Jalankan laporan coverage:
+2. Generate laporan coverage:
    ```bash
    chmod +x test.sh
    ./test.sh
    ```
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
-## Endpoint
+## Contoh Endpoint
 - `POST /inventory/create`: Membuat item inventory baru. Contoh payload:
   ```json
   {
@@ -67,8 +66,9 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
 ## Menghentikan Layanan
 Hentikan dan hapus container:
 ```bash
-docker-compose down
+docker-compose down -v --remove-orphans
 ```
+
 ## Building App
 1. Pastikan sudah login ke registry.gmedia.id
 2. Build image
