@@ -234,3 +234,55 @@ async fn test_update_inventory_negative_price() {
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
+
+#[tokio::test]
+#[serial]
+async fn test_delete_inventory() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+
+    // Buat item baru untuk dihapus
+    let new_item = json!({
+        "name": "Item to Delete",
+        "quantity": 5,
+        "price": 15.0
+    });
+
+    let response = client
+        .post(&format!("{}/inventory/create", server_url))
+        .json(&new_item)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::OK);
+
+    let created_item: InventoryItem = response
+        .json()
+        .await
+        .expect("Gagal parse response JSON");
+
+    // Hapus item
+    let response = client
+        .delete(&format!(
+            "{}/inventory/delete/{}",
+            server_url, created_item.id
+        ))
+        .send()
+        .await
+        .expect("Gagal mengirim request DELETE");
+
+    assert_eq!(response.status(), reqwest::StatusCode::OK);
+
+    // Coba hapus lagi, harusnya 404 Not Found
+    let response = client
+        .delete(&format!(
+            "{}/inventory/delete/{}",
+            server_url, created_item.id
+        ))
+        .send()
+        .await
+        .expect("Gagal mengirim request DELETE");
+
+    assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
+}
