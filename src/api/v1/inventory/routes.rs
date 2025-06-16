@@ -1,6 +1,11 @@
 use actix_web::web;
 
-use super::handlers::{create_item, search_items, update_item, delete_item};
+use super::handlers::{
+    create_item::create_item,
+    delete_item::delete_item,
+    search_items::search_items,
+    update_item::update_item,
+};
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
