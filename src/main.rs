@@ -1,4 +1,5 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpServer, Responder, HttpResponse};
+use serde_json::json;
 use dotenv::dotenv;
 use erp_api::api::v1::{employee, inventory, order};
 use erp_api::config::settings::Settings;
@@ -8,6 +9,10 @@ use std::env;
 use erp_api::api::openapi::ApiDoc;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
+
+async fn healthcheck() -> impl Responder {
+    HttpResponse::Ok().json(json!({ "status": "active" }))
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -33,6 +38,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .route("/healthcheck", web::get().to(healthcheck))
             .app_data(web::Data::new(db_pool.clone()))
             .app_data(web::Data::new(meili_client.clone()))
             // Register your routes here

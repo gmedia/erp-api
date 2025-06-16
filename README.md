@@ -19,6 +19,11 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch,
    ```bash
    cargo run
    ```
+   Untuk mengaktifkan watch mode dapat dilakukan dengan:
+   ```bash
+   cargo install --locked watchexec-cli
+   watchexec -w src -r cargo run
+   ```
 6. Aplikasi akan berjalan di `http://localhost:8080`, MariaDB di `localhost:3306`, dan Meilisearch di `localhost:7700`.
 
 ## Mengakses Dokumentasi API
