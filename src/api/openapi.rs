@@ -41,6 +41,9 @@ impl Modify for SecurityAddon {
             crate::api::v1::order::models::CreateOrder,
         )
     ),
-    modifiers(&SecurityAddon)
+    modifiers(&SecurityAddon),
+    tags(
+        (name = "inventory", description = "Inventory management endpoints.")
+    )
 )]
 pub struct ApiDoc;

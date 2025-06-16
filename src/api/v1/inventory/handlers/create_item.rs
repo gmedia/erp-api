@@ -10,6 +10,7 @@ use crate::db::entities::inventory;
 #[utoipa::path(
     post,
     path = "/inventory/create",
+    tag = "inventory",
     request_body = CreateInventoryItem,
     responses(
         (status = 200, description = "Item created successfully", body = InventoryItem),

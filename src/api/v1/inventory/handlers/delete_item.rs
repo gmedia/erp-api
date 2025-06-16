@@ -7,6 +7,7 @@ use crate::db::entities::inventory;
 #[utoipa::path(
     delete,
     path = "/inventory/delete/{id}",
+    tag = "inventory",
     params(
         ("id" = String, Path, description = "Item ID")
     ),
