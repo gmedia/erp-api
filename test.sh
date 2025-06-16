@@ -1,8 +1,12 @@
 #!/bin/bash
 
+rm -rf tarpaulin-report.html
+
 cargo tarpaulin --all-targets --ignore-tests --out Html \
-    --exclude-files "migrations/*" \
+    --exclude-files "api/src/openapi.rs" \
+    --exclude-files "config/*" \
+    --exclude-files "db/*" \
     --exclude-files "entity/*" \
-    --exclude-files "src/config/*" \
-    --exclude-files "src/api/openapi.rs" \
-    --exclude-files "src/main.rs"
+    --exclude-files "migration/*" \
+    --exclude-files "search/*" \
+    --exclude-files "src/*"
