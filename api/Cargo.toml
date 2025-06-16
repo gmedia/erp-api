@@ -3,10 +3,6 @@ name = "api"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "api"
-path = "src/mod.rs"
-
 [dependencies]
 actix-web = "4.11.0"
 sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }

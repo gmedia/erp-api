@@ -74,8 +74,8 @@ docker-compose down
 ## Struktur Proyek
 ```
 /erp-api
-├── /src
-│   ├── /api
+├── /api
+│   ├── /src
 │   │   ├── /v1
 │   │   │   ├── /inventory
 │   │   │   │   ├── mod.rs
@@ -93,30 +93,49 @@ docker-compose down
 │   │   │   │   ├── models.rs
 │   │   │   │   └── routes.rs
 │   │   │   └── mod.rs
-│   │   └── mod.rs
-│   ├── /config
-│   │   ├── mod.rs
-│   │   └── settings.rs
-│   ├── /db
-│   │   ├── mod.rs
-│   │   └── mysql.rs
-│   ├── /search
-│   │   ├── mod.rs
-│   │   └── meilisearch.rs
-│   ├── /middleware
-│   │   ├── mod.rs
-│   │   └── auth.rs
-│   ├── /utils
-│   │   └── mod.rs
+│   │   ├── openapi.rs
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── /config
+│   ├── /src
+│   │   ├── db.rs
+│   │   ├── meilisearch.rs
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── /db
+│   ├── /src
+│   │   ├── mysql.rs
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── /entity
+│   ├── /src
+│   │   ├── employees.rs
+│   │   ├── inventory.rs
+│   │   ├── orders.rs
+│   │   ├── prelude.rs
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── /migration
+│   ├── /src
+│   │   ├── m20250604_000000_create_inventory.rs
+│   │   ├── m20250604_000001_create_employees.rs
+│   │   ├── m20250604_000002_create_orders.rs
+│   │   ├── main.rs
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── /search
+│   ├── /src
+│   │   ├── meilisearch.rs
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── /src
 │   ├── main.rs
 │   └── lib.rs
 ├── /tests
 │   ├── common.rs
-│   ├── inventory_tests.rs
-│   ├── employee_tests.rs
-│   └── order_tests.rs
-├── /migration
-├── /entity
+│   ├── inventory.rs
+│   ├── employee.rs
+│   └── order.rs
 ├── .env
 ├── Cargo.toml
 ├── docker-compose.yml
