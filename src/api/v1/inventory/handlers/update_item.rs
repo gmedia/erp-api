@@ -4,7 +4,7 @@ use sea_orm::{ActiveModelTrait, Set, DatabaseConnection, EntityTrait, IntoActive
 use serde_json;
 
 use super::super::models::{UpdateInventoryItem, InventoryItem};
-use crate::db::entities::inventory;
+use entity::inventory;
 
 #[utoipa::path(
     put,

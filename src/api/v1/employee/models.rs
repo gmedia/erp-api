@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::db::entities::employees;
+use entity::employees;
 
 pub type Employee = employees::Model;
 

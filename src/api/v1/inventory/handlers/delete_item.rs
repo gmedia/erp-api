@@ -2,7 +2,7 @@ use actix_web::{web, HttpResponse, Responder};
 use meilisearch_sdk::client::Client;
 use sea_orm::{DatabaseConnection, EntityTrait, ModelTrait};
 
-use crate::db::entities::inventory;
+use entity::inventory;
 
 #[utoipa::path(
     delete,

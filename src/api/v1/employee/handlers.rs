@@ -3,7 +3,7 @@ use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 
 use super::models::{CreateEmployee, Employee};
-use crate::db::entities::employees;
+use entity::employees;
 use sea_orm::DatabaseConnection;
 
 #[utoipa::path(

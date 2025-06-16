@@ -5,7 +5,7 @@ use uuid::Uuid;
 use serde_json;
 
 use super::super::models::{CreateInventoryItem, InventoryItem};
-use crate::db::entities::inventory;
+use entity::inventory;
 
 #[utoipa::path(
     post,

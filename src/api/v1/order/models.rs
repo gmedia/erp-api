@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::db::entities::orders;
+use entity::orders;
 
 pub type Order = orders::Model;
 

@@ -4,7 +4,7 @@ use uuid::Uuid;
 use chrono::Utc;
 
 use super::models::{CreateOrder, Order};
-use crate::db::entities::orders;
+use entity::orders;
 use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
