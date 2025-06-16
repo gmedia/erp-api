@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpServer};
-use erp_api::api::v1::{employee, inventory, order};
+use api::v1::{employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;

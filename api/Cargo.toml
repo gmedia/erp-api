@@ -1,7 +1,11 @@
 [package]
-name = "erp-api"
+name = "api"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+name = "api"
+path = "src/mod.rs"
 
 [dependencies]
 actix-web = "4.11.0"
@@ -17,22 +21,7 @@ chrono = { version = "0.4", features = ["serde"] }
 utoipa = { version = "5.3.1", features = ["actix_extras", "chrono"] }
 utoipa-scalar = { version = "0.3.0", features = ["actix-web"] }
 uuid = { version = "1.17.0", features = ["serde", "v4"] }
-entity = { path = "./entity" }
-db = { path = "./db" }
-search = { path = "./search" }
-config = { path = "./config" }
-api = { path = "./api" }
-
-[dev-dependencies]
-reqwest = { version = "0.12.19", features = ["json"] }
-serial_test = "3.2.0"
-
-[workspace]
-members = [
-    "entity",
-    "db",
-    "search",
-    "config",
-    "migration",
-    "api"
-]
+entity = { path = "../entity" }
+db = { path = "../db" }
+search = { path = "../search" }
+config = { path = "../config" }

@@ -2,7 +2,7 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
 
-use erp_api::api::v1::inventory::models::{InventoryItem};
+use api::v1::inventory::models::{InventoryItem};
 mod common;
 use common::setup_test_app;
 

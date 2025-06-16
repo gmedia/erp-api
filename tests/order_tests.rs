@@ -3,7 +3,7 @@ use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
-use erp_api::api::v1::order::models::Order;
+use api::v1::order::models::Order;
 mod common;
 use common::setup_test_app;
 

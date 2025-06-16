@@ -1,13 +1,13 @@
 use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use serde_json::json;
 use dotenv::dotenv;
-use erp_api::api::v1::{employee, inventory, order};
+use api::v1::{employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;
 use search::meilisearch::{init_meilisearch, configure_index};
 use std::env;
-use erp_api::api::openapi::ApiDoc;
+use api::openapi::ApiDoc;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 

@@ -326,6 +326,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "chrono",
+ "config 0.1.0",
+ "db",
+ "dotenv",
+ "entity",
+ "env_logger",
+ "jsonwebtoken",
+ "log",
+ "sea-orm 0.12.15",
+ "search",
+ "serde",
+ "serde_json",
+ "tokio",
+ "utoipa",
+ "utoipa-scalar",
+ "uuid",
+]
+
+[[package]]
 name = "arraydeque"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1144,6 +1167,7 @@ name = "erp-api"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "api",
  "chrono",
  "config 0.1.0",
  "db",
