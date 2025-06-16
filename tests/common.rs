@@ -2,8 +2,8 @@ use actix_web::{web, App, HttpServer};
 use erp_api::api::v1::{employee, inventory, order};
 use erp_api::config::settings::Settings;
 use db::mysql::init_db_pool;
-use erp_api::search::meilisearch::init_meilisearch;
-use meilisearch_sdk::client::Client;
+use search::meilisearch::init_meilisearch;
+use search::Client;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
 pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {

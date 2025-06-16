@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
-use meilisearch_sdk::client::Client;
+use search::Client;
 use sea_orm::{ActiveModelTrait, Set, DatabaseConnection, EntityTrait, IntoActiveModel};
 use serde_json;
 

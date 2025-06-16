@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
-use meilisearch_sdk::client::Client;
+use search::Client;
 use serde_json;
 
 use super::super::models::InventoryItem;

@@ -4,7 +4,7 @@ use dotenv::dotenv;
 use erp_api::api::v1::{employee, inventory, order};
 use erp_api::config::settings::Settings;
 use db::mysql::init_db_pool;
-use erp_api::search::meilisearch::{init_meilisearch, configure_index};
+use search::meilisearch::{init_meilisearch, configure_index};
 use std::env;
 use erp_api::api::openapi::ApiDoc;
 use utoipa::OpenApi;
