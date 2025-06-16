@@ -120,16 +120,7 @@ docker-compose down
 │   ├── inventory_tests.rs
 │   ├── employee_tests.rs
 │   └── order_tests.rs
-├── /migrations
-│   ├── 2025-06-04-000000_create_inventory
-│   │   ├── up.sql
-│   │   └── down.sql
-│   ├── 2025-06-04-000001_create_employees
-│   │   ├── up.sql
-│   │   └── down.sql
-│   ├── 2025-06-04-000002_create_orders
-│   │   ├── up.sql
-│   │   └── down.sql
+├── /migration
 ├── .env
 ├── Cargo.toml
 ├── docker-compose.yml
