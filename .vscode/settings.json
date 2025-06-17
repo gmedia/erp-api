@@ -5,6 +5,7 @@
         "autorestart",
         "chrono",
         "dotenv",
+        "getmeili",
         "healthcheck",
         "initdb",
         "innodb",

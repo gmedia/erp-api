@@ -29,7 +29,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
    cargo install --locked watchexec-cli
    watchexec -w src -r cargo run
    ```
-6. Aplikasi akan berjalan di `http://localhost:8080`, MariaDB di `localhost:3306`, dan Meilisearch di `localhost:7700`.
+6. Aplikasi akan berjalan di `http://localhost:8080`, MariaDB di `127.0.0.1:3306`, dan Meilisearch di `127.0.0.1:7700`.
 
 ## Mengakses Dokumentasi API
 - Buka Scalar UI di: `http://localhost:8080/scalar`.
