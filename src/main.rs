@@ -2,8 +2,7 @@ use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use serde_json::json;
 use dotenv::dotenv;
 use api::v1::{employee, inventory, order};
-use config::db::Db;
-use config::meilisearch::Meilisearch;
+use config::{app::AppConfig, db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
 use search::meilisearch::{init_meilisearch, configure_index};
 use std::env;
@@ -20,9 +19,10 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::init();
 
-    let env = env::var("APP_ENV").unwrap_or("production".to_string());
+    let env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
     let config_db = Db::new(&env);
     let config_meilisearch = Meilisearch::new(&env);
+    let config_app = AppConfig::new(&env);
     
     let db_pool = init_db_pool(&config_db.url)
         .await
@@ -31,14 +31,12 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to init Meilisearch");
 
-    // Register your Meilisearch indeks for initialization here
-    configure_index(&meili_client, "inventory", &["name"])
-        .await
-        .expect("Failed to configure 'inventory' index");
-
-    configure_index(&meili_client, "order", &["item", "customer_name"])
-        .await
-        .expect("Failed to configure 'order' index");
+    for (index_name, p_key) in &config_app.meilisearch_indexes {
+        let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
+        configure_index(&meili_client, index_name, &pk)
+            .await
+            .unwrap_or_else(|_| panic!("Failed to configure '{}' index", index_name));
+    }
 
     HttpServer::new(move || {
         App::new()
