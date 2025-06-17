@@ -1,84 +1,92 @@
+use actix_web::dev::{Server, ServerHandle};
 use actix_web::{web, App, HttpServer};
 use api::v1::{employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;
 use search::meilisearch::init_meilisearch;
-use search::Client;
-use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
+use sea_orm::{ConnectionTrait, Statement};
+use std::future::Future;
+use std::net::TcpListener;
 
-pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
+pub struct TestApp {
+    pub server_url: String,
+}
+
+pub async fn run_test<F, Fut>(test_body: F)
+where
+    F: FnOnce(TestApp) -> Fut,
+    Fut: Future<Output = ()>,
+{
     dotenv::dotenv().ok();
     let _ = env_logger::try_init();
-    let config_db = Db::new("test");
-    let config_meilisearch = Meilisearch::new("test");
 
-    // Inisialisasi database
-    let db_pool = init_db_pool(&config_db.url)
+    // Setup Database dan Meilisearch
+    let db_pool = init_db_pool(&Db::new("test").url)
         .await
-        .expect("Gagal inisialisasi pool database");
+        .expect("Gagal inisialisasi pool database untuk tes");
 
-    // Bersihkan tabel untuk tes
     db_pool
         .execute(Statement::from_string(
             db_pool.get_database_backend(),
-            "TRUNCATE TABLE `inventory`;",
+            "DELETE FROM `inventory`;",
         ))
         .await
         .expect("Gagal membersihkan tabel inventory");
     db_pool
         .execute(Statement::from_string(
             db_pool.get_database_backend(),
-            "TRUNCATE TABLE `employee`;",
+            "DELETE FROM `employee`;",
         ))
         .await
         .expect("Gagal membersihkan tabel employee");
     db_pool
         .execute(Statement::from_string(
             db_pool.get_database_backend(),
-            "TRUNCATE TABLE `order`;",
+            "DELETE FROM `order`;",
         ))
         .await
         .expect("Gagal membersihkan tabel order");
 
-    // Inisialisasi Meilisearch
     let meili_client =
-        init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
+        init_meilisearch(&Meilisearch::new("test").host, &Meilisearch::new("test").api_key)
             .await
             .expect("Gagal inisialisasi Meilisearch untuk tes");
-
-    // Bersihkan indeks Meilisearch
+    
     let index = meili_client.index("inventory");
-    index
-        .delete()
-        .await
-        .expect("Gagal menghapus indeks Meilisearch");
+    let _ = index.delete().await;
 
-    // Clone db_pool and meili_client for moving into the closure
-    let db_pool_for_server = db_pool.clone();
+    // Setup Server
+    let listener = TcpListener::bind("127.0.0.1:0").expect("Gagal bind ke port acak");
+    let server_url = format!("http://{}", listener.local_addr().unwrap());
+    
+    let db_pool_for_server = init_db_pool(&Db::new("test").url)
+        .await
+        .expect("Gagal inisialisasi pool database untuk server");
     let meili_client_for_server = meili_client.clone();
 
-    // Jalankan server di port acak
-    let server = HttpServer::new(move || {
+    let server: Server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(db_pool_for_server.clone()))
             .app_data(web::Data::new(meili_client_for_server.clone()))
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
-    });
+    })
+    .listen(listener)
+    .expect("Gagal listen pada listener")
+    .run();
 
-    let bind_addr = "127.0.0.1:0";
-    let server = server.bind(bind_addr).expect("Gagal bind server");
-    let server_addr = server
-        .addrs()
-        .first()
-        .expect("Gagal mendapatkan alamat server")
-        .to_owned();
-    let server_url = format!("http://{}", server_addr);
+    let server_handle: ServerHandle = server.handle();
+    let server_task = tokio::spawn(server);
 
-    // Jalankan server di background
-    tokio::spawn(server.run());
+    let app = TestApp { server_url };
 
-    (db_pool, meili_client, server_url)
+    // Eksekusi badan tes
+    test_body(app).await;
+
+    // Teardown
+    server_handle.stop(true).await;
+    // Menunggu task server selesai dan mengabaikan hasilnya.
+    let _ = server_task.await;
 }

@@ -4,58 +4,62 @@ use serial_test::serial;
 
 use api::v1::employee::models::Employee;
 mod common;
-use common::setup_test_app;
+use common::run_test;
 
 #[tokio::test]
 #[serial]
 async fn test_create_employee() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
-    let client = HttpClient::new();
+    run_test(|app| async move {
+        let client = HttpClient::new();
 
-    // Tes endpoint POST /employee/create
-    let new_employee = json!({
-        "name": "John Doe",
-        "role": "Software Engineer",
-        "email": "john.doe@example.com"
-    });
+        // Tes endpoint POST /employee/create
+        let new_employee = json!({
+            "name": "John Doe",
+            "role": "Software Engineer",
+            "email": "john.doe@example.com"
+        });
 
-    let response = client
-        .post(&format!("{}/employee/create", server_url))
-        .json(&new_employee)
-        .send()
-        .await
-        .expect("Gagal mengirim request POST");
+        let response = client
+            .post(&format!("{}/employee/create", app.server_url))
+            .json(&new_employee)
+            .send()
+            .await
+            .expect("Gagal mengirim request POST");
 
-    assert_eq!(response.status(), reqwest::StatusCode::OK);
+        assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_employee: Employee = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+        let created_employee: Employee = response
+            .json()
+            .await
+            .expect("Gagal parse response JSON");
 
-    assert_eq!(created_employee.name, "John Doe");
-    assert_eq!(created_employee.role, "Software Engineer");
-    assert_eq!(created_employee.email, "john.doe@example.com");
+        assert_eq!(created_employee.name, "John Doe");
+        assert_eq!(created_employee.role, "Software Engineer");
+        assert_eq!(created_employee.email, "john.doe@example.com");
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial]
 async fn test_create_employee_invalid_email() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
-    let client = HttpClient::new();
+    run_test(|app| async move {
+        let client = HttpClient::new();
 
-    let new_employee = json!({
-        "name": "Jane Doe",
-        "role": "Product Manager",
-        "email": "jane.doe"
-    });
+        let new_employee = json!({
+            "name": "Jane Doe",
+            "role": "Product Manager",
+            "email": "jane.doe"
+        });
 
-    let response = client
-        .post(&format!("{}/employee/create", server_url))
-        .json(&new_employee)
-        .send()
-        .await
-        .expect("Gagal mengirim request POST");
+        let response = client
+            .post(&format!("{}/employee/create", app.server_url))
+            .json(&new_employee)
+            .send()
+            .await
+            .expect("Gagal mengirim request POST");
 
-    assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+    })
+    .await;
 }

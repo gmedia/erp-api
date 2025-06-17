@@ -1005,6 +1005,7 @@ dependencies = [
 name = "db"
 version = "0.1.0"
 dependencies = [
+ "log",
  "sea-orm 0.12.15",
 ]
 
@@ -1176,6 +1177,7 @@ dependencies = [
  "env_logger",
  "jsonwebtoken",
  "log",
+ "once_cell",
  "reqwest",
  "sea-orm 0.12.15",
  "search",
