@@ -17,7 +17,7 @@ pub struct TestApp {
 }
 
 static TEST_DBS: Lazy<Vec<String>> = Lazy::new(|| {
-    (1..=20)
+    (1..=11)
         .map(|i| format!("mysql://root:root_password@127.0.0.1:3306/erp_db_test_{}", i))
         .collect()
 });
