@@ -1,3 +1,7 @@
+use fake::{
+    faker::{internet::en::SafeEmail, name::en::Name},
+    Fake,
+};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
@@ -11,12 +15,15 @@ use common::setup_test_app;
 async fn test_create_employee() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Name().fake();
+    let email: String = SafeEmail().fake();
+    let role = "Software Engineer";
 
     // Tes endpoint POST /employee/create
     let new_employee = json!({
-        "name": "John Doe",
-        "role": "Software Engineer",
-        "email": "john.doe@example.com"
+        "name": name,
+        "role": role,
+        "email": email
     });
 
     let response = client
@@ -33,9 +40,9 @@ async fn test_create_employee() {
         .await
         .expect("Gagal parse response JSON");
 
-    assert_eq!(created_employee.name, "John Doe");
-    assert_eq!(created_employee.role, "Software Engineer");
-    assert_eq!(created_employee.email, "john.doe@example.com");
+    assert_eq!(created_employee.name, name);
+    assert_eq!(created_employee.role, role);
+    assert_eq!(created_employee.email, email);
 }
 
 #[tokio::test]
@@ -43,10 +50,12 @@ async fn test_create_employee() {
 async fn test_create_employee_invalid_email() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Name().fake();
+    let role = "Product Manager";
 
     let new_employee = json!({
-        "name": "Jane Doe",
-        "role": "Product Manager",
+        "name": name,
+        "role": role,
         "email": "jane.doe"
     });
 

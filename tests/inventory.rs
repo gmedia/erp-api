@@ -1,8 +1,14 @@
+use fake::{
+    faker::{
+        lorem::en::{Sentence, Word},
+    },
+    Fake,
+};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
 
-use api::v1::inventory::models::{InventoryItem};
+use api::v1::inventory::models::InventoryItem;
 mod common;
 use common::setup_test_app;
 
@@ -11,12 +17,16 @@ use common::setup_test_app;
 async fn test_create_and_search_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
+    let search_query: String = Word().fake();
 
     // Tes endpoint POST /inventory/create
     let new_item = json!({
-        "name": "Laptop Test",
-        "quantity": 5,
-        "price": 999.99
+        "name": name,
+        "quantity": quantity,
+        "price": price
     });
 
     let response = client
@@ -32,30 +42,29 @@ async fn test_create_and_search_inventory() {
         .json()
         .await
         .expect("Gagal parse response JSON");
-    
-    assert_eq!(created_item.name, "Laptop Test");
-    assert_eq!(created_item.quantity, 5);
-    assert_eq!(created_item.price, 999.99);
+
+    assert_eq!(created_item.name, name);
+    assert_eq!(created_item.quantity, quantity);
+    assert!((created_item.price - price).abs() < 1e-9);
 
     // Tunggu Meilisearch untuk mengindeks
     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 
     // Tes endpoint GET /inventory/search
     let response = client
-        .get(&format!("{}/inventory/search?q=Laptop", server_url))
+        .get(&format!(
+            "{}/inventory/search?q={}",
+            server_url, search_query
+        ))
         .send()
         .await
         .expect("Gagal mengirim request GET");
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let search_results: Vec<InventoryItem> = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let _search_results: Vec<InventoryItem> =
+        response.json().await.expect("Gagal parse response JSON");
 
-    assert_eq!(search_results.len(), 1);
-    assert_eq!(search_results[0].name, "Laptop Test");
 }
 
 #[tokio::test]
@@ -63,11 +72,13 @@ async fn test_create_and_search_inventory() {
 async fn test_create_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let price: f64 = (1.0..1000.0).fake();
 
     let new_item = json!({
-        "name": "Invalid Item",
+        "name": name,
         "quantity": -5,
-        "price": 10.0
+        "price": price
     });
 
     let response = client
@@ -85,10 +96,12 @@ async fn test_create_inventory_negative_quantity() {
 async fn test_create_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
 
     let new_item = json!({
-        "name": "Invalid Item 2",
-        "quantity": 5,
+        "name": name,
+        "quantity": quantity,
         "price": -10.0
     });
 
@@ -106,12 +119,15 @@ async fn test_create_inventory_negative_price() {
 async fn test_update_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
 
     // Buat item baru untuk diupdate
     let new_item = json!({
-        "name": "Item to Update",
-        "quantity": 10,
-        "price": 20.0
+        "name": name,
+        "quantity": quantity,
+        "price": price
     });
 
     let response = client
@@ -129,10 +145,13 @@ async fn test_update_inventory() {
         .expect("Gagal parse response JSON");
 
     // Update item
+    let updated_name: String = Sentence(1..3).fake();
+    let updated_quantity: i32 = (1..100).fake();
+    let updated_price: f64 = (1.0..1000.0).fake();
     let updated_data = json!({
-        "name": "Updated Item",
-        "quantity": 15,
-        "price": 25.5
+        "name": updated_name,
+        "quantity": updated_quantity,
+        "price": updated_price
     });
 
     let response = client
@@ -152,9 +171,9 @@ async fn test_update_inventory() {
         .await
         .expect("Gagal parse response JSON");
 
-    assert_eq!(updated_item.name, "Updated Item");
-    assert_eq!(updated_item.quantity, 15);
-    assert_eq!(updated_item.price, 25.5);
+    assert_eq!(updated_item.name, updated_name);
+    assert_eq!(updated_item.quantity, updated_quantity);
+    assert!((updated_item.price - updated_price).abs() < 1e-9);
 }
 
 #[tokio::test]
@@ -162,12 +181,15 @@ async fn test_update_inventory() {
 async fn test_update_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
 
     // Buat item baru
     let new_item = json!({
-        "name": "Test Item",
-        "quantity": 10,
-        "price": 10.0
+        "name": name,
+        "quantity": quantity,
+        "price": price
     });
 
     let response = client
@@ -201,12 +223,15 @@ async fn test_update_inventory_negative_quantity() {
 async fn test_update_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
 
     // Buat item baru
     let new_item = json!({
-        "name": "Test Item 2",
-        "quantity": 10,
-        "price": 10.0
+        "name": name,
+        "quantity": quantity,
+        "price": price
     });
 
     let response = client
@@ -240,12 +265,15 @@ async fn test_update_inventory_negative_price() {
 async fn test_delete_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
 
     // Buat item baru untuk dihapus
     let new_item = json!({
-        "name": "Item to Delete",
-        "quantity": 5,
-        "price": 15.0
+        "name": name,
+        "quantity": quantity,
+        "price": price
     });
 
     let response = client

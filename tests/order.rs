@@ -1,3 +1,4 @@
+use fake::Fake;
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
@@ -13,11 +14,12 @@ async fn test_create_order() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
     let customer_id = Uuid::new_v4().to_string();
+    let total_amount: f64 = (1.0..1000.0).fake();
 
     // Tes endpoint POST /order/create
     let new_order = json!({
         "customer_id": customer_id,
-        "total_amount": 150.75
+        "total_amount": total_amount
     });
 
     let response = client
@@ -35,7 +37,7 @@ async fn test_create_order() {
         .expect("Gagal parse response JSON");
 
     assert_eq!(created_order.customer_id, customer_id);
-    assert_eq!(created_order.total_amount, 150.75);
+    assert_eq!(created_order.total_amount, total_amount);
 }
 
 #[tokio::test]
