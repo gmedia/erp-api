@@ -6,7 +6,7 @@ use db::mysql::init_db_pool;
 use migration::{Migrator, MigratorTrait};
 use once_cell::sync::Lazy;
 use search::meilisearch::init_meilisearch;
-use sea_orm::{ConnectionTrait, Database, DatabaseConnection, Statement};
+use sea_orm::{ConnectionTrait, Database, Statement};
 use std::future::Future;
 use std::net::TcpListener;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -14,11 +14,10 @@ use std::env;
 
 pub struct TestApp {
     pub server_url: String,
-    pub db_pool: DatabaseConnection,
 }
 
 static TEST_DBS: Lazy<Vec<String>> = Lazy::new(|| {
-    (1..=3)
+    (1..=20)
         .map(|i| format!("mysql://root:root_password@127.0.0.1:3306/erp_db_test_{}", i))
         .collect()
 });
@@ -97,7 +96,7 @@ where
     let server_handle: ServerHandle = server.handle();
     let server_task = tokio::spawn(server);
 
-    let app = TestApp { server_url, db_pool };
+    let app = TestApp { server_url };
 
     test_body(app).await;
 
