@@ -14,7 +14,6 @@ async fn test_create_order() {
         let client = HttpClient::new();
         let customer_id = Uuid::new_v4().to_string();
 
-        // Tes endpoint POST /order/create
         let new_order = json!({
             "customer_id": customer_id,
             "total_amount": 150.75

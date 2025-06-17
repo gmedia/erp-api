@@ -12,7 +12,6 @@ async fn test_create_employee() {
     run_test(|app| async move {
         let client = HttpClient::new();
 
-        // Tes endpoint POST /employee/create
         let new_employee = json!({
             "name": "John Doe",
             "role": "Software Engineer",
