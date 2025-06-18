@@ -314,3 +314,30 @@ async fn test_delete_inventory() {
 
     assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
 }
+#[tokio::test]
+#[serial]
+async fn test_create_item_internal_server_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
+
+    // Simulate database connection error by closing the pool
+    let _ = db_pool.close().await;
+
+    let new_item = json!({
+        "name": name,
+        "quantity": quantity,
+        "price": price
+    });
+
+    let response = client
+        .post(&format!("{}/inventory/create", server_url))
+        .json(&new_item)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}

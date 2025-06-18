@@ -62,3 +62,29 @@ async fn test_create_order_negative_amount() {
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
+
+#[tokio::test]
+#[serial]
+async fn test_create_order_internal_server_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+    let customer_id = Uuid::new_v4().to_string();
+    let total_amount: f64 = (1.0..1000.0).fake();
+
+    // Simulate database connection error by closing the pool
+    let _ = db_pool.close().await;
+
+    let new_order = json!({
+        "customer_id": customer_id,
+        "total_amount": total_amount
+    });
+
+    let response = client
+        .post(&format!("{}/order/create", server_url))
+        .json(&new_order)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}
