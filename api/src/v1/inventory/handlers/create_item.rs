@@ -1,6 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
-use search::Client;
-use sea_orm::{ActiveModelTrait, Set, DatabaseConnection};
+use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 use serde_json;
 
@@ -21,8 +20,7 @@ use entity::inventory;
     )
 )]
 pub async fn create_item(
-    db: web::Data<DatabaseConnection>,
-    meili_client: web::Data<Client>,
+    data: web::Data<config::app::AppState>,
     item: web::Json<CreateInventoryItem>,
 ) -> impl Responder {
     if item.quantity < 0 {
@@ -40,12 +38,12 @@ pub async fn create_item(
         price: Set(item.price),
     };
 
-    let result = new_item.insert(db.get_ref()).await;
+    let result = new_item.insert(&data.db).await;
 
     match result {
         Ok(inserted_item) => {
             // Add to Meilisearch for indexing
-            let index = meili_client.index("inventory");
+            let index = data.meilisearch.index("inventory");
             let item_for_meili: InventoryItem = inserted_item.into();
             index
                 .add_documents(&[&item_for_meili], Some("id"))

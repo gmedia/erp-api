@@ -7,6 +7,13 @@ pub struct AppConfig {
     pub meilisearch_indexes: HashMap<String, Vec<String>>,
 }
 
+#[derive(Debug, Clone)]
+pub struct AppState {
+    pub db: sea_orm::DatabaseConnection,
+    pub meilisearch: meilisearch_sdk::client::Client,
+    pub jwt_secret: String,
+}
+
 #[derive(Debug, Deserialize)]
 struct TomlConfig {
     app: AppConfig,

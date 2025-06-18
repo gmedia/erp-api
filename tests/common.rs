@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpServer};
-use api::v1::{employee, inventory, order};
+use api::v1::{auth, employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;
@@ -13,6 +13,7 @@ pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
     let config_app = config::app::AppConfig::new("test");
+    let jwt_secret = "test-secret".to_string();
 
     // Inisialisasi database
     let db_pool = init_db_pool(&config_db.url)
@@ -37,9 +38,9 @@ pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
             .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Bersihkan indeks Meilisearch
-    for index_name in config_app.meilisearch_indexes.keys() {
-        let index = meili_client.index(index_name);
-        let _ = index.delete().await;
+    for (index_name, p_key) in &config_app.meilisearch_indexes {
+        let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
+        let _ = meili_client.create_index(index_name, Some(&pk[0])).await;
     }
 
     // Clone db_pool and meili_client for moving into the closure
@@ -49,12 +50,16 @@ pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
     // Jalankan server di port acak
     let server = HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(db_pool_for_server.clone()))
-            .app_data(web::Data::new(meili_client_for_server.clone()))            
+            .app_data(web::Data::new(config::app::AppState {
+                db: db_pool_for_server.clone(),
+                meilisearch: meili_client_for_server.clone(),
+                jwt_secret: jwt_secret.clone(),
+            }))
             // Register your routes here
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
+            .configure(auth::routes::init_routes)
     });
 
     let bind_addr = "127.0.0.1:0";

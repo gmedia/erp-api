@@ -1,5 +1,4 @@
 use actix_web::{web, HttpResponse, Responder};
-use search::Client;
 use serde_json;
 
 use super::super::models::InventoryItem;
@@ -20,18 +19,23 @@ use super::super::models::InventoryItem;
     )
 )]
 pub async fn search_items(
-    meili_client: web::Data<Client>,
+    data: web::Data<config::app::AppState>,
     query: web::Query<serde_json::Value>,
 ) -> impl Responder {
     let q = query.get("q").and_then(|v| v.as_str()).unwrap_or("");
-    let index = meili_client.index("inventory");
+    log::info!("Searching for: {}", q);
+    let index = data.meilisearch.index("inventory");
     let search_result = index.search().with_query(q).execute::<InventoryItem>().await;
 
     match search_result {
         Ok(result) => {
+            log::info!("Search successful, found {} hits", result.hits.len());
             let hits: Vec<_> = result.hits.into_iter().map(|hit| hit.result).collect();
             HttpResponse::Ok().json(hits)
         },
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Err(e) => {
+            log::error!("Meilisearch error: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
     }
 }

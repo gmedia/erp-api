@@ -1,8 +1,8 @@
 use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use serde_json::json;
 use dotenv::dotenv;
-use api::v1::{employee, inventory, order};
-use config::{app::AppConfig, db::Db, meilisearch::Meilisearch};
+use api::v1::{auth, employee, inventory, order};
+use config::{app::{AppConfig, AppState}, db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
 use search::meilisearch::{init_meilisearch, configure_index};
 use std::env;
@@ -23,6 +23,7 @@ async fn main() -> std::io::Result<()> {
     let config_db = Db::new(&env);
     let config_meilisearch = Meilisearch::new(&env);
     let config_app = AppConfig::new(&env);
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
     
     let db_pool = init_db_pool(&config_db.url)
         .await
@@ -38,15 +39,21 @@ async fn main() -> std::io::Result<()> {
             .unwrap_or_else(|_| panic!("Failed to configure '{}' index", index_name));
     }
 
+    let app_state = AppState {
+        db: db_pool,
+        meilisearch: meili_client,
+        jwt_secret,
+    };
+
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
-            .app_data(web::Data::new(db_pool.clone()))
-            .app_data(web::Data::new(meili_client.clone()))
+            .app_data(web::Data::new(app_state.clone()))
             // Register your routes here
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
+            .configure(auth::routes::init_routes)
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka

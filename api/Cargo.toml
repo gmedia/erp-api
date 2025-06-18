@@ -9,7 +9,10 @@ sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-nativ
 dotenv = "0.15.0"
 env_logger = "0.11.8"
 jsonwebtoken = "9.3.1"
+bcrypt = "0.15.1"
 log = "0.4.27"
+pin-project = "1.1.5"
+futures-util = "0.3.30"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 tokio = { version = "1.45.1", features = ["full"] }

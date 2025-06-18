@@ -1,6 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
-use search::Client;
-use sea_orm::{DatabaseConnection, EntityTrait, ModelTrait};
+use sea_orm::{EntityTrait, ModelTrait};
 
 use entity::inventory;
 
@@ -21,22 +20,21 @@ use entity::inventory;
     )
 )]
 pub async fn delete_item(
-    db: web::Data<DatabaseConnection>,
-    meili_client: web::Data<Client>,
+    data: web::Data<config::app::AppState>,
     id: web::Path<String>,
 ) -> impl Responder {
     let item_id = id.into_inner();
-    let find_result = inventory::Entity::find_by_id(item_id.clone()).one(db.get_ref()).await;
+    let find_result = inventory::Entity::find_by_id(item_id.clone()).one(&data.db).await;
 
     match find_result {
         Ok(Some(found_item)) => {
             let item_id_for_meili = found_item.id.clone();
-            let delete_result = found_item.delete(db.get_ref()).await;
+            let delete_result = found_item.delete(&data.db).await;
 
             match delete_result {
                 Ok(_) => {
                     // Delete from Meilisearch
-                    let index = meili_client.index("inventory");
+                    let index = data.meilisearch.index("inventory");
                     index
                         .delete_document(&item_id_for_meili)
                         .await

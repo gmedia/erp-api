@@ -8,13 +8,47 @@ use serial_test::serial;
 
 use api::v1::employee::models::Employee;
 mod common;
+use api::v1::auth::models::TokenResponse;
 use common::setup_test_app;
+
+async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/login", server_url))
+        .json(&login_req)
+        .send()
+        .await
+        .unwrap();
+
+    let token_response: TokenResponse = response.json().await.unwrap();
+    token_response.token
+}
 
 #[tokio::test]
 #[serial]
 async fn test_create_employee() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
     let role = "Software Engineer";
@@ -28,6 +62,7 @@ async fn test_create_employee() {
 
     let response = client
         .post(&format!("{}/v1/employee/create", server_url))
+        .bearer_auth(token)
         .json(&new_employee)
         .send()
         .await
@@ -50,6 +85,7 @@ async fn test_create_employee() {
 async fn test_create_employee_invalid_email() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
     let role = "Product Manager";
 
@@ -61,6 +97,7 @@ async fn test_create_employee_invalid_email() {
 
     let response = client
         .post(&format!("{}/v1/employee/create", server_url))
+        .bearer_auth(token)
         .json(&new_employee)
         .send()
         .await
@@ -73,6 +110,7 @@ async fn test_create_employee_invalid_email() {
 async fn test_create_employee_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
     let role = "Chaos Engineer";
@@ -88,6 +126,7 @@ async fn test_create_employee_internal_server_error() {
 
     let response = client
         .post(&format!("{}/v1/employee/create", server_url))
+        .bearer_auth(token)
         .json(&new_employee)
         .send()
         .await

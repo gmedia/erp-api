@@ -8,3 +8,5 @@ config = { version = "0.14.0", features = ["yaml"] }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_derive = "1.0.203"
 toml = "0.8.14"
+sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros" ] }
+meilisearch-sdk = "0.28.0"

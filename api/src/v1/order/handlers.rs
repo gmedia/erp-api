@@ -5,7 +5,6 @@ use chrono::Utc;
 
 use super::models::{CreateOrder, Order};
 use entity::order;
-use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
     post,
@@ -20,7 +19,7 @@ use sea_orm::DatabaseConnection;
     )
 )]
 pub async fn create_order(
-    db: web::Data<DatabaseConnection>,
+    data: web::Data<config::app::AppState>,
     order: web::Json<CreateOrder>,
 ) -> impl Responder {
     if order.total_amount < 0.0 {
@@ -36,7 +35,7 @@ pub async fn create_order(
         created_at: Set(now),
     };
 
-    let result = new_order.insert(db.get_ref()).await;
+    let result = new_order.insert(&data.db).await;
 
     match result {
         Ok(inserted_order) => {

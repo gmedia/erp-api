@@ -1,6 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
-use search::Client;
-use sea_orm::{ActiveModelTrait, Set, DatabaseConnection, EntityTrait, IntoActiveModel};
+use sea_orm::{ActiveModelTrait, Set, EntityTrait, IntoActiveModel};
 use serde_json;
 
 use super::super::models::{UpdateInventoryItem, InventoryItem};
@@ -24,13 +23,12 @@ use entity::inventory;
     )
 )]
 pub async fn update_item(
-    db: web::Data<DatabaseConnection>,
-    meili_client: web::Data<Client>,
+    data: web::Data<config::app::AppState>,
     id: web::Path<String>,
     item: web::Json<UpdateInventoryItem>,
 ) -> impl Responder {
     let item_id = id.into_inner();
-    let find_result = inventory::Entity::find_by_id(item_id.clone()).one(db.get_ref()).await;
+    let find_result = inventory::Entity::find_by_id(item_id.clone()).one(&data.db).await;
 
     match find_result {
         Ok(Some(found_item)) => {
@@ -52,11 +50,11 @@ pub async fn update_item(
                 active_item.price = Set(price);
             }
 
-            let result = active_item.update(db.get_ref()).await;
+            let result = active_item.update(&data.db).await;
 
             match result {
                 Ok(updated_item) => {
-                    let index = meili_client.index("inventory");
+                    let index = data.meilisearch.index("inventory");
                     let item_for_meili: InventoryItem = updated_item.clone().into();
                     index
                         .add_documents(&[&item_for_meili], Some("id"))

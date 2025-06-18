@@ -4,7 +4,6 @@ use uuid::Uuid;
 
 use super::models::{CreateEmployee, Employee};
 use entity::employee;
-use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
     post,
@@ -19,7 +18,7 @@ use sea_orm::DatabaseConnection;
     )
 )]
 pub async fn create_employee(
-    db: web::Data<DatabaseConnection>,
+    data: web::Data<config::app::AppState>,
     employee: web::Json<CreateEmployee>,
 ) -> impl Responder {
     if !employee.email.contains('@') {
@@ -34,7 +33,7 @@ pub async fn create_employee(
         email: Set(employee.email.clone()),
     };
 
-    let result = new_employee.insert(db.get_ref()).await;
+    let result = new_employee.insert(&data.db).await;
 
     match result {
         Ok(inserted_employee) => {

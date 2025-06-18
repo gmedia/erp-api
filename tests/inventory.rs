@@ -1,5 +1,6 @@
 use fake::{
     faker::{
+        internet::en::SafeEmail,
         lorem::en::{Sentence, Word},
         name::en::Name,
     },
@@ -11,13 +12,47 @@ use serial_test::serial;
 
 use api::v1::inventory::models::InventoryItem;
 mod common;
+use api::v1::auth::models::TokenResponse;
 use common::setup_test_app;
+
+async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/login", server_url))
+        .json(&login_req)
+        .send()
+        .await
+        .unwrap();
+
+    let token_response: TokenResponse = response.json().await.unwrap();
+    token_response.token
+}
 
 #[tokio::test]
 #[serial]
 async fn test_create_and_search_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -32,6 +67,7 @@ async fn test_create_and_search_inventory() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -57,6 +93,7 @@ async fn test_create_and_search_inventory() {
             "{}/v1/inventory/search?q={}",
             server_url, search_query
         ))
+        .bearer_auth(token)
         .send()
         .await
         .expect("Gagal mengirim request GET");
@@ -73,6 +110,7 @@ async fn test_create_and_search_inventory() {
 async fn test_create_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let price: f64 = (1.0..1000.0).fake();
 
@@ -84,6 +122,7 @@ async fn test_create_inventory_negative_quantity() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token)
         .json(&new_item)
         .send()
         .await
@@ -97,6 +136,7 @@ async fn test_create_inventory_negative_quantity() {
 async fn test_create_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
 
@@ -108,6 +148,7 @@ async fn test_create_inventory_negative_price() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token)
         .json(&new_item)
         .send()
         .await
@@ -120,6 +161,7 @@ async fn test_create_inventory_negative_price() {
 async fn test_update_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -133,6 +175,7 @@ async fn test_update_inventory() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -160,6 +203,7 @@ async fn test_update_inventory() {
             "{}/v1/inventory/update/{}",
             server_url, created_item.id
         ))
+        .bearer_auth(token)
         .json(&updated_data)
         .send()
         .await
@@ -182,6 +226,7 @@ async fn test_update_inventory() {
 async fn test_update_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -195,6 +240,7 @@ async fn test_update_inventory_negative_quantity() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -211,6 +257,7 @@ async fn test_update_inventory_negative_quantity() {
             "{}/v1/inventory/update/{}",
             server_url, created_item.id
         ))
+        .bearer_auth(token)
         .json(&updated_data)
         .send()
         .await
@@ -224,6 +271,7 @@ async fn test_update_inventory_negative_quantity() {
 async fn test_update_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -237,6 +285,7 @@ async fn test_update_inventory_negative_price() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -253,6 +302,7 @@ async fn test_update_inventory_negative_price() {
             "{}/v1/inventory/update/{}",
             server_url, created_item.id
         ))
+        .bearer_auth(token)
         .json(&updated_data)
         .send()
         .await
@@ -266,6 +316,7 @@ async fn test_update_inventory_negative_price() {
 async fn test_delete_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -279,6 +330,7 @@ async fn test_delete_inventory() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -297,6 +349,7 @@ async fn test_delete_inventory() {
             "{}/v1/inventory/delete/{}",
             server_url, created_item.id
         ))
+        .bearer_auth(token.clone())
         .send()
         .await
         .expect("Gagal mengirim request DELETE");
@@ -309,6 +362,7 @@ async fn test_delete_inventory() {
             "{}/v1/inventory/delete/{}",
             server_url, created_item.id
         ))
+        .bearer_auth(token)
         .send()
         .await
         .expect("Gagal mengirim request DELETE");
@@ -320,6 +374,7 @@ async fn test_delete_inventory() {
 async fn test_create_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -335,6 +390,7 @@ async fn test_create_item_internal_server_error() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token)
         .json(&new_item)
         .send()
         .await
@@ -347,6 +403,7 @@ async fn test_create_item_internal_server_error() {
 async fn test_update_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let item_id = "some-random-id";
     let updated_data = json!({
         "name": "some new name"
@@ -357,6 +414,7 @@ async fn test_update_item_internal_server_error() {
 
     let response = client
         .put(&format!("{}/v1/inventory/update/{}", server_url, item_id))
+        .bearer_auth(token)
         .json(&updated_data)
         .send()
         .await
@@ -370,6 +428,7 @@ async fn test_update_item_internal_server_error() {
 async fn test_delete_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -383,6 +442,7 @@ async fn test_delete_item_internal_server_error() {
 
     let response = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -398,6 +458,7 @@ async fn test_delete_item_internal_server_error() {
             "{}/v1/inventory/delete/{}",
             server_url, created_item.id
         ))
+        .bearer_auth(token)
         .send()
         .await
         .expect("Gagal mengirim request DELETE");
@@ -413,10 +474,12 @@ async fn test_search_items_internal_server_error() {
     // However, the test server setup might be affected by the db connection
     // being closed, which could lead to a server error.
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
-    let _ = db_pool.close().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
+    let _ = db_pool.close().await;
     let response = client
         .get(&format!("{}/v1/inventory/search?q=test", server_url))
+        .bearer_auth(token)
         .send()
         .await
         .expect("Gagal mengirim request GET");
@@ -435,6 +498,7 @@ use uuid::Uuid;
 async fn test_delete_item_with_fk_constraint_fails() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
 
     // Create a temporary table with a foreign key to the inventory table
     // to simulate a constraint violation.
@@ -451,6 +515,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
     let new_item = json!({ "name": name, "quantity": 10, "price": 10.0 });
     let res = client
         .post(&format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
         .json(&new_item)
         .send()
         .await
@@ -473,6 +538,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
     // 3. Try to delete the inventory item. This should fail due to the FK constraint.
     let res = client
         .delete(&format!("{}/v1/inventory/delete/{}", server_url, created_item.id))
+        .bearer_auth(token)
         .send()
         .await
         .unwrap();
@@ -493,11 +559,13 @@ async fn test_delete_item_with_fk_constraint_fails() {
 async fn test_update_item_not_found() {
     let (_db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let non_existent_id = Uuid::new_v4().to_string();
     let updated_data = json!({ "name": "this should fail" });
 
     let response = client
         .put(&format!("{}/v1/inventory/update/{}", server_url, non_existent_id))
+        .bearer_auth(token)
         .json(&updated_data)
         .send()
         .await
@@ -511,6 +579,7 @@ async fn test_update_item_not_found() {
 async fn test_update_item_fails_on_db_constraint() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
 
     // Add a UNIQUE constraint on the 'name' column for this test
     let backend = db_pool.get_database_backend();
@@ -527,14 +596,15 @@ async fn test_update_item_fails_on_db_constraint() {
     let item1 = json!({ "name": name1, "quantity": 1, "price": 1.0 });
     let item2 = json!({ "name": name2, "quantity": 2, "price": 2.0 });
 
-    let res1 = client.post(&format!("{}/v1/inventory/create", server_url)).json(&item1).send().await.unwrap();
+    let res1 = client.post(&format!("{}/v1/inventory/create", server_url)).bearer_auth(token.clone()).json(&item1).send().await.unwrap();
     let created_item1: InventoryItem = res1.json().await.unwrap();
-    let _ = client.post(&format!("{}/v1/inventory/create", server_url)).json(&item2).send().await.unwrap();
+    let _ = client.post(&format!("{}/v1/inventory/create", server_url)).bearer_auth(token.clone()).json(&item2).send().await.unwrap();
 
     // 2. Try to update item1's name to item2's name (violating UNIQUE constraint)
     let update_data = json!({ "name": name2 });
     let res = client
         .put(&format!("{}/v1/inventory/update/{}", server_url, created_item1.id))
+        .bearer_auth(token)
         .json(&update_data)
         .send()
         .await

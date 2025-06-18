@@ -1,5 +1,5 @@
 [app]
-tables = ["inventory", "employee", "order"]
+tables = ["inventory", "employee", "order", "user"]
 
 [app.meilisearch_indexes]
 inventory = ["name"]
