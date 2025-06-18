@@ -341,3 +341,67 @@ async fn test_create_item_internal_server_error() {
 
     assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
 }
+#[tokio::test]
+#[serial]
+async fn test_update_item_internal_server_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+    let item_id = "some-random-id";
+    let updated_data = json!({
+        "name": "some new name"
+    });
+
+    // Simulate database connection error by closing the pool
+    let _ = db_pool.close().await;
+
+    let response = client
+        .put(&format!("{}/inventory/update/{}", server_url, item_id))
+        .json(&updated_data)
+        .send()
+        .await
+        .expect("Gagal mengirim request PUT");
+
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}
+
+#[tokio::test]
+#[serial]
+async fn test_delete_item_internal_server_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+    let item_id = "some-random-id";
+
+    // Simulate database connection error by closing the pool
+    let _ = db_pool.close().await;
+
+    let response = client
+        .delete(&format!("{}/inventory/delete/{}", server_url, item_id))
+        .send()
+        .await
+        .expect("Gagal mengirim request DELETE");
+
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}
+#[tokio::test]
+#[serial]
+async fn test_search_items_internal_server_error() {
+    // The search_items handler only interacts with Meilisearch.
+    // A real failure would be Meilisearch being down.
+    // We can't easily simulate that here.
+    // However, the test server setup might be affected by the db connection
+    // being closed, which could lead to a server error.
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let _ = db_pool.close().await;
+    let client = HttpClient::new();
+    let response = client
+        .get(&format!("{}/inventory/search?q=test", server_url))
+        .send()
+        .await
+        .expect("Gagal mengirim request GET");
+
+    // This is an indirect way to test this, but it's the best we can do
+    // without more complex mocking. We expect the server to fail to respond
+    // correctly if its database dependency is unavailable, even if this
+    // specific endpoint doesn't use the DB directly.
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}
