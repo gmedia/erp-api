@@ -1,6 +1,7 @@
 use fake::{
     faker::{
         lorem::en::{Sentence, Word},
+        name::en::Name,
     },
     Fake,
 };
@@ -484,6 +485,69 @@ async fn test_delete_item_with_fk_constraint_fails() {
         .execute(Statement::from_string(
             backend,
             "DROP TABLE order_items;".to_string(),
+        ))
+        .await;
+}
+#[tokio::test]
+#[serial]
+async fn test_update_item_not_found() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+    let non_existent_id = Uuid::new_v4().to_string();
+    let updated_data = json!({ "name": "this should fail" });
+
+    let response = client
+        .put(&format!("{}/inventory/update/{}", server_url, non_existent_id))
+        .json(&updated_data)
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+#[serial]
+async fn test_update_item_fails_on_db_constraint() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+
+    // Add a UNIQUE constraint on the 'name' column for this test
+    let backend = db_pool.get_database_backend();
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+            "ALTER TABLE inventory ADD UNIQUE (name);".to_string(),
+        ))
+        .await;
+
+    // 1. Create two items
+    let name1: String = Name().fake();
+    let name2: String = Name().fake();
+    let item1 = json!({ "name": name1, "quantity": 1, "price": 1.0 });
+    let item2 = json!({ "name": name2, "quantity": 2, "price": 2.0 });
+
+    let res1 = client.post(&format!("{}/inventory/create", server_url)).json(&item1).send().await.unwrap();
+    let created_item1: InventoryItem = res1.json().await.unwrap();
+    let _ = client.post(&format!("{}/inventory/create", server_url)).json(&item2).send().await.unwrap();
+
+    // 2. Try to update item1's name to item2's name (violating UNIQUE constraint)
+    let update_data = json!({ "name": name2 });
+    let res = client
+        .put(&format!("{}/inventory/update/{}", server_url, created_item1.id))
+        .json(&update_data)
+        .send()
+        .await
+        .unwrap();
+
+    // 3. Assert we get a 500 Internal Server Error
+    assert_eq!(res.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+
+    // Cleanup: remove the UNIQUE constraint
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+            "ALTER TABLE inventory DROP INDEX name;".to_string(),
         ))
         .await;
 }
