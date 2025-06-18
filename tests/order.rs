@@ -37,7 +37,7 @@ async fn test_create_order() {
         .expect("Gagal parse response JSON");
 
     assert_eq!(created_order.customer_id, customer_id);
-    assert_eq!(created_order.total_amount, total_amount);
+    assert!((created_order.total_amount - total_amount).abs() < 1e-9);
 }
 
 #[tokio::test]

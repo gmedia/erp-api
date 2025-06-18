@@ -68,3 +68,30 @@ async fn test_create_employee_invalid_email() {
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
+#[tokio::test]
+#[serial]
+async fn test_create_employee_internal_server_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+    let name: String = Name().fake();
+    let email: String = SafeEmail().fake();
+    let role = "Chaos Engineer";
+
+    // Simulate database connection error by closing the pool
+    let _ = db_pool.close().await;
+
+    let new_employee = json!({
+        "name": name,
+        "role": role,
+        "email": email
+    });
+
+    let response = client
+        .post(&format!("{}/employee/create", server_url))
+        .json(&new_employee)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}
