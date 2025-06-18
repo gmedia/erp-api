@@ -369,13 +369,34 @@ async fn test_update_item_internal_server_error() {
 async fn test_delete_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app().await;
     let client = HttpClient::new();
-    let item_id = "some-random-id";
+    let name: String = Sentence(1..3).fake();
+    let quantity: i32 = (1..100).fake();
+    let price: f64 = (1.0..1000.0).fake();
+
+    // Create a new item to delete
+    let new_item = json!({
+        "name": name,
+        "quantity": quantity,
+        "price": price
+    });
+
+    let response = client
+        .post(&format!("{}/inventory/create", server_url))
+        .json(&new_item)
+        .send()
+        .await
+        .expect("Gagal mengirim request POST");
+    let created_item: InventoryItem = response.json().await.unwrap();
 
     // Simulate database connection error by closing the pool
     let _ = db_pool.close().await;
 
+    // Try to delete the item, this should fail on the delete operation
     let response = client
-        .delete(&format!("{}/inventory/delete/{}", server_url, item_id))
+        .delete(&format!(
+            "{}/inventory/delete/{}",
+            server_url, created_item.id
+        ))
         .send()
         .await
         .expect("Gagal mengirim request DELETE");
@@ -404,4 +425,65 @@ async fn test_search_items_internal_server_error() {
     // correctly if its database dependency is unavailable, even if this
     // specific endpoint doesn't use the DB directly.
     assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+}
+use sea_orm::{ConnectionTrait, Statement};
+use uuid::Uuid;
+
+#[tokio::test]
+#[serial]
+async fn test_delete_item_with_fk_constraint_fails() {
+    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let client = HttpClient::new();
+
+    // Create a temporary table with a foreign key to the inventory table
+    // to simulate a constraint violation.
+    let backend = db_pool.get_database_backend();
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+            "CREATE TABLE order_items (id CHAR(36) PRIMARY KEY, item_id CHAR(36) NOT NULL, FOREIGN KEY (item_id) REFERENCES inventory(id))".to_string(),
+        ))
+        .await;
+
+    // 1. Create an inventory item.
+    let name: String = Sentence(1..3).fake();
+    let new_item = json!({ "name": name, "quantity": 10, "price": 10.0 });
+    let res = client
+        .post(&format!("{}/inventory/create", server_url))
+        .json(&new_item)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), reqwest::StatusCode::OK);
+    let created_item: InventoryItem = res.json().await.unwrap();
+
+    // 2. Create a record in `order_items` that references the inventory item.
+    let order_item_id = Uuid::new_v4().to_string();
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+            format!(
+                "INSERT INTO order_items (id, item_id) VALUES ('{}', '{}');",
+                order_item_id, created_item.id
+            ),
+        ))
+        .await;
+
+    // 3. Try to delete the inventory item. This should fail due to the FK constraint.
+    let res = client
+        .delete(&format!("{}/inventory/delete/{}", server_url, created_item.id))
+        .send()
+        .await
+        .unwrap();
+
+    // 4. Assert we get a 500 Internal Server Error.
+    assert_eq!(res.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+
+    // Cleanup: drop the temporary table
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+            "DROP TABLE order_items;".to_string(),
+        ))
+        .await;
 }
