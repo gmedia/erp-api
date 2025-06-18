@@ -16,14 +16,14 @@ async fn test_create_order() {
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
-    // Tes endpoint POST /order/create
+    // Tes endpoint POST /v1/order/create
     let new_order = json!({
         "customer_id": customer_id,
         "total_amount": total_amount
     });
 
     let response = client
-        .post(&format!("{}/order/create", server_url))
+        .post(&format!("{}/v1/order/create", server_url))
         .json(&new_order)
         .send()
         .await
@@ -47,14 +47,14 @@ async fn test_create_order_negative_amount() {
     let client = HttpClient::new();
     let customer_id = Uuid::new_v4().to_string();
 
-    // Tes endpoint POST /order/create dengan jumlah negatif
+    // Tes endpoint POST /v1/order/create dengan jumlah negatif
     let new_order = json!({
         "customer_id": customer_id,
         "total_amount": -150.75
     });
 
     let response = client
-        .post(&format!("{}/order/create", server_url))
+        .post(&format!("{}/v1/order/create", server_url))
         .json(&new_order)
         .send()
         .await
@@ -80,7 +80,7 @@ async fn test_create_order_internal_server_error() {
     });
 
     let response = client
-        .post(&format!("{}/order/create", server_url))
+        .post(&format!("{}/v1/order/create", server_url))
         .json(&new_order)
         .send()
         .await

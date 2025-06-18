@@ -8,7 +8,7 @@ use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
     post,
-    path = "/employee/create",
+    path = "/v1/employee/create",
     request_body = CreateEmployee,
     responses(
         (status = 200, description = "Employee created successfully", body = Employee),

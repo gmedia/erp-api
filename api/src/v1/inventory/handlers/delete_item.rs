@@ -6,7 +6,7 @@ use entity::inventory;
 
 #[utoipa::path(
     delete,
-    path = "/inventory/delete/{id}",
+    path = "/v1/inventory/delete/{id}",
     tag = "inventory",
     params(
         ("id" = String, Path, description = "Item ID")

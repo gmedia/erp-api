@@ -23,7 +23,7 @@ async fn test_create_and_search_inventory() {
     let price: f64 = (1.0..1000.0).fake();
     let search_query: String = Word().fake();
 
-    // Tes endpoint POST /inventory/create
+    // Tes endpoint POST /v1/inventory/create
     let new_item = json!({
         "name": name,
         "quantity": quantity,
@@ -31,7 +31,7 @@ async fn test_create_and_search_inventory() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -51,10 +51,10 @@ async fn test_create_and_search_inventory() {
     // Tunggu Meilisearch untuk mengindeks
     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 
-    // Tes endpoint GET /inventory/search
+    // Tes endpoint GET /v1/inventory/search
     let response = client
         .get(&format!(
-            "{}/inventory/search?q={}",
+            "{}/v1/inventory/search?q={}",
             server_url, search_query
         ))
         .send()
@@ -83,7 +83,7 @@ async fn test_create_inventory_negative_quantity() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -107,7 +107,7 @@ async fn test_create_inventory_negative_price() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -132,7 +132,7 @@ async fn test_update_inventory() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -157,7 +157,7 @@ async fn test_update_inventory() {
 
     let response = client
         .put(&format!(
-            "{}/inventory/update/{}",
+            "{}/v1/inventory/update/{}",
             server_url, created_item.id
         ))
         .json(&updated_data)
@@ -194,7 +194,7 @@ async fn test_update_inventory_negative_quantity() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -208,7 +208,7 @@ async fn test_update_inventory_negative_quantity() {
 
     let response = client
         .put(&format!(
-            "{}/inventory/update/{}",
+            "{}/v1/inventory/update/{}",
             server_url, created_item.id
         ))
         .json(&updated_data)
@@ -236,7 +236,7 @@ async fn test_update_inventory_negative_price() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -250,7 +250,7 @@ async fn test_update_inventory_negative_price() {
 
     let response = client
         .put(&format!(
-            "{}/inventory/update/{}",
+            "{}/v1/inventory/update/{}",
             server_url, created_item.id
         ))
         .json(&updated_data)
@@ -278,7 +278,7 @@ async fn test_delete_inventory() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -294,7 +294,7 @@ async fn test_delete_inventory() {
     // Hapus item
     let response = client
         .delete(&format!(
-            "{}/inventory/delete/{}",
+            "{}/v1/inventory/delete/{}",
             server_url, created_item.id
         ))
         .send()
@@ -306,7 +306,7 @@ async fn test_delete_inventory() {
     // Coba hapus lagi, harusnya 404 Not Found
     let response = client
         .delete(&format!(
-            "{}/inventory/delete/{}",
+            "{}/v1/inventory/delete/{}",
             server_url, created_item.id
         ))
         .send()
@@ -334,7 +334,7 @@ async fn test_create_item_internal_server_error() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -356,7 +356,7 @@ async fn test_update_item_internal_server_error() {
     let _ = db_pool.close().await;
 
     let response = client
-        .put(&format!("{}/inventory/update/{}", server_url, item_id))
+        .put(&format!("{}/v1/inventory/update/{}", server_url, item_id))
         .json(&updated_data)
         .send()
         .await
@@ -382,7 +382,7 @@ async fn test_delete_item_internal_server_error() {
     });
 
     let response = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -395,7 +395,7 @@ async fn test_delete_item_internal_server_error() {
     // Try to delete the item, this should fail on the delete operation
     let response = client
         .delete(&format!(
-            "{}/inventory/delete/{}",
+            "{}/v1/inventory/delete/{}",
             server_url, created_item.id
         ))
         .send()
@@ -416,7 +416,7 @@ async fn test_search_items_internal_server_error() {
     let _ = db_pool.close().await;
     let client = HttpClient::new();
     let response = client
-        .get(&format!("{}/inventory/search?q=test", server_url))
+        .get(&format!("{}/v1/inventory/search?q=test", server_url))
         .send()
         .await
         .expect("Gagal mengirim request GET");
@@ -450,7 +450,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
     let name: String = Sentence(1..3).fake();
     let new_item = json!({ "name": name, "quantity": 10, "price": 10.0 });
     let res = client
-        .post(&format!("{}/inventory/create", server_url))
+        .post(&format!("{}/v1/inventory/create", server_url))
         .json(&new_item)
         .send()
         .await
@@ -472,7 +472,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
 
     // 3. Try to delete the inventory item. This should fail due to the FK constraint.
     let res = client
-        .delete(&format!("{}/inventory/delete/{}", server_url, created_item.id))
+        .delete(&format!("{}/v1/inventory/delete/{}", server_url, created_item.id))
         .send()
         .await
         .unwrap();
@@ -497,7 +497,7 @@ async fn test_update_item_not_found() {
     let updated_data = json!({ "name": "this should fail" });
 
     let response = client
-        .put(&format!("{}/inventory/update/{}", server_url, non_existent_id))
+        .put(&format!("{}/v1/inventory/update/{}", server_url, non_existent_id))
         .json(&updated_data)
         .send()
         .await
@@ -527,14 +527,14 @@ async fn test_update_item_fails_on_db_constraint() {
     let item1 = json!({ "name": name1, "quantity": 1, "price": 1.0 });
     let item2 = json!({ "name": name2, "quantity": 2, "price": 2.0 });
 
-    let res1 = client.post(&format!("{}/inventory/create", server_url)).json(&item1).send().await.unwrap();
+    let res1 = client.post(&format!("{}/v1/inventory/create", server_url)).json(&item1).send().await.unwrap();
     let created_item1: InventoryItem = res1.json().await.unwrap();
-    let _ = client.post(&format!("{}/inventory/create", server_url)).json(&item2).send().await.unwrap();
+    let _ = client.post(&format!("{}/v1/inventory/create", server_url)).json(&item2).send().await.unwrap();
 
     // 2. Try to update item1's name to item2's name (violating UNIQUE constraint)
     let update_data = json!({ "name": name2 });
     let res = client
-        .put(&format!("{}/inventory/update/{}", server_url, created_item1.id))
+        .put(&format!("{}/v1/inventory/update/{}", server_url, created_item1.id))
         .json(&update_data)
         .send()
         .await

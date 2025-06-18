@@ -9,7 +9,7 @@ use sea_orm::DatabaseConnection;
 
 #[utoipa::path(
     post,
-    path = "/order/create",
+    path = "/v1/order/create",
     request_body = CreateOrder,
     responses(
         (status = 200, description = "Order created successfully", body = Order),

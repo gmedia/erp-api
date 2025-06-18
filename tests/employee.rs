@@ -19,7 +19,7 @@ async fn test_create_employee() {
     let email: String = SafeEmail().fake();
     let role = "Software Engineer";
 
-    // Tes endpoint POST /employee/create
+    // Tes endpoint POST /v1/employee/create
     let new_employee = json!({
         "name": name,
         "role": role,
@@ -27,7 +27,7 @@ async fn test_create_employee() {
     });
 
     let response = client
-        .post(&format!("{}/employee/create", server_url))
+        .post(&format!("{}/v1/employee/create", server_url))
         .json(&new_employee)
         .send()
         .await
@@ -60,7 +60,7 @@ async fn test_create_employee_invalid_email() {
     });
 
     let response = client
-        .post(&format!("{}/employee/create", server_url))
+        .post(&format!("{}/v1/employee/create", server_url))
         .json(&new_employee)
         .send()
         .await
@@ -87,7 +87,7 @@ async fn test_create_employee_internal_server_error() {
     });
 
     let response = client
-        .post(&format!("{}/employee/create", server_url))
+        .post(&format!("{}/v1/employee/create", server_url))
         .json(&new_employee)
         .send()
         .await

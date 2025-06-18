@@ -6,7 +6,7 @@ use super::super::models::InventoryItem;
 
 #[utoipa::path(
     get,
-    path = "/inventory/search",
+    path = "/v1/inventory/search",
     tag = "inventory",
     params(
         ("q" = String, Query, description = "Search query for inventory items")

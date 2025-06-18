@@ -8,7 +8,7 @@ use entity::inventory;
 
 #[utoipa::path(
     put,
-    path = "/inventory/update/{id}",
+    path = "/v1/inventory/update/{id}",
     tag = "inventory",
     params(
         ("id" = String, Path, description = "Item ID")

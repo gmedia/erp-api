@@ -9,7 +9,7 @@ use super::handlers::{
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/inventory")
+        web::scope("/v1/inventory")
             .route("/create", web::post().to(create_item))
             .route("/search", web::get().to(search_items))
             .route("/update/{id}", web::put().to(update_item))

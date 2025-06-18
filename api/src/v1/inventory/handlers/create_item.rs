@@ -9,7 +9,7 @@ use entity::inventory;
 
 #[utoipa::path(
     post,
-    path = "/inventory/create",
+    path = "/v1/inventory/create",
     tag = "inventory",
     request_body = CreateInventoryItem,
     responses(
