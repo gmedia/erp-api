@@ -220,3 +220,45 @@ async fn test_access_protected_route_invalid_token() {
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
+#[tokio::test]
+#[serial]
+async fn test_login_db_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let client = HttpClient::new();
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    // Register user
+    let register_req = json!({
+        "username": &username,
+        "password": password,
+    });
+
+    client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    // Close the database connection to simulate a database error
+    db_pool.close().await.unwrap();
+
+    // Attempt to login
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/login", server_url))
+        .json(&login_req)
+        .send()
+        .await
+        .expect("Failed to send login request");
+
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
+}
