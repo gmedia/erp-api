@@ -46,7 +46,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
 #[tokio::test]
 #[serial]
 async fn test_create_employee() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
@@ -83,7 +83,7 @@ async fn test_create_employee() {
 #[tokio::test]
 #[serial]
 async fn test_create_employee_invalid_email() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
@@ -108,7 +108,7 @@ async fn test_create_employee_invalid_email() {
 #[tokio::test]
 #[serial]
 async fn test_create_employee_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();

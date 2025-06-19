@@ -7,11 +7,16 @@ use search::meilisearch::init_meilisearch;
 use search::Client;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
-pub async fn setup_test_app() -> (DatabaseConnection, Client, String) {
+pub async fn setup_test_app(
+    meilisearch_url: Option<&str>,
+) -> (DatabaseConnection, Client, String) {
     dotenv::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
-    let config_meilisearch = Meilisearch::new("test");
+    let mut config_meilisearch = Meilisearch::new("test");
+    if let Some(url) = meilisearch_url {
+        config_meilisearch.host = url.to_string();
+    }
     let config_app = config::app::AppConfig::new("test");
     let jwt_secret = "test-secret".to_string();
 

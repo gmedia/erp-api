@@ -1,18 +1,52 @@
-use fake::Fake;
+use api::v1::auth::models::TokenResponse;
+use api::v1::order::models::Order;
+use fake::{faker::internet::en::SafeEmail, Fake};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
-use api::v1::order::models::Order;
 mod common;
 use common::setup_test_app;
+
+async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/login", server_url))
+        .json(&login_req)
+        .send()
+        .await
+        .unwrap();
+
+    let token_response: TokenResponse = response.json().await.unwrap();
+    token_response.token
+}
 
 #[tokio::test]
 #[serial]
 async fn test_create_order() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
@@ -24,6 +58,7 @@ async fn test_create_order() {
 
     let response = client
         .post(&format!("{}/v1/order/create", server_url))
+        .bearer_auth(token)
         .json(&new_order)
         .send()
         .await
@@ -43,8 +78,9 @@ async fn test_create_order() {
 #[tokio::test]
 #[serial]
 async fn test_create_order_negative_amount() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
 
     // Tes endpoint POST /v1/order/create dengan jumlah negatif
@@ -55,6 +91,7 @@ async fn test_create_order_negative_amount() {
 
     let response = client
         .post(&format!("{}/v1/order/create", server_url))
+        .bearer_auth(token)
         .json(&new_order)
         .send()
         .await
@@ -66,8 +103,9 @@ async fn test_create_order_negative_amount() {
 #[tokio::test]
 #[serial]
 async fn test_create_order_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
+    let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
@@ -81,6 +119,7 @@ async fn test_create_order_internal_server_error() {
 
     let response = client
         .post(&format!("{}/v1/order/create", server_url))
+        .bearer_auth(token)
         .json(&new_order)
         .send()
         .await

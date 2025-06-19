@@ -10,7 +10,7 @@ use common::setup_test_app;
 #[tokio::test]
 #[serial]
 async fn test_register_and_login() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -56,7 +56,7 @@ async fn test_register_and_login() {
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app().await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
