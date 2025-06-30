@@ -2,7 +2,7 @@
 
 rm -rf tarpaulin-report.html
 
-cargo tarpaulin --all-targets --ignore-tests --out Html \
+cargo tarpaulin --workspace --all-targets --out Html \
     --exclude-files "api/src/openapi.rs" \
     --exclude-files "config/*" \
     --exclude-files "db/*" \
