@@ -43,6 +43,7 @@ async fn main() -> std::io::Result<()> {
         db: db_pool,
         meilisearch: meili_client,
         jwt_secret,
+        jwt_expires_in_seconds: 3600, // Default to 1 hour
     };
 
     HttpServer::new(move || {

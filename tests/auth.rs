@@ -262,3 +262,90 @@ async fn test_login_db_error() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
+#[tokio::test]
+#[serial]
+async fn test_access_protected_route_malformed_header() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let client = HttpClient::new();
+
+    // Access protected route with a malformed token
+    let response = client
+        .get(&format!("{}/v1/inventory/search?q=test", server_url))
+        .header("Authorization", "NotBearer token")
+        .send()
+        .await
+        .expect("Failed to send request to protected route");
+
+    assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+#[serial]
+async fn test_access_protected_route_expired_token() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app(Some(1)).await; // 1 second token validity
+    let client = HttpClient::new();
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    // Register and login to get a token
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/login", server_url))
+        .json(&login_req)
+        .send()
+        .await
+        .unwrap();
+
+    let token_response: TokenResponse = response.json().await.unwrap();
+    let token = token_response.token;
+
+    // Wait for the token to expire
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
+    // Access protected route with expired token
+    let response = client
+        .get(&format!("{}/v1/inventory/search?q=test", server_url))
+        .bearer_auth(token)
+        .send()
+        .await
+        .expect("Failed to send request to protected route");
+
+    assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+}
+use crate::common::setup_test_app_no_state;
+
+#[tokio::test]
+#[serial]
+async fn test_access_protected_route_no_app_state() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app_no_state().await;
+    let client = HttpClient::new();
+
+    // Access protected route without app state configured
+    let response = client
+        .get(&format!("{}/v1/inventory/search?q=test", server_url))
+        .bearer_auth("some-token")
+        .send()
+        .await
+        .expect("Failed to send request to protected route");
+
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
+}

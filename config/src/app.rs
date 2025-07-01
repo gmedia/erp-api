@@ -12,6 +12,7 @@ pub struct AppState {
     pub db: sea_orm::DatabaseConnection,
     pub meilisearch: meilisearch_sdk::client::Client,
     pub jwt_secret: String,
+    pub jwt_expires_in_seconds: u64,
 }
 
 #[derive(Debug, Deserialize)]

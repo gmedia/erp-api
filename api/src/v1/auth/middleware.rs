@@ -81,7 +81,12 @@ where
         let claims = match decode::<Claims>(
             &token,
             &DecodingKey::from_secret(data.jwt_secret.as_ref()),
-            &Validation::default(),
+            &{
+                let mut val = Validation::new(jsonwebtoken::Algorithm::HS256);
+                val.validate_exp = true;
+                val.leeway = 0;
+                val
+            },
         ) {
             Ok(token_data) => token_data.claims,
             Err(_) => {

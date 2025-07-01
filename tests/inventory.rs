@@ -13,7 +13,7 @@ use serial_test::serial;
 use api::v1::inventory::models::InventoryItem;
 mod common;
 use api::v1::auth::models::TokenResponse;
-use common::setup_test_app;
+use common::{setup_test_app, setup_test_app_with_meili_error};
 
 async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     let username: String = SafeEmail().fake();
@@ -468,9 +468,7 @@ async fn test_delete_item_internal_server_error() {
 #[tokio::test]
 #[serial]
 async fn test_search_items_internal_server_error() {
-    // Simulate Meilisearch being down by providing a bad URL.
-    let meili_url = "http://localhost:9999"; // Assuming this port is not in use
-    let (_db_pool, _meili_client, server_url) = setup_test_app(Some(meili_url)).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app_with_meili_error().await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
 
@@ -479,12 +477,9 @@ async fn test_search_items_internal_server_error() {
         .bearer_auth(token)
         .send()
         .await
-        .expect("Gagal mengirim request GET");
+        .expect("Failed to send request");
 
-    assert_eq!(
-        response.status(),
-        reqwest::StatusCode::INTERNAL_SERVER_ERROR
-    );
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
 }
 use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;

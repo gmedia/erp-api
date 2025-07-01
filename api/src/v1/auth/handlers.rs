@@ -89,7 +89,9 @@ pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> i
     }
 
     let exp = chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::hours(24))
+        .checked_add_signed(chrono::Duration::seconds(
+            data.jwt_expires_in_seconds as i64
+        ))
         .expect("valid timestamp")
         .timestamp();
 
