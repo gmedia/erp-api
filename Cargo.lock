@@ -89,6 +89,7 @@ version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24eda4e2a6e042aa4e55ac438a2ae052d3b5da0ecf83d7411e1a368946925208"
 dependencies = [
+ "actix-macros",
  "futures-core",
  "tokio",
 ]
@@ -1211,6 +1212,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 name = "erp-api"
 version = "0.1.0"
 dependencies = [
+ "actix-rt",
  "actix-web",
  "api",
  "bcrypt",
@@ -1221,6 +1223,7 @@ dependencies = [
  "entity",
  "env_logger",
  "fake",
+ "futures-util",
  "jsonwebtoken",
  "log",
  "rand 0.8.5",

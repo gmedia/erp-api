@@ -349,3 +349,25 @@ async fn test_access_protected_route_no_app_state() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
+use reqwest::header::{HeaderMap, HeaderValue};
+
+#[tokio::test]
+#[serial]
+async fn test_access_protected_route_invalid_utf8_in_header() {
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let client = HttpClient::new();
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        HeaderValue::from_bytes(b"Bearer \x80").unwrap(),
+    );
+
+    let response = client
+        .get(&format!("{}/v1/inventory/search?q=test", server_url))
+        .headers(headers)
+        .send()
+        .await
+        .expect("Failed to send request to protected route");
+
+    assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+}

@@ -31,6 +31,8 @@ rand = "0.8.5"
 bcrypt = "0.15.1"
 uuid = { version = "1.17.0", features = ["v4"] }
 sea-orm = { version = "0.12.15", features = ["runtime-actix-native-tls", "sqlx-mysql"] }
+futures-util = "0.3.31"
+actix-rt = "2.10.0"
 
 [workspace]
 members = [
