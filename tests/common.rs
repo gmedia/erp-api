@@ -9,6 +9,7 @@ use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
+    bcrypt_cost: Option<u32>,
 ) -> (DatabaseConnection, Client, String) {
     dotenv::dotenv().ok();
     let _ = env_logger::try_init();
@@ -57,6 +58,7 @@ pub async fn setup_test_app(
                 meilisearch: meili_client_for_server.clone(),
                 jwt_secret: jwt_secret.clone(),
                 jwt_expires_in_seconds: jwt_expires_in_seconds.unwrap_or(3600),
+                bcrypt_cost: bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
             }))
             // Register your routes here
             .configure(inventory::routes::init_routes)
@@ -187,6 +189,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
                 meilisearch: meili_client_for_server.clone(),
                 jwt_secret: jwt_secret.clone(),
                 jwt_expires_in_seconds: 3600,
+                bcrypt_cost: bcrypt::DEFAULT_COST,
             }))
             // Register your routes here
             .configure(inventory::routes::init_routes)

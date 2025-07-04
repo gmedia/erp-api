@@ -30,7 +30,7 @@ pub async fn register(
     req: web::Json<RegisterRequest>,
 ) -> impl Responder {
     let db = &data.db;
-    let hashed_password = match hash(&req.password, DEFAULT_COST) {
+    let hashed_password = match hash(&req.password, data.bcrypt_cost) {
         Ok(h) => h,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };

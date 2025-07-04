@@ -44,6 +44,7 @@ async fn main() -> std::io::Result<()> {
         meilisearch: meili_client,
         jwt_secret,
         jwt_expires_in_seconds: 3600, // Default to 1 hour
+        bcrypt_cost: bcrypt::DEFAULT_COST,
     };
 
     HttpServer::new(move || {

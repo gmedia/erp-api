@@ -10,7 +10,7 @@ use common::setup_test_app;
 #[tokio::test]
 #[serial]
 async fn test_register_and_login() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -56,7 +56,7 @@ async fn test_register_and_login() {
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -111,7 +111,7 @@ async fn test_access_protected_route() {
 #[tokio::test]
 #[serial]
 async fn test_register_existing_user() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -145,7 +145,7 @@ async fn test_register_existing_user() {
 #[tokio::test]
 #[serial]
 async fn test_login_non_existent_user() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -168,7 +168,7 @@ async fn test_login_non_existent_user() {
 #[tokio::test]
 #[serial]
 async fn test_login_wrong_password() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -206,7 +206,7 @@ async fn test_login_wrong_password() {
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route_invalid_token() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let invalid_token = "this.is.an.invalid.token";
 
@@ -223,7 +223,7 @@ async fn test_access_protected_route_invalid_token() {
 #[tokio::test]
 #[serial]
 async fn test_login_db_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -265,7 +265,7 @@ async fn test_login_db_error() {
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route_malformed_header() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
 
     // Access protected route with a malformed token
@@ -282,7 +282,7 @@ async fn test_access_protected_route_malformed_header() {
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route_expired_token() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(Some(1)).await; // 1 second token validity
+    let (_db_pool, _meili_client, server_url) = setup_test_app(Some(1), None).await; // 1 second token validity
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -354,7 +354,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route_invalid_utf8_in_header() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
     let client = HttpClient::new();
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -370,4 +370,28 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+}
+#[tokio::test]
+#[serial]
+async fn test_register_invalid_bcrypt_cost() {
+    // bcrypt cost must be between 4 and 31.
+    let invalid_cost = 99;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, Some(invalid_cost)).await;
+    let client = HttpClient::new();
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .expect("Failed to send registration request");
+
+    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
 }

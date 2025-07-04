@@ -13,6 +13,7 @@ pub struct AppState {
     pub meilisearch: meilisearch_sdk::client::Client,
     pub jwt_secret: String,
     pub jwt_expires_in_seconds: u64,
+    pub bcrypt_cost: u32,
 }
 
 #[derive(Debug, Deserialize)]
