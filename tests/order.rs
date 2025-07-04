@@ -44,7 +44,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
 #[tokio::test]
 #[serial]
 async fn test_create_order() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -78,7 +78,7 @@ async fn test_create_order() {
 #[tokio::test]
 #[serial]
 async fn test_create_order_negative_amount() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -103,7 +103,7 @@ async fn test_create_order_negative_amount() {
 #[tokio::test]
 #[serial]
 async fn test_create_order_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None).await;
+    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();

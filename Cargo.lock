@@ -855,6 +855,7 @@ name = "config"
 version = "0.1.0"
 dependencies = [
  "config 0.14.1",
+ "jsonwebtoken",
  "meilisearch-sdk",
  "sea-orm 0.12.15",
  "serde",

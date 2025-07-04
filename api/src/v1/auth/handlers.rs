@@ -101,7 +101,7 @@ pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> i
     };
 
     let token = match encode(
-        &Header::default(),
+        &Header::new(data.jwt_algorithm),
         &claims,
         &EncodingKey::from_secret(data.jwt_secret.as_ref()),
     ) {

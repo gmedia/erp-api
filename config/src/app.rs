@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::collections::HashMap;
+use jsonwebtoken::Algorithm;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -14,6 +15,7 @@ pub struct AppState {
     pub jwt_secret: String,
     pub jwt_expires_in_seconds: u64,
     pub bcrypt_cost: u32,
+    pub jwt_algorithm: Algorithm,
 }
 
 #[derive(Debug, Deserialize)]

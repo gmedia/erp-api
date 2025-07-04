@@ -10,13 +10,15 @@ use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
     bcrypt_cost: Option<u32>,
+    jwt_secret: Option<String>,
+    jwt_algorithm: Option<jsonwebtoken::Algorithm>,
 ) -> (DatabaseConnection, Client, String) {
     dotenv::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
     let config_app = config::app::AppConfig::new("test");
-    let jwt_secret = "test-secret".to_string();
+    let jwt_secret = jwt_secret.unwrap_or_else(|| "test-secret".to_string());
 
     // Inisialisasi database
     let db_pool = init_db_pool(&config_db.url)
@@ -59,6 +61,7 @@ pub async fn setup_test_app(
                 jwt_secret: jwt_secret.clone(),
                 jwt_expires_in_seconds: jwt_expires_in_seconds.unwrap_or(3600),
                 bcrypt_cost: bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
+                jwt_algorithm: jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
             }))
             // Register your routes here
             .configure(inventory::routes::init_routes)
@@ -190,6 +193,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
                 jwt_secret: jwt_secret.clone(),
                 jwt_expires_in_seconds: 3600,
                 bcrypt_cost: bcrypt::DEFAULT_COST,
+                jwt_algorithm: jsonwebtoken::Algorithm::HS256,
             }))
             // Register your routes here
             .configure(inventory::routes::init_routes)
