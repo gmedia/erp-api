@@ -24,3 +24,8 @@ entity = { path = "../entity" }
 db = { path = "../db" }
 search = { path = "../search" }
 config = { path = "../config" }
+[dev-dependencies]
+actix-rt = "2.10.0"
+actix-web = { version = "4.11.0", features = ["macros"] }
+futures-util = "0.3.31"
+reqwest = { version = "0.12.19", features = ["json"] }

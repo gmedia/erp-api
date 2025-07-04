@@ -1,77 +1,73 @@
-use actix_web::dev::Transform;
-use actix_web::{
-    body::BoxBody,
-    dev::{Service, ServiceRequest, ServiceResponse},
-    http, test, web, App, Error, HttpResponse,
-};
-use api::v1::auth::middleware::JwtMiddleware;
-use futures_util::task::noop_waker_ref;
-use std::cell::Cell;
-use std::future::{ready, Ready};
-use std::task::{Context, Poll};
+use api::v1::auth::middleware::Claims;
+use jsonwebtoken::{encode, EncodingKey, Header};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+mod common;
+use common::setup_test_app;
 
-struct NotReadyService {
-    calls: Cell<u8>,
-}
-
-impl Service<ServiceRequest> for NotReadyService {
-    type Response = ServiceResponse<BoxBody>;
-    type Error = Error;
-    type Future = Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        if self.calls.get() < 1 {
-            self.calls.set(self.calls.get() + 1);
-            Poll::Pending
-        } else {
-            Poll::Ready(Ok(()))
-        }
-    }
-
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        ready(Ok(req.into_response(HttpResponse::Ok().finish())))
-    }
-}
-
-#[actix_rt::test]
-async fn test_poll_ready_is_covered() {
-    let middleware = JwtMiddleware;
-    let not_ready_service = NotReadyService {
-        calls: Cell::new(0),
+fn create_token(sub: &str, secret: &str, exp: usize) -> String {
+    let claims = Claims {
+        sub: sub.to_owned(),
+        exp,
     };
-    let transformed_service = middleware.new_transform(not_ready_service).await.unwrap();
-
-    let mut ctx = Context::from_waker(&noop_waker_ref());
-
-    // First poll is pending
-    assert!(transformed_service.poll_ready(&mut ctx).is_pending());
-    // Second poll is ready
-    assert!(transformed_service.poll_ready(&mut ctx).is_ready());
-}
-struct ErrorService;
-
-impl Service<ServiceRequest> for ErrorService {
-    type Response = ServiceResponse<BoxBody>;
-    type Error = Error;
-    type Future = Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Err(actix_web::error::ErrorInternalServerError("Service not ready")))
-    }
-
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        ready(Ok(req.into_response(HttpResponse::Ok().finish())))
-    }
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_ref()),
+    )
+    .unwrap()
 }
 
 #[actix_rt::test]
-async fn test_service_error_is_propagated() {
-    let middleware = JwtMiddleware;
-    let error_service = ErrorService;
-    let transformed_service = middleware.new_transform(error_service).await.unwrap();
+async fn test_jwt_middleware_logic() {
+    let secret = "my-super-secret-key-that-is-long-enough".to_string();
+    let (_db, _meili, server_url) =
+        setup_test_app(None, None, Some(secret.clone()), None).await;
+    let client = reqwest::Client::new();
 
-    let mut ctx = Context::from_waker(&noop_waker_ref());
-    let poll_result = transformed_service.poll_ready(&mut ctx);
+    // Test case 1: Valid token
+    let exp = (SystemTime::now() + Duration::from_secs(30))
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as usize;
+    let token = create_token("user1", &secret, exp);
+    let res = client
+        .get(format!("{}/v1/auth/me", server_url))
+        .bearer_auth(token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), 200);
+    let body = res.text().await.unwrap();
+    assert!(body.contains("user1"));
 
-    assert!(matches!(poll_result, Poll::Ready(Err(_))));
+    // Test case 2: No token
+    let res = client
+        .get(format!("{}/v1/auth/me", server_url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), 401);
+
+    // Test case 3: Invalid token
+    let res = client
+        .get(format!("{}/v1/auth/me", server_url))
+        .bearer_auth("invalid-token")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), 401);
+
+    // Test case 4: Expired token
+    let exp = (SystemTime::now() - Duration::from_secs(60))
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as usize;
+    let token = create_token("user1", &secret, exp);
+    let res = client
+        .get(format!("{}/v1/auth/me", server_url))
+        .bearer_auth(token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), 401);
 }

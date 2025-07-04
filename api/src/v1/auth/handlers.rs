@@ -1,19 +1,12 @@
 use actix_web::{web, HttpResponse, Responder};
-use bcrypt::{hash, verify, DEFAULT_COST};
+use crate::v1::auth::middleware::Claims;
+use crate::v1::auth::models::{LoginRequest, RegisterRequest, TokenResponse};
+use bcrypt::{hash, verify};
+use config::app::AppState;
+use entity::user::{self, Entity as User};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-use crate::v1::auth::models::{LoginRequest, RegisterRequest, TokenResponse};
-use config::app::AppState;
-use entity::{prelude::User, user};
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    exp: usize,
-}
 
 #[utoipa::path(
     post,
@@ -110,4 +103,18 @@ pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> i
     };
 
     HttpResponse::Ok().json(TokenResponse { token })
+}
+
+#[utoipa::path(
+    get,
+    path = "/v1/auth/me",
+    security(
+        ("bearer_auth" = [])
+    ),
+    responses(
+        (status = 200, description = "Authenticated user data", body = Claims)
+    )
+)]
+pub async fn me(claims: web::ReqData<Claims>) -> impl Responder {
+    HttpResponse::Ok().json(claims.into_inner())
 }

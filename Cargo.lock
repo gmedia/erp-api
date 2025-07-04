@@ -330,6 +330,7 @@ dependencies = [
 name = "api"
 version = "0.1.0"
 dependencies = [
+ "actix-rt",
  "actix-web",
  "bcrypt",
  "chrono",
@@ -342,6 +343,7 @@ dependencies = [
  "jsonwebtoken",
  "log",
  "pin-project",
+ "reqwest",
  "sea-orm 0.12.15",
  "search",
  "serde",
