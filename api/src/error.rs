@@ -11,6 +11,12 @@ pub enum ApiError {
     #[error("Not found: {0}")]
     NotFound(String),
 
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
+
+    #[error("Conflict: {0}")]
+    Conflict(String),
+
     #[error("Database error")]
     DatabaseError(#[from] DbErr),
 
@@ -26,6 +32,8 @@ impl ResponseError for ApiError {
         match self {
             ApiError::ValidationError(_) => StatusCode::BAD_REQUEST,
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            ApiError::Conflict(_) => StatusCode::CONFLICT,
             ApiError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::SearchError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,

@@ -1,11 +1,12 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 use crate::v1::auth::middleware::Claims;
 use crate::v1::auth::models::{LoginRequest, RegisterRequest, TokenResponse};
+use crate::error::ApiError;
 use bcrypt::{hash, verify};
 use config::app::AppState;
 use entity::user::{self, Entity as User};
 use jsonwebtoken::{encode, EncodingKey, Header};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, DbErr};
 use uuid::Uuid;
 
 #[utoipa::path(
@@ -16,17 +17,16 @@ use uuid::Uuid;
         (status = 201, description = "User registered successfully"),
         (status = 400, description = "Invalid input"),
         (status = 409, description = "User already exists"),
+        (status = 500, description = "Internal Server Error")
     )
 )]
 pub async fn register(
     data: web::Data<AppState>,
     req: web::Json<RegisterRequest>,
-) -> impl Responder {
+) -> Result<HttpResponse, ApiError> {
     let db = &data.db;
-    let hashed_password = match hash(&req.password, data.bcrypt_cost) {
-        Ok(h) => h,
-        Err(_) => return HttpResponse::InternalServerError().finish(),
-    };
+    let hashed_password = hash(&req.password, data.bcrypt_cost)
+        .map_err(|_| ApiError::InternalServerError)?;
 
     let new_user = user::ActiveModel {
         id: sea_orm::ActiveValue::Set(Uuid::new_v4().to_string()),
@@ -36,10 +36,16 @@ pub async fn register(
         updated_at: sea_orm::ActiveValue::Set(chrono::Utc::now().into()),
     };
 
-    match User::insert(new_user).exec(db).await {
-        Ok(_) => HttpResponse::Created().finish(),
-        Err(_) => HttpResponse::Conflict().finish(),
-    }
+    User::insert(new_user).exec(db).await.map_err(|db_err| {
+        if let DbErr::Exec(ref err_msg) = db_err {
+            if err_msg.to_string().contains("Duplicate entry") {
+                return ApiError::Conflict("User already exists".to_string());
+            }
+        }
+        ApiError::DatabaseError(db_err)
+    })?;
+
+    Ok(HttpResponse::Created().finish())
 }
 
 #[utoipa::path(
@@ -48,44 +54,39 @@ pub async fn register(
     request_body = LoginRequest,
     responses(
         (status = 200, description = "Login successful", body = TokenResponse),
-        (status = 400, description = "Invalid input"),
         (status = 401, description = "Unauthorized"),
+        (status = 500, description = "Internal Server Error")
     )
 )]
-pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> impl Responder {
+pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> Result<HttpResponse, ApiError> {
     let db = &data.db;
     log::info!("Attempting to log in user: {}", &req.username);
-    let user = match User::find()
+
+    let user = User::find()
         .filter(user::Column::Username.eq(&req.username))
         .one(db)
-        .await
-    {
-        Ok(Some(user)) => {
-            log::info!("User found: {:?}", &user);
-            user
-        }
-        Ok(None) => {
+        .await?
+        .ok_or_else(|| {
             log::info!("User not found: {}", &req.username);
-            return HttpResponse::Unauthorized().finish();
-        }
-        Err(e) => {
-            log::error!("Database error during login: {}", e);
-            return HttpResponse::InternalServerError().finish();
-        }
-    };
+            ApiError::Unauthorized("Invalid username or password".to_string())
+        })?;
 
+    log::info!("User found: {:?}", &user);
     let password_hash = user.password.clone();
-    log::info!("Password hash from DB: {}", password_hash);
-    if !verify(&req.password, &password_hash).unwrap_or(false) {
+    
+    let valid_password = verify(&req.password, &password_hash)
+        .map_err(|_| ApiError::InternalServerError)?;
+
+    if !valid_password {
         log::warn!("Password verification failed for user: {}", &req.username);
-        return HttpResponse::Unauthorized().finish();
+        return Err(ApiError::Unauthorized("Invalid username or password".to_string()));
     }
 
     let exp = chrono::Utc::now()
         .checked_add_signed(chrono::Duration::seconds(
             data.jwt_expires_in_seconds as i64
         ))
-        .expect("valid timestamp")
+        .ok_or(ApiError::InternalServerError)?
         .timestamp();
 
     let claims = Claims {
@@ -93,16 +94,14 @@ pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> i
         exp: exp as usize,
     };
 
-    let token = match encode(
+    let token = encode(
         &Header::new(data.jwt_algorithm),
         &claims,
         &EncodingKey::from_secret(data.jwt_secret.as_ref()),
-    ) {
-        Ok(t) => t,
-        Err(_) => return HttpResponse::InternalServerError().finish(),
-    };
+    )
+    .map_err(|_| ApiError::InternalServerError)?;
 
-    HttpResponse::Ok().json(TokenResponse { token })
+    Ok(HttpResponse::Ok().json(TokenResponse { token }))
 }
 
 #[utoipa::path(
@@ -115,6 +114,6 @@ pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> i
         (status = 200, description = "Authenticated user data", body = Claims)
     )
 )]
-pub async fn me(claims: web::ReqData<Claims>) -> impl Responder {
-    HttpResponse::Ok().json(claims.into_inner())
+pub async fn me(claims: web::ReqData<Claims>) -> Result<HttpResponse, ApiError> {
+    Ok(HttpResponse::Ok().json(claims.into_inner()))
 }
