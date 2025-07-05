@@ -24,6 +24,9 @@ entity = { path = "../entity" }
 db = { path = "../db" }
 search = { path = "../search" }
 config = { path = "../config" }
+thiserror = "1.0"
+meilisearch-sdk = "0.28.0"
+
 [dev-dependencies]
 actix-rt = "2.10.0"
 actix-web = { version = "4.11.0", features = ["macros"] }

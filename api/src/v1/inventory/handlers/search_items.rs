@@ -1,7 +1,13 @@
-use actix_web::{web, HttpResponse, Responder};
-use serde_json;
+use actix_web::{web, HttpResponse};
+use serde::Deserialize;
 
+use crate::error::ApiError;
 use super::super::models::InventoryItem;
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    q: Option<String>,
+}
 
 #[utoipa::path(
     get,
@@ -20,22 +26,16 @@ use super::super::models::InventoryItem;
 )]
 pub async fn search_items(
     data: web::Data<config::app::AppState>,
-    query: web::Query<serde_json::Value>,
-) -> impl Responder {
-    let q = query.get("q").and_then(|v| v.as_str()).unwrap_or("");
+    query: web::Query<SearchQuery>,
+) -> Result<HttpResponse, ApiError> {
+    let q = query.q.as_deref().unwrap_or("");
     log::info!("Searching for: {}", q);
+    
     let index = data.meilisearch.index("inventory");
-    let search_result = index.search().with_query(q).execute::<InventoryItem>().await;
+    let result = index.search().with_query(q).execute::<InventoryItem>().await?;
 
-    match search_result {
-        Ok(result) => {
-            log::info!("Search successful, found {} hits", result.hits.len());
-            let hits: Vec<_> = result.hits.into_iter().map(|hit| hit.result).collect();
-            HttpResponse::Ok().json(hits)
-        },
-        Err(e) => {
-            log::error!("Meilisearch error: {}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+    log::info!("Search successful, found {} hits", result.hits.len());
+    let hits: Vec<_> = result.hits.into_iter().map(|hit| hit.result).collect();
+    
+    Ok(HttpResponse::Ok().json(hits))
 }

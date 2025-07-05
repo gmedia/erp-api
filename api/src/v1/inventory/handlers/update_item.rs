@@ -1,7 +1,7 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, Set, EntityTrait, IntoActiveModel};
-use serde_json;
 
+use crate::error::ApiError;
 use super::super::models::{UpdateInventoryItem, InventoryItem};
 use entity::inventory;
 
@@ -15,6 +15,7 @@ use entity::inventory;
     request_body = UpdateInventoryItem,
     responses(
         (status = 200, description = "Item updated successfully", body = InventoryItem),
+        (status = 400, description = "Validation error"),
         (status = 404, description = "Item not found"),
         (status = 500, description = "Internal server error")
     ),
@@ -26,46 +27,39 @@ pub async fn update_item(
     data: web::Data<config::app::AppState>,
     id: web::Path<String>,
     item: web::Json<UpdateInventoryItem>,
-) -> impl Responder {
+) -> Result<HttpResponse, ApiError> {
     let item_id = id.into_inner();
-    let find_result = inventory::Entity::find_by_id(item_id.clone()).one(&data.db).await;
+    
+    let found_item = inventory::Entity::find_by_id(item_id.clone())
+        .one(&data.db)
+        .await?
+        .ok_or_else(|| ApiError::NotFound(format!("Item with id {} not found", item_id)))?;
 
-    match find_result {
-        Ok(Some(found_item)) => {
-            let mut active_item = found_item.into_active_model();
+    let mut active_item = found_item.into_active_model();
 
-            if let Some(name) = &item.name {
-                active_item.name = Set(name.clone());
-            }
-            if let Some(quantity) = item.quantity {
-                 if quantity < 0 {
-                    return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Quantity cannot be negative" }));
-                }
-                active_item.quantity = Set(quantity);
-            }
-            if let Some(price) = item.price {
-                if price < 0.0 {
-                    return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Price cannot be negative" }));
-                }
-                active_item.price = Set(price);
-            }
-
-            let result = active_item.update(&data.db).await;
-
-            match result {
-                Ok(updated_item) => {
-                    let index = data.meilisearch.index("inventory");
-                    let item_for_meili: InventoryItem = updated_item.clone().into();
-                    index
-                        .add_documents(&[&item_for_meili], Some("id"))
-                        .await
-                        .expect("Failed to index in Meilisearch");
-                    HttpResponse::Ok().json(updated_item)
-                }
-                Err(_) => HttpResponse::InternalServerError().finish(),
-            }
-        }
-        Ok(None) => HttpResponse::NotFound().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+    if let Some(name) = &item.name {
+        active_item.name = Set(name.clone());
     }
+    if let Some(quantity) = item.quantity {
+        if quantity < 0 {
+            return Err(ApiError::ValidationError("Quantity cannot be negative".to_string()));
+        }
+        active_item.quantity = Set(quantity);
+    }
+    if let Some(price) = item.price {
+        if price < 0.0 {
+            return Err(ApiError::ValidationError("Price cannot be negative".to_string()));
+        }
+        active_item.price = Set(price);
+    }
+
+    let updated_item = active_item.update(&data.db).await?;
+
+    let index = data.meilisearch.index("inventory");
+    let item_for_meili: InventoryItem = updated_item.clone().into();
+    index
+        .add_documents(&[&item_for_meili], Some("id"))
+        .await?;
+
+    Ok(HttpResponse::Ok().json(updated_item))
 }

@@ -1,6 +1,7 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 use sea_orm::{EntityTrait, ModelTrait};
 
+use crate::error::ApiError;
 use entity::inventory;
 
 #[utoipa::path(
@@ -22,29 +23,20 @@ use entity::inventory;
 pub async fn delete_item(
     data: web::Data<config::app::AppState>,
     id: web::Path<String>,
-) -> impl Responder {
+) -> Result<HttpResponse, ApiError> {
     let item_id = id.into_inner();
-    let find_result = inventory::Entity::find_by_id(item_id.clone()).one(&data.db).await;
+    
+    let found_item = inventory::Entity::find_by_id(item_id.clone())
+        .one(&data.db)
+        .await?
+        .ok_or_else(|| ApiError::NotFound(format!("Item with id {} not found", item_id)))?;
 
-    match find_result {
-        Ok(Some(found_item)) => {
-            let item_id_for_meili = found_item.id.clone();
-            let delete_result = found_item.delete(&data.db).await;
+    let item_id_for_meili = found_item.id.clone();
+    found_item.delete(&data.db).await?;
 
-            match delete_result {
-                Ok(_) => {
-                    // Delete from Meilisearch
-                    let index = data.meilisearch.index("inventory");
-                    index
-                        .delete_document(&item_id_for_meili)
-                        .await
-                        .expect("Failed to delete from Meilisearch");
-                    HttpResponse::Ok().finish()
-                }
-                Err(_) => HttpResponse::InternalServerError().finish(),
-            }
-        }
-        Ok(None) => HttpResponse::NotFound().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    // Delete from Meilisearch
+    let index = data.meilisearch.index("inventory");
+    index.delete_document(&item_id_for_meili).await?;
+
+    Ok(HttpResponse::Ok().finish())
 }

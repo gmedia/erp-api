@@ -1,8 +1,8 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
-use serde_json;
 
+use crate::error::ApiError;
 use super::super::models::{CreateInventoryItem, InventoryItem};
 use entity::inventory;
 
@@ -13,6 +13,7 @@ use entity::inventory;
     request_body = CreateInventoryItem,
     responses(
         (status = 200, description = "Item created successfully", body = InventoryItem),
+        (status = 400, description = "Validation error"),
         (status = 500, description = "Internal server error")
     ),
     security(
@@ -22,12 +23,12 @@ use entity::inventory;
 pub async fn create_item(
     data: web::Data<config::app::AppState>,
     item: web::Json<CreateInventoryItem>,
-) -> impl Responder {
+) -> Result<HttpResponse, ApiError> {
     if item.quantity < 0 {
-        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Quantity cannot be negative" }));
+        return Err(ApiError::ValidationError("Quantity cannot be negative".to_string()));
     }
     if item.price < 0.0 {
-        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Price cannot be negative" }));
+        return Err(ApiError::ValidationError("Price cannot be negative".to_string()));
     }
 
     let new_uuid = Uuid::new_v4();
@@ -38,19 +39,15 @@ pub async fn create_item(
         price: Set(item.price),
     };
 
-    let result = new_item.insert(&data.db).await;
+    let inserted_item = new_item.insert(&data.db).await?;
 
-    match result {
-        Ok(inserted_item) => {
-            // Add to Meilisearch for indexing
-            let index = data.meilisearch.index("inventory");
-            let item_for_meili: InventoryItem = inserted_item.into();
-            index
-                .add_documents(&[&item_for_meili], Some("id"))
-                .await
-                .expect("Failed to index in Meilisearch");
-            HttpResponse::Ok().json(item_for_meili)
-        },
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    // Add to Meilisearch for indexing
+    let index = data.meilisearch.index("inventory");
+    let item_for_meili: InventoryItem = inserted_item.into();
+    
+    index
+        .add_documents(&[&item_for_meili], Some("id"))
+        .await?;
+
+    Ok(HttpResponse::Ok().json(item_for_meili))
 }
