@@ -60,32 +60,43 @@ where
         let service = self.service.clone();
 
         Box::pin(async move {
-            let data = req
-                .app_data::<actix_web::web::Data<config::app::AppState>>()
-                .ok_or(ApiError::InternalServerError)?;
-
-            let token = req
-                .headers()
-                .get("Authorization")
-                .and_then(|h| h.to_str().ok())
-                .and_then(|s| s.strip_prefix("Bearer "))
-                .ok_or(ApiError::Unauthorized("Missing token".to_string()))?;
-
-            let mut validation = Validation::new(jsonwebtoken::Algorithm::HS256);
-            validation.validate_exp = true;
-            validation.leeway = 0;
-
-            let claims = decode::<Claims>(
-                token,
-                &DecodingKey::from_secret(data.jwt_secret.as_ref()),
-                &validation,
-            )
-            .map_err(|_| ApiError::Unauthorized("Invalid token".to_string()))?
-            .claims;
-
-            req.extensions_mut().insert(claims);
-
-            service.call(req).await
+            match Self::verify_token(&req) {
+                Ok(claims) => {
+                    req.extensions_mut().insert(claims);
+                    service.call(req).await
+                }
+                Err(e) => Err(e.into()),
+            }
         })
+    }
+}
+
+impl<S> JwtMiddlewareService<S> {
+    fn extract_token(req: &ServiceRequest) -> Option<&str> {
+        req.headers()
+            .get("Authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|s| s.strip_prefix("Bearer "))
+    }
+
+    fn verify_token(req: &ServiceRequest) -> Result<Claims, ApiError> {
+        let data = req
+            .app_data::<actix_web::web::Data<config::app::AppState>>()
+            .ok_or(ApiError::InternalServerError)?;
+
+        let token =
+            Self::extract_token(req).ok_or_else(|| ApiError::Unauthorized("Missing token".to_string()))?;
+
+        let mut validation = Validation::new(data.jwt_algorithm);
+        validation.validate_exp = true;
+        validation.leeway = 0;
+
+        decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(data.jwt_secret.as_ref()),
+            &validation,
+        )
+        .map(|data| data.claims)
+        .map_err(|_| ApiError::Unauthorized("Invalid token".to_string()))
     }
 }
