@@ -143,7 +143,6 @@ use config::app::AppState;
 use config::{db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
 use dotenv::dotenv;
-use std::rc::Rc;
 
 #[actix_rt::test]
 async fn test_jwt_middleware_call_logic() {
