@@ -437,3 +437,86 @@ async fn test_login_invalid_jwt_secret() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
+use entity::user::{self, Entity as User};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
+
+#[tokio::test]
+#[serial]
+async fn test_register_db_error() {
+    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let client = HttpClient::new();
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    // Close the database connection to simulate a database error
+    db_pool.close().await;
+
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .expect("Failed to send registration request");
+
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
+}
+
+#[tokio::test]
+#[serial]
+async fn test_login_malformed_hash() {
+    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let client = HttpClient::new();
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    // Register user
+    let register_req = json!({
+        "username": &username,
+        "password": password,
+    });
+
+    client
+        .post(&format!("{}/v1/auth/register", server_url))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    // Find the user and update the password to a malformed hash
+    let user = User::find()
+        .filter(user::Column::Username.eq(&username))
+        .one(&db_pool)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let mut active_user: user::ActiveModel = user.into();
+    active_user.password = Set("not_a_real_hash".to_owned());
+    User::update(active_user).exec(&db_pool).await.unwrap();
+
+    // Attempt to login
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(&format!("{}/v1/auth/login", server_url))
+        .json(&login_req)
+        .send()
+        .await
+        .expect("Failed to send login request");
+
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
+}
