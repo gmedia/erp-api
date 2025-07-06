@@ -1,8 +1,9 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 use chrono::Utc;
 
+use crate::error::ApiError;
 use super::models::{CreateOrder, Order};
 use entity::order;
 
@@ -12,6 +13,7 @@ use entity::order;
     request_body = CreateOrder,
     responses(
         (status = 200, description = "Order created successfully", body = Order),
+        (status = 400, description = "Validation error"),
         (status = 500, description = "Internal server error")
     ),
     security(
@@ -21,9 +23,9 @@ use entity::order;
 pub async fn create_order(
     data: web::Data<config::app::AppState>,
     order: web::Json<CreateOrder>,
-) -> impl Responder {
+) -> Result<HttpResponse, ApiError> {
     if order.total_amount < 0.0 {
-        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Total amount cannot be negative" }));
+        return Err(ApiError::ValidationError("Total amount cannot be negative".to_string()));
     }
 
     let new_uuid = Uuid::new_v4();
@@ -35,13 +37,8 @@ pub async fn create_order(
         created_at: Set(now),
     };
 
-    let result = new_order.insert(&data.db).await;
+    let inserted_order = new_order.insert(&data.db).await?;
 
-    match result {
-        Ok(inserted_order) => {
-            let order_response: Order = inserted_order.into();
-            HttpResponse::Ok().json(order_response)
-        },
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    let order_response: Order = inserted_order.into();
+    Ok(HttpResponse::Ok().json(order_response))
 }

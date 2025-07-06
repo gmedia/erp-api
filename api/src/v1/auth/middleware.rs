@@ -2,6 +2,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage,
 };
+use crate::error::ApiError;
 use futures_util::future::LocalBoxFuture;
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
@@ -61,16 +62,14 @@ where
         Box::pin(async move {
             let data = req
                 .app_data::<actix_web::web::Data<config::app::AppState>>()
-                .ok_or_else(|| {
-                    actix_web::error::ErrorInternalServerError("App state not configured")
-                })?;
+                .ok_or(ApiError::InternalServerError)?;
 
             let token = req
                 .headers()
                 .get("Authorization")
                 .and_then(|h| h.to_str().ok())
                 .and_then(|s| s.strip_prefix("Bearer "))
-                .ok_or_else(|| actix_web::error::ErrorUnauthorized("Missing token"))?;
+                .ok_or(ApiError::Unauthorized("Missing token".to_string()))?;
 
             let mut validation = Validation::new(jsonwebtoken::Algorithm::HS256);
             validation.validate_exp = true;
@@ -81,7 +80,7 @@ where
                 &DecodingKey::from_secret(data.jwt_secret.as_ref()),
                 &validation,
             )
-            .map_err(|_| actix_web::error::ErrorUnauthorized("Invalid token"))?
+            .map_err(|_| ApiError::Unauthorized("Invalid token".to_string()))?
             .claims;
 
             req.extensions_mut().insert(claims);

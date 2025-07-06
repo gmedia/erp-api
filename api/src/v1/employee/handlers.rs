@@ -1,7 +1,8 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 
+use crate::error::ApiError;
 use super::models::{CreateEmployee, Employee};
 use entity::employee;
 
@@ -11,6 +12,7 @@ use entity::employee;
     request_body = CreateEmployee,
     responses(
         (status = 200, description = "Employee created successfully", body = Employee),
+        (status = 400, description = "Validation error"),
         (status = 500, description = "Internal server error")
     ),
     security(
@@ -20,9 +22,9 @@ use entity::employee;
 pub async fn create_employee(
     data: web::Data<config::app::AppState>,
     employee: web::Json<CreateEmployee>,
-) -> impl Responder {
+) -> Result<HttpResponse, ApiError> {
     if !employee.email.contains('@') {
-        return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Invalid email format" }));
+        return Err(ApiError::ValidationError("Invalid email format".to_string()));
     }
 
     let new_uuid = Uuid::new_v4();
@@ -33,13 +35,8 @@ pub async fn create_employee(
         email: Set(employee.email.clone()),
     };
 
-    let result = new_employee.insert(&data.db).await;
+    let inserted_employee = new_employee.insert(&data.db).await?;
 
-    match result {
-        Ok(inserted_employee) => {
-            let employee_response: Employee = inserted_employee.into();
-            HttpResponse::Ok().json(employee_response)
-        },
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    let employee_response: Employee = inserted_employee.into();
+    Ok(HttpResponse::Ok().json(employee_response))
 }
