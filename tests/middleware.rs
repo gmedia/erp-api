@@ -1,4 +1,5 @@
 use api::v1::auth::middleware::Claims;
+use actix_web::HttpMessage;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use reqwest::header::{HeaderMap, HeaderValue};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -165,8 +166,23 @@ async fn test_jwt_middleware_call_logic() {
     });
 
     let middleware = JwtMiddleware;
-    let service = MockService;
-    let middleware_service = middleware.new_transform(service).await.unwrap();
+    let service = MockService::default();
+    let middleware_service = middleware.new_transform(service.clone()).await.unwrap();
+
+    // Test case: Valid token
+    let exp = (SystemTime::now() + Duration::from_secs(30))
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as usize;
+    let token = create_token("user1", &secret, exp);
+    let req = test::TestRequest::default()
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .app_data(app_state.clone())
+        .to_srv_request();
+    let res = middleware_service.call(req).await.unwrap();
+    assert_eq!(res.status(), 200);
+    let body: Claims = test::read_body_json(res).await;
+    assert_eq!(body.sub, "user1");
 
     // Test case: No Authorization header
     let req = test::TestRequest::default()
@@ -191,6 +207,19 @@ async fn test_jwt_middleware_call_logic() {
     let err = middleware_service.call(req).await.err().unwrap();
     assert_eq!(err.as_response_error().status_code(), 401);
 
+    // Test case: Expired token
+    let exp = (SystemTime::now() - Duration::from_secs(60))
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as usize;
+    let token = create_token("user1", &secret, exp);
+    let req = test::TestRequest::default()
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .app_data(app_state.clone())
+        .to_srv_request();
+    let err = middleware_service.call(req).await.err().unwrap();
+    assert_eq!(err.as_response_error().status_code(), 401);
+
     // Test case: Token with wrong secret
     let wrong_secret = "another-secret".to_string();
     let exp = (SystemTime::now() + Duration::from_secs(30))
@@ -204,9 +233,18 @@ async fn test_jwt_middleware_call_logic() {
         .to_srv_request();
     let err = middleware_service.call(req).await.err().unwrap();
     assert_eq!(err.as_response_error().status_code(), 401);
+
+    // Test case: No AppState
+    let req = test::TestRequest::default()
+        .insert_header(("Authorization", "Bearer some-token"))
+        .to_srv_request();
+    let err = middleware_service.call(req).await.err().unwrap();
+    assert_eq!(err.as_response_error().status_code(), 500);
 }
 
+#[derive(Default, Clone)]
 struct MockService;
+
 impl Service<ServiceRequest> for MockService {
     type Response = ServiceResponse<BoxBody>;
     type Error = Error;
@@ -217,9 +255,10 @@ impl Service<ServiceRequest> for MockService {
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        let claims = req.extensions().get::<Claims>().cloned();
         ready(Ok(req.into_response(
             actix_web::HttpResponse::Ok()
-                .finish()
+                .json(&claims)
                 .map_into_boxed_body(),
         )))
     }
@@ -236,4 +275,55 @@ async fn test_jwt_middleware_poll_ready_cover() {
 
     let poll_result = middleware_service.poll_ready(&mut cx);
     assert!(poll_result.is_ready());
+}
+#[actix_rt::test]
+async fn test_jwt_middleware_invalid_utf8_header() {
+    let secret = "my-super-secret-key-that-is-long-enough".to_string();
+    let app_state = web::Data::new(AppState {
+        db: init_db_pool(&Db::new("test").url).await.unwrap(),
+        meilisearch: search::meilisearch::init_meilisearch(&Meilisearch::new("test").host, &Meilisearch::new("test").api_key).await.unwrap(),
+        jwt_secret: secret.clone(),
+        jwt_expires_in_seconds: 3600,
+        bcrypt_cost: 4,
+        jwt_algorithm: jsonwebtoken::Algorithm::HS256,
+    });
+
+    let middleware = JwtMiddleware;
+    let service = MockService::default();
+    let middleware_service = middleware.new_transform(service.clone()).await.unwrap();
+
+    let req = test::TestRequest::default()
+        .insert_header(("Authorization", b"Bearer \x80" as &[u8]))
+        .app_data(app_state.clone())
+        .to_srv_request();
+    let err = middleware_service.call(req).await.err().unwrap();
+    assert_eq!(err.as_response_error().status_code(), 401);
+}
+#[actix_rt::test]
+async fn test_jwt_middleware_wrong_key_for_alg() {
+    let secret = "a-simple-secret".to_string();
+    let app_state = web::Data::new(AppState {
+        db: init_db_pool(&Db::new("test").url).await.unwrap(),
+        meilisearch: search::meilisearch::init_meilisearch(&Meilisearch::new("test").host, &Meilisearch::new("test").api_key).await.unwrap(),
+        jwt_secret: secret.clone(),
+        jwt_expires_in_seconds: 3600,
+        bcrypt_cost: 4,
+        // Use an algorithm that expects a PEM-encoded key, but provide a simple secret
+        jwt_algorithm: jsonwebtoken::Algorithm::RS256,
+    });
+
+    let middleware = JwtMiddleware;
+    let service = MockService::default();
+    let middleware_service = middleware.new_transform(service.clone()).await.unwrap();
+
+    // We provide a token, although the decoding will fail due to the key/alg mismatch.
+    let token = "some.jwt.token";
+    let req = test::TestRequest::default()
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .app_data(app_state.clone())
+        .to_srv_request();
+
+    let err = middleware_service.call(req).await.err().unwrap();
+    // The decode function will return a crypto error, which our middleware maps to Unauthorized.
+    assert_eq!(err.as_response_error().status_code(), 401);
 }

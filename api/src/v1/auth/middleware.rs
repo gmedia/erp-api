@@ -84,19 +84,22 @@ impl<S> JwtMiddlewareService<S> {
             .app_data::<actix_web::web::Data<config::app::AppState>>()
             .ok_or(ApiError::InternalServerError)?;
 
-        let token =
-            Self::extract_token(req).ok_or_else(|| ApiError::Unauthorized("Missing token".to_string()))?;
+        let token = match Self::extract_token(req) {
+            Some(token) => token,
+            None => return Err(ApiError::Unauthorized("Missing token".to_string())),
+        };
 
         let mut validation = Validation::new(data.jwt_algorithm);
         validation.validate_exp = true;
         validation.leeway = 0;
 
-        decode::<Claims>(
+        match decode::<Claims>(
             token,
             &DecodingKey::from_secret(data.jwt_secret.as_ref()),
             &validation,
-        )
-        .map(|data| data.claims)
-        .map_err(|_| ApiError::Unauthorized("Invalid token".to_string()))
+        ) {
+            Ok(token_data) => Ok(token_data.claims),
+            Err(_) => Err(ApiError::Unauthorized("Invalid token".to_string())),
+        }
     }
 }
