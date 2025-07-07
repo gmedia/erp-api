@@ -26,7 +26,10 @@ fn create_token(sub: &str, secret: &str, exp: usize) -> String {
     .unwrap()
 }
 
+use serial_test::serial;
+
 #[actix_rt::test]
+#[serial]
 async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url) =
@@ -125,6 +128,7 @@ async fn test_jwt_middleware_logic() {
 }
 
 #[actix_rt::test]
+#[serial]
 async fn test_jwt_middleware_no_app_state() {
     let (_db, _meili, server_url) = setup_test_app_no_state().await;
     let client = reqwest::Client::new();
@@ -146,6 +150,7 @@ use db::mysql::init_db_pool;
 use dotenv::dotenv;
 
 #[actix_rt::test]
+#[serial]
 async fn test_jwt_middleware_call_logic() {
     dotenv().ok();
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
@@ -265,6 +270,7 @@ impl Service<ServiceRequest> for MockService {
 }
 
 #[actix_rt::test]
+#[serial]
 async fn test_jwt_middleware_poll_ready_cover() {
     let middleware = JwtMiddleware;
     let service = MockService;
@@ -277,6 +283,7 @@ async fn test_jwt_middleware_poll_ready_cover() {
     assert!(poll_result.is_ready());
 }
 #[actix_rt::test]
+#[serial]
 async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let app_state = web::Data::new(AppState {
@@ -300,6 +307,7 @@ async fn test_jwt_middleware_invalid_utf8_header() {
     assert_eq!(err.as_response_error().status_code(), 401);
 }
 #[actix_rt::test]
+#[serial]
 async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {

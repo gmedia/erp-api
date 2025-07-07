@@ -449,7 +449,7 @@ async fn test_register_db_error() {
     let password = "password123";
 
     // Close the database connection to simulate a database error
-    db_pool.close().await;
+    db_pool.close().await.unwrap();
 
     let register_req = json!({
         "username": username,

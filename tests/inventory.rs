@@ -85,7 +85,7 @@ async fn test_create_and_search_inventory() {
     assert!((created_item.price - price).abs() < 1e-9);
 
     // Tunggu Meilisearch untuk mengindeks
-    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
     // Tes endpoint GET /v1/inventory/search
     let response = client
