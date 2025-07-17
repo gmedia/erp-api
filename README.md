@@ -77,15 +77,23 @@ Menemukan dependency (crate) yang tidak digunakan → bisa mengurangi attack sur
 Menemukan crate yang memiliki vulnerability (CVE, RCE, dsb).
 1. Install:
    ```bash
-   cargo install cargo-audit
+   cargo install cargo-audit --locked --features=fix
    ```
 2. Jalankan:
    ```bash
    cargo audit
+   cargo audit fix
    ```
 
-## Formatting code style
-
+## Menjalankan formatter style
+1. Install:
+   ```bash
+   rustup component add rustfmt --toolchain nightly
+   ```
+2. Jalankan:
+   ```bash
+   cargo +nightly fmt
+   ```
 
 ## Contoh Endpoint
 - `POST /inventory/create`: Membuat item inventory baru. Contoh payload:
