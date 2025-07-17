@@ -52,6 +52,12 @@ cargo test
    ```
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
+## Menjalankan Linter
+```bash
+cargo clippy
+cargo clippy --fix
+```
+
 ## Contoh Endpoint
 - `POST /inventory/create`: Membuat item inventory baru. Contoh payload:
   ```json

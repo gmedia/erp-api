@@ -39,6 +39,6 @@ pub async fn create_order(
 
     let inserted_order = new_order.insert(&data.db).await?;
 
-    let order_response: Order = inserted_order.into();
+    let order_response: Order = inserted_order;
     Ok(HttpResponse::Ok().json(order_response))
 }

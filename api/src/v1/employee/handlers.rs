@@ -37,6 +37,6 @@ pub async fn create_employee(
 
     let inserted_employee = new_employee.insert(&data.db).await?;
 
-    let employee_response: Employee = inserted_employee.into();
+    let employee_response: Employee = inserted_employee;
     Ok(HttpResponse::Ok().json(employee_response))
 }

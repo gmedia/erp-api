@@ -56,7 +56,7 @@ pub async fn update_item(
     let updated_item = active_item.update(&data.db).await?;
 
     let index = data.meilisearch.index("inventory");
-    let item_for_meili: InventoryItem = updated_item.clone().into();
+    let item_for_meili: InventoryItem = updated_item.clone();
     index
         .add_documents(&[&item_for_meili], Some("id"))
         .await?;

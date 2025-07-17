@@ -43,7 +43,7 @@ pub async fn create_item(
 
     // Add to Meilisearch for indexing
     let index = data.meilisearch.index("inventory");
-    let item_for_meili: InventoryItem = inserted_item.into();
+    let item_for_meili: InventoryItem = inserted_item;
     
     index
         .add_documents(&[&item_for_meili], Some("id"))

@@ -32,8 +32,8 @@ pub async fn register(
         id: sea_orm::ActiveValue::Set(Uuid::new_v4().to_string()),
         username: sea_orm::ActiveValue::Set(req.username.clone()),
         password: sea_orm::ActiveValue::Set(hashed_password),
-        created_at: sea_orm::ActiveValue::Set(chrono::Utc::now().into()),
-        updated_at: sea_orm::ActiveValue::Set(chrono::Utc::now().into()),
+        created_at: sea_orm::ActiveValue::Set(chrono::Utc::now()),
+        updated_at: sea_orm::ActiveValue::Set(chrono::Utc::now()),
     };
 
     User::insert(new_user).exec(db).await.map_err(|db_err| {
