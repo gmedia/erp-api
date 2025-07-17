@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.11.0"
-sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }
-dotenv = "0.15.0"
+sea-orm = { version = "1.1.13", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }
+dotenvy = "0.15.7"
 env_logger = "0.11.8"
 jsonwebtoken = "9.3.1"
 bcrypt = "0.15.1"

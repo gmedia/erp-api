@@ -147,7 +147,7 @@ use actix_web::{test, web};
 use config::app::AppState;
 use config::{db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 
 #[actix_rt::test]
 #[serial]

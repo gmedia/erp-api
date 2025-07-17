@@ -5,8 +5,8 @@ edition = "2024"
 
 [dependencies]
 actix-web = "4.11.0"
-sea-orm = { version = "0.12.15", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }
-dotenv = "0.15.0"
+sea-orm = { version = "1.1.13", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }
+dotenvy = "0.15.7"
 env_logger = "0.11.8"
 jsonwebtoken = "9.3.1"
 log = "0.4.27"
@@ -30,7 +30,7 @@ serial_test = "3.2.0"
 fake = "2.5.0"
 rand = "0.8.5"
 uuid = { version = "1.17.0", features = ["v4"] }
-sea-orm = { version = "0.12.15", features = ["runtime-actix-native-tls", "sqlx-mysql"] }
+sea-orm = { version = "1.1.13", features = ["runtime-actix-native-tls", "sqlx-mysql"] }
 futures-util = "0.3.31"
 actix-rt = "2.10.0"
 

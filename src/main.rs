@@ -1,6 +1,6 @@
 use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use serde_json::json;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use api::v1::{auth, employee, inventory, order};
 use config::{app::{AppConfig, AppState}, db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;

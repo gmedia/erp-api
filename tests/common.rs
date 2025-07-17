@@ -13,7 +13,7 @@ pub async fn setup_test_app(
     jwt_secret: Option<String>,
     jwt_algorithm: Option<jsonwebtoken::Algorithm>,
 ) -> (DatabaseConnection, Client, String) {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
@@ -86,7 +86,7 @@ pub async fn setup_test_app(
 }
 #[allow(dead_code)]
 pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
@@ -146,7 +146,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
 }
 #[allow(dead_code)]
 pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String) {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
     let mut config_meilisearch = Meilisearch::new("test");
