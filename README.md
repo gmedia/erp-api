@@ -53,10 +53,36 @@ cargo test
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
 ## Menjalankan Linter
-```bash
-cargo clippy
-cargo clippy --fix
-```
+- Menemukan kode yang buruk, tidak idiomatik, boros, atau terlalu verbose:
+   ```bash
+   cargo clippy
+   ```
+- Fixing code:
+   ```bash
+   cargo clippy --fix
+   ```
+
+## Cek Dependency Tak Terpakai
+Menemukan dependency (crate) yang tidak digunakan → bisa mengurangi attack surface dan build time.
+1. Install:
+   ```bash
+   cargo install cargo-udeps
+   ```
+2. Jalankan:
+   ```bash
+   cargo +nightly udeps
+   ```
+
+## Cek Kerentanan Keamanan
+Menemukan crate yang memiliki vulnerability (CVE, RCE, dsb).
+1. Install:
+   ```bash
+   cargo install cargo-audit
+   ```
+2. Jalankan:
+   ```bash
+   cargo audit
+   ```
 
 ## Contoh Endpoint
 - `POST /inventory/create`: Membuat item inventory baru. Contoh payload:
