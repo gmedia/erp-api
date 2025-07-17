@@ -45,7 +45,7 @@ pub async fn setup_test_app(
     // Bersihkan indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
         let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        let _ = meili_client.create_index(index_name, Some(&pk[0])).await;
+        let _ = meili_client.create_index(index_name, Some(pk[0])).await;
     }
 
     // Clone db_pool and meili_client for moving into the closure
@@ -117,7 +117,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
     // Bersihkan indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
         let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        let _ = meili_client.create_index(index_name, Some(&pk[0])).await;
+        let _ = meili_client.create_index(index_name, Some(pk[0])).await;
     }
 
     // Jalankan server di port acak
@@ -179,7 +179,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     // Bersihkan indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
         let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        let _ = meili_client.create_index(index_name, Some(&pk[0])).await;
+        let _ = meili_client.create_index(index_name, Some(pk[0])).await;
     }
 
     // Clone db_pool and meili_client for moving into the closure

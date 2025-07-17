@@ -171,7 +171,7 @@ async fn test_jwt_middleware_call_logic() {
     });
 
     let middleware = JwtMiddleware;
-    let service = MockService::default();
+    let service = MockService;
     let middleware_service = middleware.new_transform(service.clone()).await.unwrap();
 
     // Test case: Valid token
@@ -296,7 +296,7 @@ async fn test_jwt_middleware_invalid_utf8_header() {
     });
 
     let middleware = JwtMiddleware;
-    let service = MockService::default();
+    let service = MockService;
     let middleware_service = middleware.new_transform(service.clone()).await.unwrap();
 
     let req = test::TestRequest::default()
@@ -321,7 +321,7 @@ async fn test_jwt_middleware_wrong_key_for_alg() {
     });
 
     let middleware = JwtMiddleware;
-    let service = MockService::default();
+    let service = MockService;
     let middleware_service = middleware.new_transform(service.clone()).await.unwrap();
 
     // We provide a token, although the decoding will fail due to the key/alg mismatch.

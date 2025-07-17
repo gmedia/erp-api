@@ -21,7 +21,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     client
-        .post(&format!("{}/v1/auth/register", server_url))
+        .post(format!("{}/v1/auth/register", server_url))
         .json(&register_req)
         .send()
         .await
@@ -33,7 +33,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     let response = client
-        .post(&format!("{}/v1/auth/login", server_url))
+        .post(format!("{}/v1/auth/login", server_url))
         .json(&login_req)
         .send()
         .await
@@ -61,7 +61,7 @@ async fn test_create_employee() {
     });
 
     let response = client
-        .post(&format!("{}/v1/employee/create", server_url))
+        .post(format!("{}/v1/employee/create", server_url))
         .bearer_auth(token)
         .json(&new_employee)
         .send()
@@ -96,7 +96,7 @@ async fn test_create_employee_invalid_email() {
     });
 
     let response = client
-        .post(&format!("{}/v1/employee/create", server_url))
+        .post(format!("{}/v1/employee/create", server_url))
         .bearer_auth(token)
         .json(&new_employee)
         .send()
@@ -125,7 +125,7 @@ async fn test_create_employee_internal_server_error() {
     });
 
     let response = client
-        .post(&format!("{}/v1/employee/create", server_url))
+        .post(format!("{}/v1/employee/create", server_url))
         .bearer_auth(token)
         .json(&new_employee)
         .send()

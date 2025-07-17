@@ -19,7 +19,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     client
-        .post(&format!("{}/v1/auth/register", server_url))
+        .post(format!("{}/v1/auth/register", server_url))
         .json(&register_req)
         .send()
         .await
@@ -31,7 +31,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     let response = client
-        .post(&format!("{}/v1/auth/login", server_url))
+        .post(format!("{}/v1/auth/login", server_url))
         .json(&login_req)
         .send()
         .await
@@ -57,7 +57,7 @@ async fn test_create_order() {
     });
 
     let response = client
-        .post(&format!("{}/v1/order/create", server_url))
+        .post(format!("{}/v1/order/create", server_url))
         .bearer_auth(token)
         .json(&new_order)
         .send()
@@ -90,7 +90,7 @@ async fn test_create_order_negative_amount() {
     });
 
     let response = client
-        .post(&format!("{}/v1/order/create", server_url))
+        .post(format!("{}/v1/order/create", server_url))
         .bearer_auth(token)
         .json(&new_order)
         .send()
@@ -118,7 +118,7 @@ async fn test_create_order_internal_server_error() {
     });
 
     let response = client
-        .post(&format!("{}/v1/order/create", server_url))
+        .post(format!("{}/v1/order/create", server_url))
         .bearer_auth(token)
         .json(&new_order)
         .send()
