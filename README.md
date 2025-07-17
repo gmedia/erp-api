@@ -66,7 +66,7 @@ cargo test
 Menemukan dependency (crate) yang tidak digunakan → bisa mengurangi attack surface dan build time.
 1. Install:
    ```bash
-   cargo install cargo-udeps
+   cargo install cargo-udeps --locked
    ```
 2. Jalankan:
    ```bash
@@ -83,6 +83,9 @@ Menemukan crate yang memiliki vulnerability (CVE, RCE, dsb).
    ```bash
    cargo audit
    ```
+
+## Formatting code style
+
 
 ## Contoh Endpoint
 - `POST /inventory/create`: Membuat item inventory baru. Contoh payload:

@@ -1,5 +1,5 @@
 use api::v1::auth::models::TokenResponse;
-use fake::{faker::internet::en::SafeEmail, Fake};
+use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
@@ -43,7 +43,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
 async fn test_internal_server_error_response_format() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    
+
     // Get a valid token first
     let token = get_auth_token(&client, &server_url).await;
 
@@ -64,9 +64,15 @@ async fn test_internal_server_error_response_format() {
         .await
         .expect("Failed to send request");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 
-    let body: serde_json::Value = response.json().await.expect("Failed to parse error response");
+    let body: serde_json::Value = response
+        .json()
+        .await
+        .expect("Failed to parse error response");
 
     // Verify the structure of the error response
     assert_eq!(body["error"]["code"], 500);

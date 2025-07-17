@@ -1,10 +1,8 @@
-use actix_web::web;
 use crate::v1::auth::middleware::JwtMiddleware;
+use actix_web::web;
 
 use super::handlers::{
-    create_item::create_item,
-    delete_item::delete_item,
-    search_items::search_items,
+    create_item::create_item, delete_item::delete_item, search_items::search_items,
     update_item::update_item,
 };
 

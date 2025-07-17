@@ -1,3 +1,3 @@
-pub mod v1;
-pub mod openapi;
 pub mod error;
+pub mod openapi;
+pub mod v1;

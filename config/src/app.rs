@@ -1,6 +1,6 @@
+use jsonwebtoken::Algorithm;
 use serde::Deserialize;
 use std::collections::HashMap;
-use jsonwebtoken::Algorithm;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -28,8 +28,8 @@ impl AppConfig {
         let config_path = format!("config/{}.toml", env);
         let config_str = std::fs::read_to_string(&config_path)
             .unwrap_or_else(|_| panic!("Failed to read config file: {}", &config_path));
-        let toml_config: TomlConfig = toml::from_str(&config_str)
-            .expect("Failed to parse TOML config");
+        let toml_config: TomlConfig =
+            toml::from_str(&config_str).expect("Failed to parse TOML config");
         toml_config.app
     }
 }

@@ -1,10 +1,10 @@
 use actix_web::{web, HttpResponse};
+use chrono::Utc;
 use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
-use chrono::Utc;
 
-use crate::error::ApiError;
 use super::models::{CreateOrder, Order};
+use crate::error::ApiError;
 use entity::order;
 
 #[utoipa::path(
@@ -25,7 +25,9 @@ pub async fn create_order(
     order: web::Json<CreateOrder>,
 ) -> Result<HttpResponse, ApiError> {
     if order.total_amount < 0.0 {
-        return Err(ApiError::ValidationError("Total amount cannot be negative".to_string()));
+        return Err(ApiError::ValidationError(
+            "Total amount cannot be negative".to_string(),
+        ));
     }
 
     let new_uuid = Uuid::new_v4();

@@ -1,10 +1,10 @@
 use fake::{
+    Fake,
     faker::{
         internet::en::SafeEmail,
         lorem::en::{Sentence, Word},
         name::en::Name,
     },
-    Fake,
 };
 use reqwest::Client as HttpClient;
 use serde_json::json;
@@ -75,10 +75,7 @@ async fn test_create_and_search_inventory() {
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_item: InventoryItem = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let created_item: InventoryItem = response.json().await.expect("Gagal parse response JSON");
 
     assert_eq!(created_item.name, name);
     assert_eq!(created_item.quantity, quantity);
@@ -102,7 +99,6 @@ async fn test_create_and_search_inventory() {
 
     let _search_results: Vec<InventoryItem> =
         response.json().await.expect("Gagal parse response JSON");
-
 }
 
 #[tokio::test]
@@ -183,10 +179,7 @@ async fn test_update_inventory() {
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_item: InventoryItem = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let created_item: InventoryItem = response.json().await.expect("Gagal parse response JSON");
 
     // Update item
     let updated_name: String = Sentence(1..3).fake();
@@ -211,10 +204,7 @@ async fn test_update_inventory() {
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let updated_item: InventoryItem = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let updated_item: InventoryItem = response.json().await.expect("Gagal parse response JSON");
 
     assert_eq!(updated_item.name, updated_name);
     assert_eq!(updated_item.quantity, updated_quantity);
@@ -338,10 +328,7 @@ async fn test_delete_inventory() {
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_item: InventoryItem = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let created_item: InventoryItem = response.json().await.expect("Gagal parse response JSON");
 
     // Hapus item
     let response = client
@@ -396,7 +383,10 @@ async fn test_create_item_internal_server_error() {
         .await
         .expect("Gagal mengirim request POST");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }
 #[tokio::test]
 #[serial]
@@ -420,7 +410,10 @@ async fn test_update_item_internal_server_error() {
         .await
         .expect("Gagal mengirim request PUT");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }
 
 #[tokio::test]
@@ -463,7 +456,10 @@ async fn test_delete_item_internal_server_error() {
         .await
         .expect("Gagal mengirim request DELETE");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }
 #[tokio::test]
 #[serial]
@@ -479,7 +475,10 @@ async fn test_search_items_internal_server_error() {
         .await
         .expect("Failed to send request");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }
 use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
@@ -528,7 +527,10 @@ async fn test_delete_item_with_fk_constraint_fails() {
 
     // 3. Try to delete the inventory item. This should fail due to the FK constraint.
     let res = client
-        .delete(format!("{}/v1/inventory/delete/{}", server_url, created_item.id))
+        .delete(format!(
+            "{}/v1/inventory/delete/{}",
+            server_url, created_item.id
+        ))
         .bearer_auth(token)
         .send()
         .await
@@ -555,7 +557,10 @@ async fn test_update_item_not_found() {
     let updated_data = json!({ "name": "this should fail" });
 
     let response = client
-        .put(format!("{}/v1/inventory/update/{}", server_url, non_existent_id))
+        .put(format!(
+            "{}/v1/inventory/update/{}",
+            server_url, non_existent_id
+        ))
         .bearer_auth(token)
         .json(&updated_data)
         .send()
@@ -587,14 +592,29 @@ async fn test_update_item_fails_on_db_constraint() {
     let item1 = json!({ "name": name1, "quantity": 1, "price": 1.0 });
     let item2 = json!({ "name": name2, "quantity": 2, "price": 2.0 });
 
-    let res1 = client.post(format!("{}/v1/inventory/create", server_url)).bearer_auth(token.clone()).json(&item1).send().await.unwrap();
+    let res1 = client
+        .post(format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
+        .json(&item1)
+        .send()
+        .await
+        .unwrap();
     let created_item1: InventoryItem = res1.json().await.unwrap();
-    let _ = client.post(format!("{}/v1/inventory/create", server_url)).bearer_auth(token.clone()).json(&item2).send().await.unwrap();
+    let _ = client
+        .post(format!("{}/v1/inventory/create", server_url))
+        .bearer_auth(token.clone())
+        .json(&item2)
+        .send()
+        .await
+        .unwrap();
 
     // 2. Try to update item1's name to item2's name (violating UNIQUE constraint)
     let update_data = json!({ "name": name2 });
     let res = client
-        .put(format!("{}/v1/inventory/update/{}", server_url, created_item1.id))
+        .put(format!(
+            "{}/v1/inventory/update/{}",
+            server_url, created_item1.id
+        ))
         .bearer_auth(token)
         .json(&update_data)
         .send()

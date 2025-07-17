@@ -1,12 +1,12 @@
-use actix_web::{web, HttpResponse};
+use crate::error::ApiError;
 use crate::v1::auth::middleware::Claims;
 use crate::v1::auth::models::{LoginRequest, RegisterRequest, TokenResponse};
-use crate::error::ApiError;
+use actix_web::{web, HttpResponse};
 use bcrypt::{hash, verify};
 use config::app::AppState;
 use entity::user::{self, Entity as User};
 use jsonwebtoken::{encode, EncodingKey, Header};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, DbErr};
+use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter};
 use uuid::Uuid;
 
 #[utoipa::path(
@@ -25,8 +25,8 @@ pub async fn register(
     req: web::Json<RegisterRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let db = &data.db;
-    let hashed_password = hash(&req.password, data.bcrypt_cost)
-        .map_err(|_| ApiError::InternalServerError)?;
+    let hashed_password =
+        hash(&req.password, data.bcrypt_cost).map_err(|_| ApiError::InternalServerError)?;
 
     let new_user = user::ActiveModel {
         id: sea_orm::ActiveValue::Set(Uuid::new_v4().to_string()),
@@ -58,7 +58,10 @@ pub async fn register(
         (status = 500, description = "Internal Server Error")
     )
 )]
-pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> Result<HttpResponse, ApiError> {
+pub async fn login(
+    data: web::Data<AppState>,
+    req: web::Json<LoginRequest>,
+) -> Result<HttpResponse, ApiError> {
     let db = &data.db;
     log::info!("Attempting to log in user: {}", &req.username);
 
@@ -73,18 +76,20 @@ pub async fn login(data: web::Data<AppState>, req: web::Json<LoginRequest>) -> R
 
     log::info!("User found: {:?}", &user);
     let password_hash = user.password.clone();
-    
-    let valid_password = verify(&req.password, &password_hash)
-        .map_err(|_| ApiError::InternalServerError)?;
+
+    let valid_password =
+        verify(&req.password, &password_hash).map_err(|_| ApiError::InternalServerError)?;
 
     if !valid_password {
         log::warn!("Password verification failed for user: {}", &req.username);
-        return Err(ApiError::Unauthorized("Invalid username or password".to_string()));
+        return Err(ApiError::Unauthorized(
+            "Invalid username or password".to_string(),
+        ));
     }
 
     let exp = chrono::Utc::now()
         .checked_add_signed(chrono::Duration::seconds(
-            data.jwt_expires_in_seconds as i64
+            data.jwt_expires_in_seconds as i64,
         ))
         .ok_or(ApiError::InternalServerError)?
         .timestamp();

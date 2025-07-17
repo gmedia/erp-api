@@ -1,7 +1,4 @@
-use utoipa::{
-    Modify,
-    OpenApi,
-};
+use utoipa::{Modify, OpenApi};
 
 pub struct SecurityAddon;
 
@@ -11,7 +8,9 @@ impl Modify for SecurityAddon {
             components.add_security_scheme(
                 "bearerAuth",
                 utoipa::openapi::security::SecurityScheme::Http(
-                    utoipa::openapi::security::Http::new(utoipa::openapi::security::HttpAuthScheme::Bearer),
+                    utoipa::openapi::security::Http::new(
+                        utoipa::openapi::security::HttpAuthScheme::Bearer,
+                    ),
                 ),
             )
         }

@@ -9,8 +9,6 @@ impl Db {
         let url = env::var("DATABASE_URL")
             .unwrap_or_else(|_| "mysql://user:password@mariadb:3306/erp_db".to_string());
 
-        Db {
-            url,
-        }
+        Db { url }
     }
 }

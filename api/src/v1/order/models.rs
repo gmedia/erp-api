@@ -1,6 +1,6 @@
+use entity::order;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use entity::order;
 
 pub type Order = order::Model;
 

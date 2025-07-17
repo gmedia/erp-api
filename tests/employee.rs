@@ -1,6 +1,6 @@
 use fake::{
-    faker::{internet::en::SafeEmail, name::en::Name},
     Fake,
+    faker::{internet::en::SafeEmail, name::en::Name},
 };
 use reqwest::Client as HttpClient;
 use serde_json::json;
@@ -70,10 +70,7 @@ async fn test_create_employee() {
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_employee: Employee = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let created_employee: Employee = response.json().await.expect("Gagal parse response JSON");
 
     assert_eq!(created_employee.name, name);
     assert_eq!(created_employee.role, role);
@@ -132,5 +129,8 @@ async fn test_create_employee_internal_server_error() {
         .await
         .expect("Gagal mengirim request POST");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }

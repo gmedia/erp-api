@@ -1,4 +1,4 @@
-pub mod inventory;
-pub mod employee;
-pub mod order;
 pub mod auth;
+pub mod employee;
+pub mod inventory;
+pub mod order;

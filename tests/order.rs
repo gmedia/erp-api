@@ -1,6 +1,6 @@
 use api::v1::auth::models::TokenResponse;
 use api::v1::order::models::Order;
-use fake::{faker::internet::en::SafeEmail, Fake};
+use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
@@ -66,10 +66,7 @@ async fn test_create_order() {
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_order: Order = response
-        .json()
-        .await
-        .expect("Gagal parse response JSON");
+    let created_order: Order = response.json().await.expect("Gagal parse response JSON");
 
     assert_eq!(created_order.customer_id, customer_id);
     assert!((created_order.total_amount - total_amount).abs() < 1e-9);
@@ -125,5 +122,8 @@ async fn test_create_order_internal_server_error() {
         .await
         .expect("Gagal mengirim request POST");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }

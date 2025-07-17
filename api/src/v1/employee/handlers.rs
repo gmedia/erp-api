@@ -2,8 +2,8 @@ use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 
-use crate::error::ApiError;
 use super::models::{CreateEmployee, Employee};
+use crate::error::ApiError;
 use entity::employee;
 
 #[utoipa::path(
@@ -24,7 +24,9 @@ pub async fn create_employee(
     employee: web::Json<CreateEmployee>,
 ) -> Result<HttpResponse, ApiError> {
     if !employee.email.contains('@') {
-        return Err(ApiError::ValidationError("Invalid email format".to_string()));
+        return Err(ApiError::ValidationError(
+            "Invalid email format".to_string(),
+        ));
     }
 
     let new_uuid = Uuid::new_v4();

@@ -25,7 +25,7 @@ pub async fn delete_item(
     id: web::Path<String>,
 ) -> Result<HttpResponse, ApiError> {
     let item_id = id.into_inner();
-    
+
     let found_item = inventory::Entity::find_by_id(item_id.clone())
         .one(&data.db)
         .await?

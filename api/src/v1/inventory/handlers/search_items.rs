@@ -1,8 +1,8 @@
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 
-use crate::error::ApiError;
 use super::super::models::InventoryItem;
+use crate::error::ApiError;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
@@ -30,12 +30,16 @@ pub async fn search_items(
 ) -> Result<HttpResponse, ApiError> {
     let q = query.q.as_deref().unwrap_or("");
     log::info!("Searching for: {}", q);
-    
+
     let index = data.meilisearch.index("inventory");
-    let result = index.search().with_query(q).execute::<InventoryItem>().await?;
+    let result = index
+        .search()
+        .with_query(q)
+        .execute::<InventoryItem>()
+        .await?;
 
     log::info!("Search successful, found {} hits", result.hits.len());
     let hits: Vec<_> = result.hits.into_iter().map(|hit| hit.result).collect();
-    
+
     Ok(HttpResponse::Ok().json(hits))
 }

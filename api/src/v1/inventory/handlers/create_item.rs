@@ -2,8 +2,8 @@ use actix_web::{web, HttpResponse};
 use sea_orm::{ActiveModelTrait, Set};
 use uuid::Uuid;
 
-use crate::error::ApiError;
 use super::super::models::{CreateInventoryItem, InventoryItem};
+use crate::error::ApiError;
 use entity::inventory;
 
 #[utoipa::path(
@@ -25,10 +25,14 @@ pub async fn create_item(
     item: web::Json<CreateInventoryItem>,
 ) -> Result<HttpResponse, ApiError> {
     if item.quantity < 0 {
-        return Err(ApiError::ValidationError("Quantity cannot be negative".to_string()));
+        return Err(ApiError::ValidationError(
+            "Quantity cannot be negative".to_string(),
+        ));
     }
     if item.price < 0.0 {
-        return Err(ApiError::ValidationError("Price cannot be negative".to_string()));
+        return Err(ApiError::ValidationError(
+            "Price cannot be negative".to_string(),
+        ));
     }
 
     let new_uuid = Uuid::new_v4();
@@ -44,10 +48,8 @@ pub async fn create_item(
     // Add to Meilisearch for indexing
     let index = data.meilisearch.index("inventory");
     let item_for_meili: InventoryItem = inserted_item;
-    
-    index
-        .add_documents(&[&item_for_meili], Some("id"))
-        .await?;
+
+    index.add_documents(&[&item_for_meili], Some("id")).await?;
 
     Ok(HttpResponse::Ok().json(item_for_meili))
 }

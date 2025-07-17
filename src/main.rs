@@ -1,12 +1,16 @@
-use actix_web::{web, App, HttpServer, Responder, HttpResponse};
-use serde_json::json;
-use dotenvy::dotenv;
-use api::v1::{auth, employee, inventory, order};
-use config::{app::{AppConfig, AppState}, db::Db, meilisearch::Meilisearch};
-use db::mysql::init_db_pool;
-use search::meilisearch::{init_meilisearch, configure_index};
-use std::env;
+use actix_web::{App, HttpResponse, HttpServer, Responder, web};
 use api::openapi::ApiDoc;
+use api::v1::{auth, employee, inventory, order};
+use config::{
+    app::{AppConfig, AppState},
+    db::Db,
+    meilisearch::Meilisearch,
+};
+use db::mysql::init_db_pool;
+use dotenvy::dotenv;
+use search::meilisearch::{configure_index, init_meilisearch};
+use serde_json::json;
+use std::env;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 
@@ -24,7 +28,7 @@ async fn main() -> std::io::Result<()> {
     let config_meilisearch = Meilisearch::new(&env);
     let config_app = AppConfig::new(&env);
     let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    
+
     let db_pool = init_db_pool(&config_db.url)
         .await
         .expect("Gagal inisialisasi pool database");

@@ -1,5 +1,5 @@
 use api::v1::auth::models::TokenResponse;
-use fake::{faker::internet::en::SafeEmail, Fake};
+use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
@@ -394,14 +394,22 @@ async fn test_register_invalid_bcrypt_cost() {
         .await
         .expect("Failed to send registration request");
 
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 }
 
 #[tokio::test]
 #[serial]
 async fn test_login_invalid_jwt_secret() {
-    let (_db_pool, _meili_client, server_url) =
-        setup_test_app(None, None, Some("".to_string()), Some(jsonwebtoken::Algorithm::RS256)).await;
+    let (_db_pool, _meili_client, server_url) = setup_test_app(
+        None,
+        None,
+        Some("".to_string()),
+        Some(jsonwebtoken::Algorithm::RS256),
+    )
+    .await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";

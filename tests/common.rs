@@ -1,11 +1,11 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use api::v1::{auth, employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
 use db::mysql::init_db_pool;
-use search::meilisearch::init_meilisearch;
-use search::Client;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
+use search::Client;
+use search::meilisearch::init_meilisearch;
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
@@ -37,10 +37,9 @@ pub async fn setup_test_app(
     }
 
     // Inisialisasi Meilisearch
-    let meili_client =
-        init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-            .await
-            .expect("Gagal inisialisasi Meilisearch untuk tes");
+    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
+        .await
+        .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Bersihkan indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
@@ -109,10 +108,9 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
     }
 
     // Inisialisasi Meilisearch
-    let meili_client =
-        init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-            .await
-            .expect("Gagal inisialisasi Meilisearch untuk tes");
+    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
+        .await
+        .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Bersihkan indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
@@ -171,10 +169,9 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     }
 
     // Inisialisasi Meilisearch
-    let meili_client =
-        init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-            .await
-            .expect("Gagal inisialisasi Meilisearch untuk tes");
+    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
+        .await
+        .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Bersihkan indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {

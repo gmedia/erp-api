@@ -43,7 +43,7 @@ impl ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse {
         let status_code = self.status_code();
         let error_message = self.to_string();
-        
+
         HttpResponse::build(status_code).json(json!({
             "error": {
                 "code": status_code.as_u16(),

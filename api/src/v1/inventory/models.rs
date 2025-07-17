@@ -1,6 +1,6 @@
+use entity::inventory;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use entity::inventory;
 
 pub type InventoryItem = inventory::Model;
 

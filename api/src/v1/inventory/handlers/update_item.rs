@@ -1,8 +1,8 @@
 use actix_web::{web, HttpResponse};
-use sea_orm::{ActiveModelTrait, Set, EntityTrait, IntoActiveModel};
+use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel, Set};
 
+use super::super::models::{InventoryItem, UpdateInventoryItem};
 use crate::error::ApiError;
-use super::super::models::{UpdateInventoryItem, InventoryItem};
 use entity::inventory;
 
 #[utoipa::path(
@@ -29,7 +29,7 @@ pub async fn update_item(
     item: web::Json<UpdateInventoryItem>,
 ) -> Result<HttpResponse, ApiError> {
     let item_id = id.into_inner();
-    
+
     let found_item = inventory::Entity::find_by_id(item_id.clone())
         .one(&data.db)
         .await?
@@ -42,13 +42,17 @@ pub async fn update_item(
     }
     if let Some(quantity) = item.quantity {
         if quantity < 0 {
-            return Err(ApiError::ValidationError("Quantity cannot be negative".to_string()));
+            return Err(ApiError::ValidationError(
+                "Quantity cannot be negative".to_string(),
+            ));
         }
         active_item.quantity = Set(quantity);
     }
     if let Some(price) = item.price {
         if price < 0.0 {
-            return Err(ApiError::ValidationError("Price cannot be negative".to_string()));
+            return Err(ApiError::ValidationError(
+                "Price cannot be negative".to_string(),
+            ));
         }
         active_item.price = Set(price);
     }
@@ -57,9 +61,7 @@ pub async fn update_item(
 
     let index = data.meilisearch.index("inventory");
     let item_for_meili: InventoryItem = updated_item.clone();
-    index
-        .add_documents(&[&item_for_meili], Some("id"))
-        .await?;
+    index.add_documents(&[&item_for_meili], Some("id")).await?;
 
     Ok(HttpResponse::Ok().json(updated_item))
 }

@@ -1,17 +1,17 @@
-use api::v1::auth::middleware::Claims;
 use actix_web::HttpMessage;
-use jsonwebtoken::{encode, EncodingKey, Header};
+use api::v1::auth::middleware::Claims;
+use jsonwebtoken::{EncodingKey, Header, encode};
 use reqwest::header::{HeaderMap, HeaderValue};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 mod common;
-use common::{setup_test_app, setup_test_app_no_state};
+use actix_web::Error;
 use actix_web::body::BoxBody;
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use actix_web::Error;
-use futures_util::future::{ready, Ready};
+use api::v1::auth::middleware::JwtMiddleware;
+use common::{setup_test_app, setup_test_app_no_state};
+use futures_util::future::{Ready, ready};
 use futures_util::task::noop_waker;
 use std::task::{Context, Poll};
-use api::v1::auth::middleware::JwtMiddleware;
 
 fn create_token(sub: &str, secret: &str, exp: usize) -> String {
     let claims = Claims {
@@ -32,8 +32,7 @@ use serial_test::serial;
 #[serial]
 async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url) =
-        setup_test_app(None, None, Some(secret.clone()), None).await;
+    let (_db, _meili, server_url) = setup_test_app(None, None, Some(secret.clone()), None).await;
     let client = reqwest::Client::new();
 
     // Test case 1: Valid token
@@ -157,10 +156,12 @@ async fn test_jwt_middleware_call_logic() {
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
     let db_pool = init_db_pool(&config_db.url).await.unwrap();
-    let meili_client =
-        search::meilisearch::init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-            .await
-            .unwrap();
+    let meili_client = search::meilisearch::init_meilisearch(
+        &config_meilisearch.host,
+        &config_meilisearch.api_key,
+    )
+    .await
+    .unwrap();
     let app_state = web::Data::new(AppState {
         db: db_pool,
         meilisearch: meili_client,
@@ -288,7 +289,12 @@ async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let app_state = web::Data::new(AppState {
         db: init_db_pool(&Db::new("test").url).await.unwrap(),
-        meilisearch: search::meilisearch::init_meilisearch(&Meilisearch::new("test").host, &Meilisearch::new("test").api_key).await.unwrap(),
+        meilisearch: search::meilisearch::init_meilisearch(
+            &Meilisearch::new("test").host,
+            &Meilisearch::new("test").api_key,
+        )
+        .await
+        .unwrap(),
         jwt_secret: secret.clone(),
         jwt_expires_in_seconds: 3600,
         bcrypt_cost: 4,
@@ -312,7 +318,12 @@ async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {
         db: init_db_pool(&Db::new("test").url).await.unwrap(),
-        meilisearch: search::meilisearch::init_meilisearch(&Meilisearch::new("test").host, &Meilisearch::new("test").api_key).await.unwrap(),
+        meilisearch: search::meilisearch::init_meilisearch(
+            &Meilisearch::new("test").host,
+            &Meilisearch::new("test").api_key,
+        )
+        .await
+        .unwrap(),
         jwt_secret: secret.clone(),
         jwt_expires_in_seconds: 3600,
         bcrypt_cost: 4,
