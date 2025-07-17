@@ -62,7 +62,7 @@ cargo test
    cargo clippy --fix
    ```
 
-## Cek Dependency Tak Terpakai
+## Cek Dependency yang tidak Terpakai
 Menemukan dependency (crate) yang tidak digunakan → bisa mengurangi attack surface dan build time.
 1. Install:
    ```bash
@@ -85,7 +85,7 @@ Menemukan crate yang memiliki vulnerability (CVE, RCE, dsb).
    cargo audit fix
    ```
 
-## Menjalankan formatter style
+## Menjalankan Linter dengan `rustfmt`
 1. Install:
    ```bash
    rustup component add rustfmt --toolchain nightly
