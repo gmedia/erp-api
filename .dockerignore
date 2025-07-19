@@ -1,0 +1,21 @@
+# Ignore build artifacts
+target/
+
+# Ignore version control
+.git/
+.gitignore
+
+# Ignore Docker related files
+Dockerfile
+docker-compose.yml
+docker-compose.yml.dist
+
+# Ignore documentation and scripts
+README.md
+test.sh
+
+# Ignore environment files
+.env*
+
+# Ignore test files
+tests/
