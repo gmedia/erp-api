@@ -112,13 +112,6 @@ Hentikan dan hapus container:
 docker-compose down -v --remove-orphans
 ```
 
-## Building App
-1. Pastikan sudah login ke registry.gmedia.id
-2. Build image
-   ```bash
-   docker build -t registry.gmedia.id/gmd/erp-api:rust -f ./docker/Dockerfile .
-   ```
-
 ## Struktur Proyek
 ```
 /erp-api
