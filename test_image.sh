@@ -39,5 +39,5 @@ if [[ "$RESTORE" != true ]]; then
     docker build -t registry.gmedia.id/erp-api:rust -f ./Dockerfile .
     docker compose up -d
 else
-    cp docker-compose.yml.local docker-compose.yml
+    cp docker-compose.yml.example docker-compose.yml
 fi
