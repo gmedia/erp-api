@@ -1,5 +1,4 @@
 services:
-
   app:
     image: registry.gmedia.id/erp-api:rust
     ports:
