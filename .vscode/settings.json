@@ -5,6 +5,7 @@
         "autorestart",
         "chrono",
         "dotenv",
+        "dotenvy",
         "gmedia",
         "healthcheck",
         "initdb",

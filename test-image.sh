@@ -34,10 +34,12 @@ docker compose down -v
 
 if [[ "$RESTORE" != true ]]; then
     cp docker-compose.yml.test docker-compose.yml
+    rm -rf .env
 
     docker login registry.gmedia.id
     docker build -t registry.gmedia.id/erp-api:rust -f ./Dockerfile .
     docker compose up -d
 else
     cp docker-compose.yml.example docker-compose.yml
+    cp .env.example .env
 fi

@@ -68,6 +68,7 @@ RUN groupadd --system appuser && useradd --system --gid appuser appuser
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     libmariadb3 \
+    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -79,11 +80,18 @@ COPY --chown=appuser:appuser config ./config
 # Copy the compiled binary from the builder stage and set ownership
 COPY --from=builder --chown=appuser:appuser /app/target/release/erp-api .
 
+# Salin wait-for-it
+COPY ./wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
+# Salin file konfigurasi supervisord
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Switch to the non-root user
 USER appuser
 
 # Expose the port the application will run on
 EXPOSE 8000
 
-# Set the command to run the application
-CMD ["./erp-api"]
+# Jalankan supervisord
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

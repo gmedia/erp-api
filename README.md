@@ -9,7 +9,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
 ## Setup dengan Docker
 1. Clone repository ini.
 2. Pastikan Docker dan Docker Compose ter-install.
-3. Salin file `.env.example` ke `.env` dan sesuaikan jika perlu.
+3. Gunakan file `.env.example` dan `docker-compose.yml.example`, sesuaikan jika perlu.
 4. Jalankan MariaDB dan Meilisearch menggunakan Docker Compose:
    ```bash
    docker-compose up -d
@@ -53,11 +53,11 @@ cargo test
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
 ## Menjalankan Linter
-- Menemukan kode yang buruk, tidak idiomatik, boros, atau terlalu verbose:
+1. Menemukan kode yang buruk, tidak idiomatik, boros, atau terlalu verbose:
    ```bash
    cargo clippy
    ```
-- Fixing code:
+2. Fixing code:
    ```bash
    cargo clippy --fix
    ```
@@ -104,7 +104,11 @@ Menemukan crate yang memiliki vulnerability (CVE, RCE, dsb).
       "price": 999.99
   }
   ```
-- `GET /inventory/search?q={query}`: Mencari item inventory menggunakan Meilisearch. Contoh: `http://localhost:8080/inventory/search?q=Laptop`.
+- `GET /inventory/search?q={query}`: Mencari item inventory menggunakan Meilisearch.
+   Contoh:
+   ```
+   http://localhost:8080/inventory/search?q=Laptop
+   ```
 
 ## Menghentikan Layanan
 Hentikan dan hapus container:
@@ -134,11 +138,13 @@ docker-compose down -v --remove-orphans
 │   │   │   │   ├── models.rs
 │   │   │   │   └── routes.rs
 │   │   │   └── mod.rs
+│   │   ├── error.rs
 │   │   ├── openapi.rs
 │   │   └── lib.rs
 │   └── Cargo.toml
 ├── /config
 │   ├── /src
+│   │   ├── app.rs
 │   │   ├── db.rs
 │   │   ├── meilisearch.rs
 │   │   └── lib.rs
