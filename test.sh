@@ -1,9 +1,8 @@
 #!/bin/bash
 
-rm -rf target
 rm -rf tarpaulin-report.html
 
-cargo tarpaulin --force-clean --workspace --all-targets --out Html \
+cargo tarpaulin --force-clean --workspace --out Html \
     --exclude-files "api/src/openapi.rs" \
     --exclude-files "config/*" \
     --exclude-files "db/*" \
