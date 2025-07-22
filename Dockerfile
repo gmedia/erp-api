@@ -1,4 +1,5 @@
 # Stage 1: Planner - Create a dependency plan and cache dependencies
+# For reproducible builds, consider pinning the digest: @sha256:...
 FROM rust:1.88-slim-bullseye AS planner
 WORKDIR /app
 
@@ -19,21 +20,22 @@ COPY migration/Cargo.toml ./migration/
 COPY search/Cargo.toml ./search/
 
 # Create dummy files to build the dependency graph
-RUN mkdir -p src && echo "fn main() {}" > src/main.rs
-RUN mkdir -p api/src && echo "pub fn lib() {}" > api/src/lib.rs
-RUN mkdir -p config/src && echo "pub fn lib() {}" > config/src/lib.rs
-RUN mkdir -p db/src && echo "pub fn lib() {}" > db/src/lib.rs
-RUN mkdir -p entity/src && echo "pub fn lib() {}" > entity/src/lib.rs
-RUN mkdir -p migration/src
-RUN echo "fn main() {}" > migration/src/main.rs
-RUN echo "pub fn lib() {}" > migration/src/lib.rs
-RUN mkdir -p search/src && echo "pub fn lib() {}" > search/src/lib.rs
+RUN mkdir -p src && echo "fn main() {}" > src/main.rs && \
+    mkdir -p api/src && echo "pub fn lib() {}" > api/src/lib.rs && \
+    mkdir -p config/src && echo "pub fn lib() {}" > config/src/lib.rs && \
+    mkdir -p db/src && echo "pub fn lib() {}" > db/src/lib.rs && \
+    mkdir -p entity/src && echo "pub fn lib() {}" > entity/src/lib.rs && \
+    mkdir -p migration/src && \
+    echo "fn main() {}" > migration/src/main.rs && \
+    echo "pub fn lib() {}" > migration/src/lib.rs && \
+    mkdir -p search/src && echo "pub fn lib() {}" > search/src/lib.rs
 
 # Build only the dependencies to cache them
 RUN cargo build --release --workspace
 
 
 # Stage 2: Builder - Build the actual application
+# For reproducible builds, consider pinning the digest: @sha256:...
 FROM rust:1.88-slim-bullseye AS builder
 WORKDIR /app
 
@@ -59,6 +61,7 @@ RUN cargo build --release --bin erp-api
 
 
 # Stage 3: Final Image - Create the small production image
+# For reproducible builds, consider pinning the digest: @sha256:...
 FROM debian:bullseye-slim AS final
 
 # Create a non-root user and group for security
@@ -80,11 +83,11 @@ COPY --chown=appuser:appuser config ./config
 # Copy the compiled binary from the builder stage and set ownership
 COPY --from=builder --chown=appuser:appuser /app/target/release/erp-api .
 
-# Salin wait-for-it
+# Copy wait-for-it
 COPY ./wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
 
-# Salin file konfigurasi supervisord
+# Copy supervisord configuration file
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Switch to the non-root user
@@ -93,5 +96,5 @@ USER appuser
 # Expose the port the application will run on
 EXPOSE 8000
 
-# Jalankan supervisord
+# Run supervisord
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
