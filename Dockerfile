@@ -33,7 +33,6 @@ RUN mkdir -p src && echo "fn main() {}" > src/main.rs && \
 # Build only the dependencies to cache them
 RUN cargo build --release --workspace
 
-
 # Stage 2: Builder - Build the actual application
 # For reproducible builds, consider pinning the digest: @sha256:...
 FROM rust:1.88-slim-bullseye AS builder
@@ -58,7 +57,7 @@ RUN cargo clean -p api -p config -p db -p entity -p migration -p search
 
 # Build the application binary, which will use the cached dependencies
 RUN cargo build --release --bin erp-api
-
+RUN cargo build --release --bin migration --package migration
 
 # Stage 3: Final Image - Create the small production image
 # For reproducible builds, consider pinning the digest: @sha256:...
@@ -82,6 +81,7 @@ COPY --chown=appuser:appuser config ./config
 
 # Copy the compiled binary from the builder stage and set ownership
 COPY --from=builder --chown=appuser:appuser /app/target/release/erp-api .
+COPY --from=builder --chown=appuser:appuser /app/target/release/migration .
 
 # Copy wait-for-it
 COPY ./wait-for-it.sh /usr/local/bin/wait-for-it.sh
