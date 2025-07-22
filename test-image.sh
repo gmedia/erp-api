@@ -42,4 +42,5 @@ if [[ "$RESTORE" != true ]]; then
 else
     cp docker-compose.yml.example docker-compose.yml
     cp .env.example .env
+    docker compose up -d
 fi
