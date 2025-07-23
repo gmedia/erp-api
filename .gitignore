@@ -3,3 +3,5 @@
 docker-compose.yml
 tarpaulin-report.html
 tarpaulin-report.json
+.kilocode
+.kilocodemodes
