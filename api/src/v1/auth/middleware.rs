@@ -7,9 +7,10 @@ use futures_util::future::LocalBoxFuture;
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::future::{ready, Ready};
-use std::rc::Rc;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 use utoipa::ToSchema;
+use log::info;
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct Claims {
@@ -17,7 +18,15 @@ pub struct Claims {
     pub exp: usize,
 }
 
-pub struct JwtMiddleware;
+pub struct JwtMiddleware {
+    token_prefix: String,
+}
+
+impl JwtMiddleware {
+    pub fn new(token_prefix: String) -> Self {
+        JwtMiddleware { token_prefix }
+    }
+}
 
 impl<S, B> Transform<S, ServiceRequest> for JwtMiddleware
 where
@@ -33,13 +42,15 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         ready(Ok(JwtMiddlewareService {
-            service: Rc::new(service),
+            service: Arc::new(service),
+            token_prefix: self.token_prefix.clone(),
         }))
     }
 }
 
 pub struct JwtMiddlewareService<S> {
-    service: Rc<S>,
+    service: Arc<S>,
+    token_prefix: String,
 }
 
 impl<S, B> Service<ServiceRequest> for JwtMiddlewareService<S>
@@ -58,33 +69,37 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = self.service.clone();
+        let token_prefix = self.token_prefix.clone();
 
         Box::pin(async move {
-            match Self::verify_token(&req) {
+            match Self::verify_token(&req, &token_prefix) {
                 Ok(claims) => {
                     req.extensions_mut().insert(claims);
                     service.call(req).await
                 }
-                Err(e) => Err(e.into()),
+                Err(e) => {
+                    info!("Error verifying token: {}", e);
+                    Err(e.into())
+                }
             }
         })
     }
 }
 
 impl<S> JwtMiddlewareService<S> {
-    fn extract_token(req: &ServiceRequest) -> Option<&str> {
+    fn extract_token<'a>(req: &'a ServiceRequest, token_prefix: &'a str) -> Option<&'a str> {
         req.headers()
             .get("Authorization")
             .and_then(|h| h.to_str().ok())
-            .and_then(|s| s.strip_prefix("Bearer "))
+            .and_then(|s| s.strip_prefix(token_prefix).map(|s| s.trim()))
     }
 
-    fn verify_token(req: &ServiceRequest) -> Result<Claims, ApiError> {
+    fn verify_token(req: &ServiceRequest, token_prefix: &str) -> Result<Claims, ApiError> {
         let data = req
             .app_data::<actix_web::web::Data<config::app::AppState>>()
             .ok_or(ApiError::InternalServerError)?;
 
-        let token = match Self::extract_token(req) {
+        let token = match Self::extract_token(req, token_prefix) {
             Some(token) => token,
             None => return Err(ApiError::Unauthorized("Missing token".to_string())),
         };
@@ -99,7 +114,10 @@ impl<S> JwtMiddlewareService<S> {
             &validation,
         ) {
             Ok(token_data) => Ok(token_data.claims),
-            Err(_) => Err(ApiError::Unauthorized("Invalid token".to_string())),
+            Err(e) => {
+                info!("Error decoding token: {}", e);
+                Err(ApiError::Unauthorized("Invalid token".to_string()))
+            }
         }
     }
 }
