@@ -5,12 +5,12 @@ use actix_web::{
 };
 use futures_util::future::LocalBoxFuture;
 use jsonwebtoken::{decode, DecodingKey, Validation};
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::future::{ready, Ready};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 use utoipa::ToSchema;
-use log::info;
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct Claims {

@@ -86,9 +86,7 @@ async fn test_create_and_search_inventory() {
 
     // Tes endpoint GET /v1/inventory/search
     let response = client
-        .get(format!(
-            "{server_url}/v1/inventory/search?q={search_query}"
-        ))
+        .get(format!("{server_url}/v1/inventory/search?q={search_query}"))
         .bearer_auth(token)
         .send()
         .await
