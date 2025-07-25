@@ -862,12 +862,14 @@ version = "0.1.0"
 dependencies = [
  "config 0.14.1",
  "dotenvy",
+ "inertia-rust",
  "jsonwebtoken",
  "meilisearch-sdk",
  "sea-orm",
  "serde",
  "serde_derive",
  "toml",
+ "vite-rust",
 ]
 
 [[package]]
@@ -1035,6 +1037,7 @@ dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
+ "strsim",
  "syn 2.0.104",
 ]
 
@@ -1075,6 +1078,37 @@ checksum = "9c9e6a11ca8224451684bc0d7d5a7adbf8f2fd6887261a1cfc3c0432f9d4068e"
 dependencies = [
  "powerfmt",
  "serde",
+]
+
+[[package]]
+name = "derive_builder"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "507dfb09ea8b7fa618fcf76e953f4f5e192547945816d5358edffe39f6f94947"
+dependencies = [
+ "derive_builder_macro",
+]
+
+[[package]]
+name = "derive_builder_core"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d5bcf7b024d6835cfb3d473887cd966994907effbe9227e8c8219824d06c4e8"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
+name = "derive_builder_macro"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab63b0e2bf4d5928aff72e83a7dace85d7bba5fe12dcc3c5a572d78caffd3f3c"
+dependencies = [
+ "derive_builder_core",
+ "syn 2.0.104",
 ]
 
 [[package]]
@@ -1215,6 +1249,7 @@ dependencies = [
  "env_logger",
  "fake",
  "futures-util",
+ "inertia-rust",
  "jsonwebtoken",
  "log",
  "rand 0.8.5",
@@ -1228,6 +1263,7 @@ dependencies = [
  "utoipa",
  "utoipa-scalar",
  "uuid",
+ "vite-rust",
 ]
 
 [[package]]
@@ -1567,6 +1603,22 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+]
+
+[[package]]
+name = "handlebars"
+version = "6.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "759e2d5aea3287cb1190c8ec394f42866cb5bf74fcbf213f354e3c856ea26098"
+dependencies = [
+ "derive_builder",
+ "log",
+ "num-order",
+ "pest",
+ "pest_derive",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -1956,6 +2008,24 @@ dependencies = [
  "equivalent",
  "hashbrown 0.15.4",
  "serde",
+]
+
+[[package]]
+name = "inertia-rust"
+version = "2.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cf9907e735c27b5d2ae790c7798c31618544ac9c862bb728d5653a6d3978185"
+dependencies = [
+ "actix-web",
+ "async-trait",
+ "futures",
+ "futures-util",
+ "handlebars",
+ "log",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "vite-rust",
 ]
 
 [[package]]
@@ -2389,6 +2459,21 @@ dependencies = [
  "autocfg",
  "num-integer",
  "num-traits",
+]
+
+[[package]]
+name = "num-modular"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17bb261bf36fa7d83f4c294f834e91256769097b3cb505d44831e0a179ac647f"
+
+[[package]]
+name = "num-order"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "537b596b97c40fcf8056d153049eb22f481c17ebce72a513ec9286e4986d1bb6"
+dependencies = [
+ "num-modular",
 ]
 
 [[package]]
@@ -4498,6 +4583,21 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "vite-rust"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ae9a5cd007a52d1227f4de7488c9da0a46b7946b3e9803025677e797ffe6f41"
+dependencies = [
+ "hex",
+ "log",
+ "md-5",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "want"

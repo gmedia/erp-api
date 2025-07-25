@@ -1,4 +1,4 @@
-use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use actix_web::{App, HttpResponse, HttpServer, Responder, web, get, HttpRequest};
 use api::openapi::ApiDoc;
 use api::v1::{auth, employee, inventory, order};
 use config::{
@@ -13,9 +13,17 @@ use serde_json::json;
 use std::env;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
+use config::inertia::initialize_inertia;
+use inertia_rust::{Inertia, InertiaFacade};
+// use actix_web::{get, Responder, HttpRequest, web::Data};
 
 async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(json!({ "status": "active" }))
+}
+
+#[get("/")]
+async fn index(req: HttpRequest) -> impl Responder {
+    Inertia::render(&req, "Index".into()).await
 }
 
 #[actix_web::main]
@@ -52,16 +60,22 @@ async fn main() -> std::io::Result<()> {
         jwt_algorithm: jsonwebtoken::Algorithm::HS256,
     };
 
+    // starts a Inertia manager instance.
+    let inertia = initialize_inertia().await?;
+    let inertia = web::Data::new(inertia);
+
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
             .app_data(web::Data::new(app_state.clone()))
+            .app_data(web::Data::new(inertia.clone()))
             // Register your routes here
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
+            .service(index)
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .run()
