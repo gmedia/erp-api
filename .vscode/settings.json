@@ -5,6 +5,7 @@
         "appuser",
         "autorestart",
         "chrono",
+        "clippy",
         "dotenv",
         "dotenvy",
         "gmedia",
@@ -20,10 +21,12 @@
         "nodaemon",
         "pidfile",
         "reqwest",
+        "rustup",
         "serde",
         "sqlx",
         "startsecs",
         "supervisord",
+        "udeps",
         "utoipa",
         "watchexec"
     ]

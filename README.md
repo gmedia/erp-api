@@ -53,7 +53,7 @@ cargo test
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
 
 ## Menjalankan Linter
-1. Menemukan kode yang buruk, tidak idiomatik, boros, atau terlalu verbose:
+1. Menemukan kode yang buruk, tidak idiomatis, boros, atau terlalu verbose:
    ```bash
    cargo clippy
    ```
