@@ -25,7 +25,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -37,7 +37,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -66,7 +66,7 @@ async fn test_create_and_search_inventory() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -87,8 +87,7 @@ async fn test_create_and_search_inventory() {
     // Tes endpoint GET /v1/inventory/search
     let response = client
         .get(format!(
-            "{}/v1/inventory/search?q={}",
-            server_url, search_query
+            "{server_url}/v1/inventory/search?q={search_query}"
         ))
         .bearer_auth(token)
         .send()
@@ -117,7 +116,7 @@ async fn test_create_inventory_negative_quantity() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token)
         .json(&new_item)
         .send()
@@ -143,7 +142,7 @@ async fn test_create_inventory_negative_price() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token)
         .json(&new_item)
         .send()
@@ -170,7 +169,7 @@ async fn test_update_inventory() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -229,7 +228,7 @@ async fn test_update_inventory_negative_quantity() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -274,7 +273,7 @@ async fn test_update_inventory_negative_price() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -319,7 +318,7 @@ async fn test_delete_inventory() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -376,7 +375,7 @@ async fn test_create_item_internal_server_error() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token)
         .json(&new_item)
         .send()
@@ -403,7 +402,7 @@ async fn test_update_item_internal_server_error() {
     let _ = db_pool.close().await;
 
     let response = client
-        .put(format!("{}/v1/inventory/update/{}", server_url, item_id))
+        .put(format!("{server_url}/v1/inventory/update/{item_id}"))
         .bearer_auth(token)
         .json(&updated_data)
         .send()
@@ -434,7 +433,7 @@ async fn test_delete_item_internal_server_error() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -469,7 +468,7 @@ async fn test_search_items_internal_server_error() {
     let token = get_auth_token(&client, &server_url).await;
 
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .bearer_auth(token)
         .send()
         .await
@@ -504,7 +503,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
     let name: String = Sentence(1..3).fake();
     let new_item = json!({ "name": name, "quantity": 10, "price": 10.0 });
     let res = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&new_item)
         .send()
@@ -558,8 +557,7 @@ async fn test_update_item_not_found() {
 
     let response = client
         .put(format!(
-            "{}/v1/inventory/update/{}",
-            server_url, non_existent_id
+            "{server_url}/v1/inventory/update/{non_existent_id}"
         ))
         .bearer_auth(token)
         .json(&updated_data)
@@ -593,7 +591,7 @@ async fn test_update_item_fails_on_db_constraint() {
     let item2 = json!({ "name": name2, "quantity": 2, "price": 2.0 });
 
     let res1 = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&item1)
         .send()
@@ -601,7 +599,7 @@ async fn test_update_item_fails_on_db_constraint() {
         .unwrap();
     let created_item1: InventoryItem = res1.json().await.unwrap();
     let _ = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token.clone())
         .json(&item2)
         .send()

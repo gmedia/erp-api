@@ -42,7 +42,7 @@ async fn test_jwt_middleware_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &secret, exp);
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .bearer_auth(token)
         .send()
         .await
@@ -53,7 +53,7 @@ async fn test_jwt_middleware_logic() {
 
     // Test case 2: No token
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .send()
         .await
         .unwrap();
@@ -61,7 +61,7 @@ async fn test_jwt_middleware_logic() {
 
     // Test case 3: Invalid token
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .bearer_auth("invalid-token")
         .send()
         .await
@@ -75,7 +75,7 @@ async fn test_jwt_middleware_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &secret, exp);
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .bearer_auth(token)
         .send()
         .await
@@ -89,7 +89,7 @@ async fn test_jwt_middleware_logic() {
         HeaderValue::from_bytes(b"Bearer \x80").unwrap(),
     );
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .headers(headers)
         .send()
         .await
@@ -103,8 +103,8 @@ async fn test_jwt_middleware_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &secret, exp);
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
-        .header("Authorization", format!("Basic {}", token))
+        .get(format!("{server_url}/v1/auth/me"))
+        .header("Authorization", format!("Basic {token}"))
         .send()
         .await
         .unwrap();
@@ -118,7 +118,7 @@ async fn test_jwt_middleware_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &wrong_secret, exp);
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .bearer_auth(token)
         .send()
         .await
@@ -133,7 +133,7 @@ async fn test_jwt_middleware_no_app_state() {
     let client = reqwest::Client::new();
 
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .bearer_auth("some-token")
         .send()
         .await
@@ -182,7 +182,7 @@ async fn test_jwt_middleware_call_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &secret, exp);
     let req = test::TestRequest::default()
-        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .insert_header(("Authorization", format!("Bearer {token}")))
         .app_data(app_state.clone())
         .to_srv_request();
     let res = middleware_service.call(req).await;
@@ -221,7 +221,7 @@ async fn test_jwt_middleware_call_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &secret, exp);
     let req = test::TestRequest::default()
-        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .insert_header(("Authorization", format!("Bearer {token}")))
         .app_data(app_state.clone())
         .to_srv_request();
     let err = middleware_service.call(req).await.err().unwrap();
@@ -235,7 +235,7 @@ async fn test_jwt_middleware_call_logic() {
         .as_secs() as usize;
     let token = create_token("user1", &wrong_secret, exp);
     let req = test::TestRequest::default()
-        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .insert_header(("Authorization", format!("Bearer {token}")))
         .app_data(app_state.clone())
         .to_srv_request();
     let err = middleware_service.call(req).await.err().unwrap();
@@ -297,7 +297,7 @@ async fn test_jwt_middleware_invalid_utf8_header() {
         HeaderValue::from_bytes(b"Bearer \x80").unwrap(),
     );
     let res = client
-        .get(format!("{}/v1/auth/me", server_url))
+        .get(format!("{server_url}/v1/auth/me"))
         .headers(headers)
         .send()
         .await
@@ -330,7 +330,7 @@ async fn test_jwt_middleware_wrong_key_for_alg() {
     // We provide a token, although the decoding will fail due to the key/alg mismatch.
     let token = "some.jwt.token";
     let req = test::TestRequest::default()
-        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .insert_header(("Authorization", format!("Bearer {token}")))
         .app_data(app_state.clone())
         .to_srv_request();
 

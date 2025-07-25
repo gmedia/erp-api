@@ -22,7 +22,7 @@ async fn test_register_and_login() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -37,7 +37,7 @@ async fn test_register_and_login() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -68,7 +68,7 @@ async fn test_access_protected_route() {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -80,7 +80,7 @@ async fn test_access_protected_route() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -91,7 +91,7 @@ async fn test_access_protected_route() {
 
     // Access protected route with token
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .bearer_auth(token)
         .send()
         .await
@@ -101,7 +101,7 @@ async fn test_access_protected_route() {
 
     // Access protected route without token
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .send()
         .await
         .expect("Failed to send request to protected route");
@@ -123,7 +123,7 @@ async fn test_register_existing_user() {
 
     // First registration
     let response = client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -133,7 +133,7 @@ async fn test_register_existing_user() {
 
     // Second registration with the same username
     let response = client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -156,7 +156,7 @@ async fn test_login_non_existent_user() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -181,7 +181,7 @@ async fn test_login_wrong_password() {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -194,7 +194,7 @@ async fn test_login_wrong_password() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -212,7 +212,7 @@ async fn test_access_protected_route_invalid_token() {
 
     // Access protected route with invalid token
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .bearer_auth(invalid_token)
         .send()
         .await
@@ -235,7 +235,7 @@ async fn test_login_db_error() {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -251,7 +251,7 @@ async fn test_login_db_error() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -270,7 +270,7 @@ async fn test_access_protected_route_malformed_header() {
 
     // Access protected route with a malformed token
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .header("Authorization", "NotBearer token")
         .send()
         .await
@@ -294,7 +294,7 @@ async fn test_access_protected_route_expired_token() {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -306,7 +306,7 @@ async fn test_access_protected_route_expired_token() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -320,7 +320,7 @@ async fn test_access_protected_route_expired_token() {
 
     // Access protected route with expired token
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .bearer_auth(token)
         .send()
         .await
@@ -338,7 +338,7 @@ async fn test_access_protected_route_no_app_state() {
 
     // Access protected route without app state configured
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .bearer_auth("some-token")
         .send()
         .await
@@ -363,7 +363,7 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
     );
 
     let response = client
-        .get(format!("{}/v1/inventory/search?q=test", server_url))
+        .get(format!("{server_url}/v1/inventory/search?q=test"))
         .headers(headers)
         .send()
         .await
@@ -388,7 +388,7 @@ async fn test_register_invalid_bcrypt_cost() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -421,7 +421,7 @@ async fn test_login_invalid_jwt_secret() {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -434,7 +434,7 @@ async fn test_login_invalid_jwt_secret() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -465,7 +465,7 @@ async fn test_register_db_error() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -492,7 +492,7 @@ async fn test_login_malformed_hash() {
     });
 
     client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await
@@ -517,7 +517,7 @@ async fn test_login_malformed_hash() {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await

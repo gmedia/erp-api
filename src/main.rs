@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
         let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
         configure_index(&meili_client, index_name, &pk)
             .await
-            .unwrap_or_else(|_| panic!("Failed to configure '{}' index", index_name));
+            .unwrap_or_else(|_| panic!("Failed to configure '{index_name}' index"));
     }
 
     let app_state = AppState {

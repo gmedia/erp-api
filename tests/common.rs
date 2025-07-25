@@ -30,7 +30,7 @@ pub async fn setup_test_app(
         db_pool
             .execute(Statement::from_string(
                 db_pool.get_database_backend(),
-                format!("TRUNCATE TABLE `{}`;", table),
+                format!("TRUNCATE TABLE `{table}`;"),
             ))
             .await
             .unwrap();
@@ -76,7 +76,7 @@ pub async fn setup_test_app(
         .first()
         .expect("Gagal mendapatkan alamat server")
         .to_owned();
-    let server_url = format!("http://{}", server_addr);
+    let server_url = format!("http://{server_addr}");
 
     // Jalankan server di background
     tokio::spawn(server.run());
@@ -101,7 +101,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
         db_pool
             .execute(Statement::from_string(
                 db_pool.get_database_backend(),
-                format!("TRUNCATE TABLE `{}`;", table),
+                format!("TRUNCATE TABLE `{table}`;"),
             ))
             .await
             .unwrap();
@@ -135,7 +135,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
         .first()
         .expect("Gagal mendapatkan alamat server")
         .to_owned();
-    let server_url = format!("http://{}", server_addr);
+    let server_url = format!("http://{server_addr}");
 
     // Jalankan server di background
     tokio::spawn(server.run());
@@ -162,7 +162,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
         db_pool
             .execute(Statement::from_string(
                 db_pool.get_database_backend(),
-                format!("TRUNCATE TABLE `{}`;", table),
+                format!("TRUNCATE TABLE `{table}`;"),
             ))
             .await
             .unwrap();
@@ -208,7 +208,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
         .first()
         .expect("Gagal mendapatkan alamat server")
         .to_owned();
-    let server_url = format!("http://{}", server_addr);
+    let server_url = format!("http://{server_addr}");
 
     // Jalankan server di background
     tokio::spawn(server.run());

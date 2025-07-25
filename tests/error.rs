@@ -17,7 +17,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     let _ = client
-        .post(format!("{}/v1/auth/register", server_url))
+        .post(format!("{server_url}/v1/auth/register"))
         .json(&register_req)
         .send()
         .await;
@@ -28,7 +28,7 @@ async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
     });
 
     let response = client
-        .post(format!("{}/v1/auth/login", server_url))
+        .post(format!("{server_url}/v1/auth/login"))
         .json(&login_req)
         .send()
         .await
@@ -57,7 +57,7 @@ async fn test_internal_server_error_response_format() {
     });
 
     let response = client
-        .post(format!("{}/v1/inventory/create", server_url))
+        .post(format!("{server_url}/v1/inventory/create"))
         .bearer_auth(token)
         .json(&new_item)
         .send()
