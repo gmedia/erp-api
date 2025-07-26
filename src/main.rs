@@ -1,4 +1,4 @@
-use actix_web::{App, HttpResponse, HttpServer, Responder, web, get, HttpRequest};
+use actix_web::{App, HttpResponse, HttpServer, Responder, web, get, HttpRequest, web::Data};
 use api::openapi::ApiDoc;
 use api::v1::{auth, employee, inventory, order};
 use config::{
@@ -15,14 +15,13 @@ use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 use config::inertia::initialize_inertia;
 use inertia_rust::{Inertia, InertiaFacade};
-// use actix_web::{get, Responder, HttpRequest, web::Data};
 
 async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(json!({ "status": "active" }))
 }
 
-#[get("/")]
-async fn index(req: HttpRequest) -> impl Responder {
+#[get("/web")]
+async fn web_index(req: HttpRequest) -> impl Responder {
     Inertia::render(&req, "Index".into()).await
 }
 
@@ -62,20 +61,20 @@ async fn main() -> std::io::Result<()> {
 
     // starts a Inertia manager instance.
     let inertia = initialize_inertia().await?;
-    let inertia = web::Data::new(inertia);
+    let inertia = Data::new(inertia);
 
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
             .app_data(web::Data::new(app_state.clone()))
-            .app_data(web::Data::new(inertia.clone()))
+            .app_data(inertia.clone())
             // Register your routes here
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
-            .service(index)
+            .service(web_index)
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .run()
