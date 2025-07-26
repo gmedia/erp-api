@@ -5,3 +5,9 @@ tarpaulin-report.html
 tarpaulin-report.json
 .kilocode
 .kilocodemodes
+node_modules/
+dist/
+public/bundle
+public/hot
+storage/
+.env
