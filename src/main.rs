@@ -70,7 +70,7 @@ async fn main() -> std::io::Result<()> {
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
-            .configure(page::index::init_routes)
+            .configure(page::routes::init_routes)
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
