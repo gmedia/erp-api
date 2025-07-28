@@ -16,7 +16,7 @@ export default function Index(props: any) {
 
                 <div className="flex flex-col items-center gap-4 w-fit">
                     <Link
-                        href="/"
+                        href="/page/v1"
                         className="
                             text-purple-200 font-medium text-lg underline
                             flex items-center gap-3 bg-purple-400/25 px-8 py-3 rounded-xl
