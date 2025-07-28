@@ -1252,6 +1252,7 @@ dependencies = [
  "inertia-rust",
  "jsonwebtoken",
  "log",
+ "page",
  "rand 0.8.5",
  "reqwest",
  "sea-orm",
@@ -2592,6 +2593,15 @@ dependencies = [
  "proc-macro2-diagnostics",
  "quote",
  "syn 2.0.104",
+]
+
+[[package]]
+name = "page"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "inertia-rust",
+ "vite-rust",
 ]
 
 [[package]]

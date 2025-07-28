@@ -22,6 +22,7 @@ db = { path = "./db" }
 search = { path = "./search" }
 config = { path = "./config" }
 api = { path = "./api" }
+page = { path = "./page" }
 bcrypt = "0.15.1"
 inertia-rust = { version = "2", features = ["actix", "vite-hbs-template-resolver"] }
 vite-rust = { version = "0.2" }

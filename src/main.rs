@@ -1,10 +1,13 @@
-use actix_web::{App, HttpResponse, HttpServer, Responder, web, get, HttpRequest, web::Data};
-use api::openapi::ApiDoc;
-use api::v1::{auth, employee, inventory, order};
+use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use api::{
+    openapi::{ApiDoc},
+    v1::{auth, employee, inventory, order},
+};
 use config::{
     app::{AppConfig, AppState},
     db::Db,
     meilisearch::Meilisearch,
+    inertia::initialize_inertia,
 };
 use db::mysql::init_db_pool;
 use dotenvy::dotenv;
@@ -13,16 +16,10 @@ use serde_json::json;
 use std::env;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
-use config::inertia::initialize_inertia;
-use inertia_rust::{Inertia, InertiaFacade};
+use page;
 
 async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(json!({ "status": "active" }))
-}
-
-#[get("/web")]
-async fn web_index(req: HttpRequest) -> impl Responder {
-    Inertia::render(&req, "Index".into()).await
 }
 
 #[actix_web::main]
@@ -61,7 +58,7 @@ async fn main() -> std::io::Result<()> {
 
     // starts a Inertia manager instance.
     let inertia = initialize_inertia().await?;
-    let inertia = Data::new(inertia);
+    let inertia = web::Data::new(inertia);
 
     HttpServer::new(move || {
         App::new()
@@ -73,8 +70,8 @@ async fn main() -> std::io::Result<()> {
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
+            .configure(page::index::init_routes)
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
-            .service(web_index)
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .run()
