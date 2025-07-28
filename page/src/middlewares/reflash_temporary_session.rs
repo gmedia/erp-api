@@ -1,3 +1,4 @@
+//! See: https://github.com/KaioFelps/inertia-rust/tree/v2/examples/actix_ssr
 //! See: https://kaiofelps.github.io/inertia-rust/advanced/actix-web-implementations.html
 
 use actix_session::SessionExt;

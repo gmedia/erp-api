@@ -45,7 +45,7 @@ async fn main() -> std::io::Result<()> {
     let config_db = Db::new(&env);
     let config_meilisearch = Meilisearch::new(&env);
     let config_app = AppConfig::new(&env);
-    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set.");
 
     let db_pool = init_db_pool(&config_db.url)
         .await
@@ -85,6 +85,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
+            .service(actix_files::Files::new("/", "./public/").prefer_utf8(true))
             // Config for api
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
             .configure(inventory::routes::init_routes)
@@ -113,7 +114,9 @@ async fn main() -> std::io::Result<()> {
                         })),
                     )
                     .wrap(ReflashTemporarySessionMiddleware::new())
-                    .wrap(SessionMiddleware::new(storage.clone(), key.clone()))
+                    .wrap(
+                        SessionMiddleware::new(storage.clone(), key.clone())
+                    )
                     .configure(page::routes::init_routes)
                     .app_data(inertia.clone())
             )

@@ -1,3 +1,4 @@
+//! See: https://github.com/KaioFelps/inertia-rust/tree/v2/examples/actix_ssr
 //! See: https://gist.github.com/KaioFelps/a5308ab73f8fa22d268240958ddbd1cb
 
 use std::{collections::HashMap, io, str::FromStr};
