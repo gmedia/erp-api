@@ -1,4 +1,3 @@
 pub mod routes;
-pub mod index;
-pub mod contact;
-pub mod todo;
+pub mod middlewares;
+pub mod v1;

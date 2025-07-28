@@ -20,6 +20,7 @@
         "meilisearch",
         "nodaemon",
         "pidfile",
+        "Reflash",
         "reqwest",
         "rustup",
         "serde",
