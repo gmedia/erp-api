@@ -10,7 +10,7 @@ use serde::Deserialize;
 use super::task::services::{get_tasks};
 
 #[get("/v1/todo")]
-async fn render(req: HttpRequest, query: web::Query<TodoQuery>) -> impl Responder {
+async fn handle(req: HttpRequest, query: web::Query<TodoQuery>) -> impl Responder {
     let page = query.page.unwrap_or(1);
 
     Inertia::render_with_props(
