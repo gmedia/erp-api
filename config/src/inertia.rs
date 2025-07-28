@@ -22,12 +22,12 @@ pub async fn initialize_inertia() -> Result<Inertia, io::Error> {
         .build()
         .map_err(InertiaError::to_io_error)?;
 
-    let url = env::var("APP_URL")
-        .unwrap_or_else(|_| "http://localhost:8080".to_string());
-
     Inertia::new(
         InertiaConfig::builder()
-            .set_url(url)
+            .set_url(
+                env::var("APP_URL")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string())
+            )
             .set_version(InertiaVersion::Literal(ASSETS_VERSION.get().unwrap()))
             .set_template_resolver(Box::new(resolver))
             // .enable_ssr()
