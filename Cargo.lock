@@ -2602,7 +2602,9 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "inertia-rust",
+ "serde",
  "serde_json",
+ "tokio",
  "vite-rust",
 ]
 
