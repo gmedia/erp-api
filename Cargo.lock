@@ -2720,6 +2720,7 @@ version = "0.1.0"
 dependencies = [
  "actix-session",
  "actix-web",
+ "futures-util",
  "inertia-rust",
  "log",
  "serde",
