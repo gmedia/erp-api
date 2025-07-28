@@ -84,7 +84,7 @@ export default function Todo() {
                     </button>
 
                     <Link
-                        href="/todo/create"
+                        href="/page/v1/todo/create"
                         className="
                             p-7 py-4 rounded-xl bg-green-500/20 hover:bg-green-600/20 active:bg-green-800/20
                             transition-all duration-100 ring-0 ring-green-400/25 focus:ring-8 outline-none

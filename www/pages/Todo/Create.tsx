@@ -10,7 +10,7 @@ export default function CreateTask() {
     const {setData, post, errors} = useForm<FormProps>();
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        post("/todo/store");
+        post("/page/v1/todo/store");
     }
 
     return (

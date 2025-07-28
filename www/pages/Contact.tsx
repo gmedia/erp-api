@@ -18,7 +18,7 @@ export default function Contact({ user, assetsVersion }: Props) {
                 <p className="text-lg mb-12">Contact-me: <span className="italic">{user.email}</span></p>
 
                 <Link
-                    href="/"
+                    href="/page/v1/"
                     className="
                         group text-purple-200 font-medium text-lg underline
                         flex items-center gap-3 bg-purple-400/25 hover:bg-purple-400/35

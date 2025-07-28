@@ -38,7 +38,7 @@ export default function Index({message, version}: Props) {
                     </button>
 
                     <Link
-                        href="/contact"
+                        href="/page/v1/contact"
                         className="
                             text-purple-200 font-medium text-lg underline
                             flex items-center gap-3 bg-purple-400/25 px-8 py-3 rounded-xl
