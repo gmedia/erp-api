@@ -1,4 +1,7 @@
-use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use actix_web::{
+    App, HttpResponse, HttpServer, Responder, web,    
+    cookie::{Key},
+};
 use api::{
     openapi::{ApiDoc},
     v1::{auth, employee, inventory, order},
@@ -8,6 +11,8 @@ use config::{
     db::Db,
     meilisearch::Meilisearch,
     inertia::initialize_inertia,
+    file_session::FileSessionStore,
+    vite::ASSETS_VERSION,
 };
 use db::mysql::init_db_pool;
 use dotenvy::dotenv;
@@ -16,7 +21,16 @@ use serde_json::json;
 use std::env;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
-use page;
+use page::middlewares::{
+    reflash_temporary_session::ReflashTemporarySessionMiddleware,
+    garbage_collector::GarbageCollectorMiddleware,
+};
+use actix_session::{SessionExt, SessionMiddleware};
+use inertia_rust::{
+    actix::InertiaMiddleware, hashmap, prop_resolver, InertiaProp, IntoInertiaPropResult,
+};
+use serde_json::{Map, Value};
+use std::{sync::Arc};
 
 async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(json!({ "status": "active" }))
@@ -60,18 +74,49 @@ async fn main() -> std::io::Result<()> {
     let inertia = initialize_inertia().await?;
     let inertia = web::Data::new(inertia);
 
+    let key = Key::from(
+        env::var("APP_KEY")
+            .expect("You must provide a valid APP_KEY environment variable.")
+            .as_bytes(),
+    );
+
+    let storage = FileSessionStore::default();
+
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
-            .app_data(web::Data::new(app_state.clone()))
-            .app_data(inertia.clone())
-            // Register your routes here
+            // Config for api
+            .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
-            .configure(page::routes::init_routes)
-            .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
+            .app_data(web::Data::new(app_state.clone()))
+            // Config for page
+            .service(
+                web::scope("/page")
+                    .wrap(GarbageCollectorMiddleware::new())
+                    .wrap(                
+                        InertiaMiddleware::new().with_shared_props(Arc::new(move |req| {
+                            let flash = req.get_session()
+                                .get::<Map<String, Value>>("_flash")
+                                .unwrap_or_default()
+                                .unwrap_or_default();
+                            
+                            Box::pin(async move {
+                                hashmap![
+                                    "version" => InertiaProp::always("0.1.0"),
+                                    "assetsVersion" => InertiaProp::lazy(prop_resolver!({ ASSETS_VERSION.get().unwrap().into_inertia_value() })),
+                                    "flash" => InertiaProp::always(flash)
+                                ]
+                            })
+                        })),
+                    )
+                    .wrap(ReflashTemporarySessionMiddleware::new())
+                    .wrap(SessionMiddleware::new(storage.clone(), key.clone()))
+                    .configure(page::routes::init_routes)
+                    .app_data(inertia.clone())
+            )
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .run()

@@ -9,7 +9,7 @@ use inertia_rust::{
 use serde::Deserialize;
 use super::task::services::{get_tasks};
 
-#[get("/todo")]
+#[get("/v1/todo")]
 async fn render(req: HttpRequest, query: web::Query<TodoQuery>) -> impl Responder {
     let page = query.page.unwrap_or(1);
 

@@ -4,7 +4,7 @@ use inertia_rust::{
 };
 use serde_json::{json};
 
-#[get("/contact")]
+#[get("/v1/contact")]
 pub async fn render(req: HttpRequest) -> impl Responder {
     let props = hashmap![
         "user" => InertiaProp::always(json!({

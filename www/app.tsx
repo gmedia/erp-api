@@ -1,6 +1,7 @@
 import "./index.css"
 
-import { hydrateRoot } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
+// import { hydrateRoot } from 'react-dom/client'
 import { createInertiaApp } from '@inertiajs/react'
 
 export const appName = 'Inertia Test'
@@ -17,7 +18,7 @@ createInertiaApp({
   },
 
   setup({ el, App, props }) {
-    // createRoot(el).render(<App {...props} />);
-    hydrateRoot(el, <App {...props} />);
+    createRoot(el).render(<App {...props} />);
+    // hydrateRoot(el, <App {...props} />);
   },
 })

@@ -924,6 +924,10 @@ dependencies = [
 name = "config"
 version = "0.1.0"
 dependencies = [
+ "actix-session",
+ "actix-web",
+ "anyhow",
+ "chrono",
  "config 0.14.1",
  "dotenvy",
  "inertia-rust",
@@ -932,6 +936,8 @@ dependencies = [
  "sea-orm",
  "serde",
  "serde_derive",
+ "serde_json",
+ "tokio",
  "toml",
  "vite-rust",
 ]
@@ -1340,6 +1346,7 @@ name = "erp-api"
 version = "0.1.0"
 dependencies = [
  "actix-rt",
+ "actix-session",
  "actix-web",
  "api",
  "bcrypt",
@@ -2720,9 +2727,11 @@ version = "0.1.0"
 dependencies = [
  "actix-session",
  "actix-web",
+ "config 0.1.0",
  "futures-util",
  "inertia-rust",
  "log",
+ "rand 0.9.1",
  "serde",
  "serde_json",
  "tokio",
