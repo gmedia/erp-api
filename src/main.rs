@@ -1,6 +1,6 @@
 use actix_web::{
     App, HttpResponse, HttpServer, Responder, web,    
-    cookie::{Key},
+    cookie::{Key, SameSite},
 };
 use api::{
     openapi::{ApiDoc},
@@ -82,10 +82,12 @@ async fn main() -> std::io::Result<()> {
 
     let storage = FileSessionStore::default();
 
+    let rust_env = env::var("RUST_ENV").unwrap_or_else(|_| "production".to_string());
+    let use_secure_cookie = rust_env.as_str() == "production";
+
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
-            .service(actix_files::Files::new("/", "./public/").prefer_utf8(true))
             // Config for api
             .service(Scalar::with_url("/scalar", ApiDoc::openapi()))
             .configure(inventory::routes::init_routes)
@@ -115,11 +117,18 @@ async fn main() -> std::io::Result<()> {
                     )
                     .wrap(ReflashTemporarySessionMiddleware::new())
                     .wrap(
-                        SessionMiddleware::new(storage.clone(), key.clone())
+                        SessionMiddleware::builder(storage.clone(), key.clone())
+                            .cookie_domain(Some(env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string())))
+                            .cookie_http_only(true)
+                            .cookie_same_site(SameSite::Strict)
+                            .cookie_name(env::var("SESSION_COOKIE_NAME").unwrap_or_else(|_| "rust_session_id".to_string()))
+                            .cookie_secure(use_secure_cookie)
+                            .build()
                     )
                     .configure(page::routes::init_routes)
                     .app_data(inertia.clone())
             )
+            .service(actix_files::Files::new("public/", "./public").prefer_utf8(true))
     })
     .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .run()

@@ -1,12 +1,10 @@
 //! See: https://github.com/KaioFelps/inertia-rust/tree/v2/examples/actix_ssr
-
 use inertia_rust::{
     template_resolvers::ViteHBSTemplateResolver, Inertia, InertiaConfig, InertiaError, InertiaVersion,
     // SsrClient,
 };
 use std::io;
 use vite_rust::ViteMode;
-use std::env;
 
 use super::vite::{initialize_vite, ASSETS_VERSION};
 
@@ -24,14 +22,11 @@ pub async fn initialize_inertia() -> Result<Inertia, io::Error> {
 
     Inertia::new(
         InertiaConfig::builder()
-            .set_url(
-                env::var("APP_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string())
-            )
+            .set_url("http://0.0.0.0:8080")
             .set_version(InertiaVersion::Literal(ASSETS_VERSION.get().unwrap()))
             .set_template_resolver(Box::new(resolver))
             // .enable_ssr()
-            // .set_ssr_client(SsrClient::new("127.0.0.1", 1000))
+            // .set_ssr_client(SsrClient::new("0.0.0.0", 1000))
             .build(),
     )
 }
