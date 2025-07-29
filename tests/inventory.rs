@@ -7,7 +7,6 @@ use fake::{
 };
 use reqwest::Client as HttpClient;
 use serde_json::json;
-use serial_test::serial;
 
 use api::v1::inventory::models::InventoryItem;
 mod common;
@@ -16,7 +15,6 @@ use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
 
 #[tokio::test]
-#[serial]
 async fn test_create_and_search_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -67,7 +65,6 @@ async fn test_create_and_search_inventory() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -93,7 +90,6 @@ async fn test_create_inventory_negative_quantity() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -119,7 +115,6 @@ async fn test_create_inventory_negative_price() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -178,7 +173,6 @@ async fn test_update_inventory() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -223,7 +217,6 @@ async fn test_update_inventory_negative_quantity() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -268,7 +261,6 @@ async fn test_update_inventory_negative_price() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_delete_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -324,7 +316,6 @@ async fn test_delete_inventory() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -357,7 +348,6 @@ async fn test_create_item_internal_server_error() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -385,7 +375,6 @@ async fn test_update_item_internal_server_error() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_delete_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -431,7 +420,6 @@ async fn test_delete_item_internal_server_error() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_search_items_internal_server_error() {
     let (_db_pool, _meili_client, server_url) = setup_test_app_with_meili_error().await;
     let client = HttpClient::new();
@@ -451,7 +439,6 @@ async fn test_search_items_internal_server_error() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_delete_item_with_fk_constraint_fails() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -516,7 +503,6 @@ async fn test_delete_item_with_fk_constraint_fails() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_item_not_found() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -538,7 +524,6 @@ async fn test_update_item_not_found() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_item_fails_on_db_constraint() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

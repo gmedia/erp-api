@@ -4,14 +4,12 @@ use fake::{
 };
 use reqwest::Client as HttpClient;
 use serde_json::json;
-use serial_test::serial;
 
 use api::v1::employee::models::Employee;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
 #[tokio::test]
-#[serial]
 async fn test_create_employee() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -45,7 +43,6 @@ async fn test_create_employee() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_employee_invalid_email() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -71,7 +68,6 @@ async fn test_create_employee_invalid_email() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_employee_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

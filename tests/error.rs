@@ -1,12 +1,10 @@
 use reqwest::Client as HttpClient;
 use serde_json::json;
-use serial_test::serial;
 
 mod common;
 use common::{setup_test_app, get_auth_token};
 
 #[tokio::test]
-#[serial]
 async fn test_internal_server_error_response_format() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

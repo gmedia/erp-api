@@ -2,7 +2,6 @@ use api::v1::auth::models::TokenResponse;
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use serde_json::json;
-use serial_test::serial;
 use entity::user::{self, Entity as User};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 
@@ -10,7 +9,6 @@ mod common;
 use common::{setup_test_app, setup_test_app_no_state};
 
 #[tokio::test]
-#[serial]
 async fn test_register_and_login() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -56,7 +54,6 @@ async fn test_register_and_login() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_access_protected_route() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -112,7 +109,6 @@ async fn test_access_protected_route() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_register_existing_user() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -146,7 +142,6 @@ async fn test_register_existing_user() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_login_non_existent_user() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -169,7 +164,6 @@ async fn test_login_non_existent_user() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_login_wrong_password() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -207,7 +201,6 @@ async fn test_login_wrong_password() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_access_protected_route_invalid_token() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -225,7 +218,6 @@ async fn test_access_protected_route_invalid_token() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_login_db_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -268,7 +260,6 @@ async fn test_login_db_error() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_access_protected_route_malformed_header() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -285,7 +276,6 @@ async fn test_access_protected_route_malformed_header() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_access_protected_route_expired_token() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(Some(1), None, None, None).await; // 1 second token validity
     let client = HttpClient::new();
@@ -335,7 +325,6 @@ async fn test_access_protected_route_expired_token() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_access_protected_route_no_app_state() {
     let (_db_pool, _meili_client, server_url) = setup_test_app_no_state().await;
     let client = HttpClient::new();
@@ -356,7 +345,6 @@ async fn test_access_protected_route_no_app_state() {
 use reqwest::header::{HeaderMap, HeaderValue};
 
 #[tokio::test]
-#[serial]
 async fn test_access_protected_route_invalid_utf8_in_header() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -377,7 +365,6 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_register_invalid_bcrypt_cost() {
     // bcrypt cost must be between 4 and 31.
     let invalid_cost = 99;
@@ -406,7 +393,6 @@ async fn test_register_invalid_bcrypt_cost() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_login_invalid_jwt_secret() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(
         None,
@@ -452,7 +438,6 @@ async fn test_login_invalid_jwt_secret() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_register_db_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -481,7 +466,6 @@ async fn test_register_db_error() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_login_malformed_hash() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

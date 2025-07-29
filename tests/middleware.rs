@@ -12,7 +12,6 @@ use common::{setup_test_app, setup_test_app_no_state};
 use futures_util::future::{Ready, ready};
 use futures_util::task::noop_waker;
 use std::task::{Context, Poll};
-use serial_test::serial;
 use actix_web::{test, web};
 use config::app::AppState;
 use config::{db::Db, meilisearch::Meilisearch};
@@ -55,7 +54,6 @@ impl Service<ServiceRequest> for MockService {
 }
 
 #[actix_rt::test]
-#[serial]
 async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url) = setup_test_app(None, None, Some(secret.clone()), None).await;
@@ -153,7 +151,6 @@ async fn test_jwt_middleware_logic() {
 }
 
 #[actix_rt::test]
-#[serial]
 async fn test_jwt_middleware_no_app_state() {
     let (_db, _meili, server_url) = setup_test_app_no_state().await;
     let client = reqwest::Client::new();
@@ -169,7 +166,6 @@ async fn test_jwt_middleware_no_app_state() {
 }
 
 #[actix_rt::test]
-#[serial]
 async fn test_jwt_middleware_call_logic() {
     dotenv().ok();
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
@@ -270,7 +266,6 @@ async fn test_jwt_middleware_call_logic() {
 }
 
 #[actix_rt::test]
-#[serial]
 async fn test_jwt_middleware_poll_ready_cover() {
     let middleware = JwtMiddleware::new("Bearer".to_string());
     let service = MockService;
@@ -284,7 +279,6 @@ async fn test_jwt_middleware_poll_ready_cover() {
 }
 
 #[actix_rt::test]
-#[serial]
 async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url) = setup_test_app(None, None, Some(secret.clone()), None).await;
@@ -305,7 +299,6 @@ async fn test_jwt_middleware_invalid_utf8_header() {
 }
 
 #[actix_rt::test]
-#[serial]
 async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {
