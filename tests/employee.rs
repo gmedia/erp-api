@@ -8,40 +8,7 @@ use serial_test::serial;
 
 use api::v1::employee::models::Employee;
 mod common;
-use api::v1::auth::models::TokenResponse;
-use common::setup_test_app;
-
-async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
-    let username: String = SafeEmail().fake();
-    let password = "password123";
-
-    let register_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    client
-        .post(format!("{server_url}/v1/auth/register"))
-        .json(&register_req)
-        .send()
-        .await
-        .unwrap();
-
-    let login_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    let response = client
-        .post(format!("{server_url}/v1/auth/login"))
-        .json(&login_req)
-        .send()
-        .await
-        .unwrap();
-
-    let token_response: TokenResponse = response.json().await.unwrap();
-    token_response.token
-}
+use common::{setup_test_app, get_auth_token};
 
 #[tokio::test]
 #[serial]
@@ -102,6 +69,7 @@ async fn test_create_employee_invalid_email() {
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
+
 #[tokio::test]
 #[serial]
 async fn test_create_employee_internal_server_error() {

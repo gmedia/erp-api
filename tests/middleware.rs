@@ -12,6 +12,12 @@ use common::{setup_test_app, setup_test_app_no_state};
 use futures_util::future::{Ready, ready};
 use futures_util::task::noop_waker;
 use std::task::{Context, Poll};
+use serial_test::serial;
+use actix_web::{test, web};
+use config::app::AppState;
+use config::{db::Db, meilisearch::Meilisearch};
+use db::mysql::init_db_pool;
+use dotenvy::dotenv;
 
 fn create_token(sub: &str, secret: &str, exp: usize) -> String {
     let claims = Claims {
@@ -26,7 +32,27 @@ fn create_token(sub: &str, secret: &str, exp: usize) -> String {
     .unwrap()
 }
 
-use serial_test::serial;
+#[derive(Default, Clone)]
+struct MockService;
+
+impl Service<ServiceRequest> for MockService {
+    type Response = ServiceResponse<BoxBody>;
+    type Error = Error;
+    type Future = Ready<Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(&self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&self, req: ServiceRequest) -> Self::Future {
+        let claims = req.extensions().get::<Claims>().cloned();
+        ready(Ok(req.into_response(
+            actix_web::HttpResponse::Ok()
+                .json(&claims)
+                .map_into_boxed_body(),
+        )))
+    }
+}
 
 #[actix_rt::test]
 #[serial]
@@ -142,12 +168,6 @@ async fn test_jwt_middleware_no_app_state() {
     assert_eq!(res.status(), 500);
 }
 
-use actix_web::{test, web};
-use config::app::AppState;
-use config::{db::Db, meilisearch::Meilisearch};
-use db::mysql::init_db_pool;
-use dotenvy::dotenv;
-
 #[actix_rt::test]
 #[serial]
 async fn test_jwt_middleware_call_logic() {
@@ -249,28 +269,6 @@ async fn test_jwt_middleware_call_logic() {
     assert_eq!(err.as_response_error().status_code(), 500);
 }
 
-#[derive(Default, Clone)]
-struct MockService;
-
-impl Service<ServiceRequest> for MockService {
-    type Response = ServiceResponse<BoxBody>;
-    type Error = Error;
-    type Future = Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        let claims = req.extensions().get::<Claims>().cloned();
-        ready(Ok(req.into_response(
-            actix_web::HttpResponse::Ok()
-                .json(&claims)
-                .map_into_boxed_body(),
-        )))
-    }
-}
-
 #[actix_rt::test]
 #[serial]
 async fn test_jwt_middleware_poll_ready_cover() {
@@ -284,6 +282,7 @@ async fn test_jwt_middleware_poll_ready_cover() {
     let poll_result = middleware_service.poll_ready(&mut cx);
     assert!(poll_result.is_ready());
 }
+
 #[actix_rt::test]
 #[serial]
 async fn test_jwt_middleware_invalid_utf8_header() {
@@ -304,6 +303,7 @@ async fn test_jwt_middleware_invalid_utf8_header() {
         .unwrap();
     assert_eq!(res.status(), 401);
 }
+
 #[actix_rt::test]
 #[serial]
 async fn test_jwt_middleware_wrong_key_for_alg() {

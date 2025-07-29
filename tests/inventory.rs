@@ -1,7 +1,6 @@
 use fake::{
     Fake,
     faker::{
-        internet::en::SafeEmail,
         lorem::en::{Sentence, Word},
         name::en::Name,
     },
@@ -12,40 +11,9 @@ use serial_test::serial;
 
 use api::v1::inventory::models::InventoryItem;
 mod common;
-use api::v1::auth::models::TokenResponse;
-use common::{setup_test_app, setup_test_app_with_meili_error};
-
-async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
-    let username: String = SafeEmail().fake();
-    let password = "password123";
-
-    let register_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    client
-        .post(format!("{server_url}/v1/auth/register"))
-        .json(&register_req)
-        .send()
-        .await
-        .unwrap();
-
-    let login_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    let response = client
-        .post(format!("{server_url}/v1/auth/login"))
-        .json(&login_req)
-        .send()
-        .await
-        .unwrap();
-
-    let token_response: TokenResponse = response.json().await.unwrap();
-    token_response.token
-}
+use common::{setup_test_app, setup_test_app_with_meili_error, get_auth_token};
+use sea_orm::{ConnectionTrait, Statement};
+use uuid::Uuid;
 
 #[tokio::test]
 #[serial]
@@ -149,6 +117,7 @@ async fn test_create_inventory_negative_price() {
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
+
 #[tokio::test]
 #[serial]
 async fn test_update_inventory() {
@@ -353,6 +322,7 @@ async fn test_delete_inventory() {
 
     assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
 }
+
 #[tokio::test]
 #[serial]
 async fn test_create_item_internal_server_error() {
@@ -385,6 +355,7 @@ async fn test_create_item_internal_server_error() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
+
 #[tokio::test]
 #[serial]
 async fn test_update_item_internal_server_error() {
@@ -458,6 +429,7 @@ async fn test_delete_item_internal_server_error() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
+
 #[tokio::test]
 #[serial]
 async fn test_search_items_internal_server_error() {
@@ -477,8 +449,6 @@ async fn test_search_items_internal_server_error() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
-use sea_orm::{ConnectionTrait, Statement};
-use uuid::Uuid;
 
 #[tokio::test]
 #[serial]
@@ -544,6 +514,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
         ))
         .await;
 }
+
 #[tokio::test]
 #[serial]
 async fn test_update_item_not_found() {

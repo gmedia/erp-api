@@ -3,9 +3,11 @@ use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
+use entity::user::{self, Entity as User};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 
 mod common;
-use common::setup_test_app;
+use common::{setup_test_app, setup_test_app_no_state};
 
 #[tokio::test]
 #[serial]
@@ -108,6 +110,7 @@ async fn test_access_protected_route() {
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
+
 #[tokio::test]
 #[serial]
 async fn test_register_existing_user() {
@@ -220,6 +223,7 @@ async fn test_access_protected_route_invalid_token() {
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
+
 #[tokio::test]
 #[serial]
 async fn test_login_db_error() {
@@ -262,6 +266,7 @@ async fn test_login_db_error() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
+
 #[tokio::test]
 #[serial]
 async fn test_access_protected_route_malformed_header() {
@@ -328,7 +333,6 @@ async fn test_access_protected_route_expired_token() {
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
-use crate::common::setup_test_app_no_state;
 
 #[tokio::test]
 #[serial]
@@ -371,6 +375,7 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
+
 #[tokio::test]
 #[serial]
 async fn test_register_invalid_bcrypt_cost() {
@@ -445,8 +450,6 @@ async fn test_login_invalid_jwt_secret() {
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
 }
-use entity::user::{self, Entity as User};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 
 #[tokio::test]
 #[serial]

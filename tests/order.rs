@@ -1,45 +1,12 @@
-use api::v1::auth::models::TokenResponse;
 use api::v1::order::models::Order;
-use fake::{Fake, faker::internet::en::SafeEmail};
+use fake::{Fake};
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
 mod common;
-use common::setup_test_app;
-
-async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
-    let username: String = SafeEmail().fake();
-    let password = "password123";
-
-    let register_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    client
-        .post(format!("{server_url}/v1/auth/register"))
-        .json(&register_req)
-        .send()
-        .await
-        .unwrap();
-
-    let login_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    let response = client
-        .post(format!("{server_url}/v1/auth/login"))
-        .json(&login_req)
-        .send()
-        .await
-        .unwrap();
-
-    let token_response: TokenResponse = response.json().await.unwrap();
-    token_response.token
-}
+use common::{setup_test_app, get_auth_token};
 
 #[tokio::test]
 #[serial]

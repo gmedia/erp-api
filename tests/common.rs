@@ -6,6 +6,10 @@ use db::mysql::init_db_pool;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 use search::Client;
 use search::meilisearch::init_meilisearch;
+use reqwest::Client as HttpClient;
+use fake::{Fake, faker::internet::en::SafeEmail};
+use serde_json::json;
+use api::v1::auth::models::TokenResponse;
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
@@ -83,6 +87,7 @@ pub async fn setup_test_app(
 
     (db_pool, meili_client, server_url)
 }
+
 #[allow(dead_code)]
 pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
     dotenvy::dotenv().ok();
@@ -142,6 +147,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
 
     (db_pool, meili_client, server_url)
 }
+
 #[allow(dead_code)]
 pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String) {
     dotenvy::dotenv().ok();
@@ -214,4 +220,37 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     tokio::spawn(server.run());
 
     (db_pool, meili_client, server_url)
+}
+
+#[allow(dead_code)]
+pub async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
+    let username: String = SafeEmail().fake();
+    let password = "password123";
+
+    let register_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    client
+        .post(format!("{server_url}/v1/auth/register"))
+        .json(&register_req)
+        .send()
+        .await
+        .unwrap();
+
+    let login_req = json!({
+        "username": username,
+        "password": password,
+    });
+
+    let response = client
+        .post(format!("{server_url}/v1/auth/login"))
+        .json(&login_req)
+        .send()
+        .await
+        .unwrap();
+
+    let token_response: TokenResponse = response.json().await.unwrap();
+    token_response.token
 }
