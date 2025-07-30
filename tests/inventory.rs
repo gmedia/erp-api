@@ -14,7 +14,7 @@ use common::{setup_test_app, setup_test_app_with_meili_error, get_auth_token};
 use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_and_search_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -64,7 +64,7 @@ async fn test_create_and_search_inventory() {
         response.json().await.expect("Gagal parse response JSON");
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -89,7 +89,7 @@ async fn test_create_inventory_negative_quantity() {
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -114,7 +114,7 @@ async fn test_create_inventory_negative_price() {
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_update_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -172,7 +172,7 @@ async fn test_update_inventory() {
     assert!((updated_item.price - updated_price).abs() < 1e-9);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_update_inventory_negative_quantity() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -216,7 +216,7 @@ async fn test_update_inventory_negative_quantity() {
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_update_inventory_negative_price() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -260,7 +260,7 @@ async fn test_update_inventory_negative_price() {
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_delete_inventory() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -315,7 +315,7 @@ async fn test_delete_inventory() {
     assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -347,7 +347,7 @@ async fn test_create_item_internal_server_error() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_update_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -374,7 +374,7 @@ async fn test_update_item_internal_server_error() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_delete_item_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -419,7 +419,7 @@ async fn test_delete_item_internal_server_error() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_search_items_internal_server_error() {
     let (_db_pool, _meili_client, server_url) = setup_test_app_with_meili_error().await;
     let client = HttpClient::new();
@@ -438,7 +438,7 @@ async fn test_search_items_internal_server_error() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_delete_item_with_fk_constraint_fails() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -502,7 +502,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
         .await;
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_update_item_not_found() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -523,7 +523,7 @@ async fn test_update_item_not_found() {
     assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_update_item_fails_on_db_constraint() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

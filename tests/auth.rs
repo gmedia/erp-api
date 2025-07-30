@@ -8,7 +8,7 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 mod common;
 use common::{setup_test_app, setup_test_app_no_state};
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_register_and_login() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -53,7 +53,7 @@ async fn test_register_and_login() {
     assert!(!token_response.token.is_empty());
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_access_protected_route() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -108,7 +108,7 @@ async fn test_access_protected_route() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_register_existing_user() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -141,7 +141,7 @@ async fn test_register_existing_user() {
     assert_eq!(response.status(), reqwest::StatusCode::CONFLICT);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_login_non_existent_user() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -163,7 +163,7 @@ async fn test_login_non_existent_user() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_login_wrong_password() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -200,7 +200,7 @@ async fn test_login_wrong_password() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_access_protected_route_invalid_token() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -217,7 +217,7 @@ async fn test_access_protected_route_invalid_token() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_login_db_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -259,7 +259,7 @@ async fn test_login_db_error() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_access_protected_route_malformed_header() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -275,7 +275,7 @@ async fn test_access_protected_route_malformed_header() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_access_protected_route_expired_token() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(Some(1), None, None, None).await; // 1 second token validity
     let client = HttpClient::new();
@@ -324,7 +324,7 @@ async fn test_access_protected_route_expired_token() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_access_protected_route_no_app_state() {
     let (_db_pool, _meili_client, server_url) = setup_test_app_no_state().await;
     let client = HttpClient::new();
@@ -344,7 +344,7 @@ async fn test_access_protected_route_no_app_state() {
 }
 use reqwest::header::{HeaderMap, HeaderValue};
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_access_protected_route_invalid_utf8_in_header() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -364,7 +364,7 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_register_invalid_bcrypt_cost() {
     // bcrypt cost must be between 4 and 31.
     let invalid_cost = 99;
@@ -392,7 +392,7 @@ async fn test_register_invalid_bcrypt_cost() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_login_invalid_jwt_secret() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(
         None,
@@ -437,7 +437,7 @@ async fn test_login_invalid_jwt_secret() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_register_db_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -465,7 +465,7 @@ async fn test_register_db_error() {
     );
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_login_malformed_hash() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

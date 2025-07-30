@@ -7,7 +7,7 @@ use uuid::Uuid;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_order() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -37,7 +37,7 @@ async fn test_create_order() {
     assert!((created_order.total_amount - total_amount).abs() < 1e-9);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_order_negative_amount() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -61,7 +61,7 @@ async fn test_create_order_negative_amount() {
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
 
-#[actix_web::test]
+#[actix_rt::test]
 async fn test_create_order_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
