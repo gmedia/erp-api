@@ -9,7 +9,7 @@ use api::v1::employee::models::Employee;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
-#[tokio::test]
+#[actix_web::test]
 async fn test_create_employee() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -42,7 +42,7 @@ async fn test_create_employee() {
     assert_eq!(created_employee.email, email);
 }
 
-#[tokio::test]
+#[actix_web::test]
 async fn test_create_employee_invalid_email() {
     let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -67,7 +67,7 @@ async fn test_create_employee_invalid_email() {
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
 }
 
-#[tokio::test]
+#[actix_web::test]
 async fn test_create_employee_internal_server_error() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

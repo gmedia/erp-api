@@ -4,7 +4,7 @@ use serde_json::json;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
-#[tokio::test]
+#[actix_web::test]
 async fn test_internal_server_error_response_format() {
     let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
