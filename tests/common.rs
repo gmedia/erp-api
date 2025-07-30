@@ -34,10 +34,18 @@ pub async fn setup_test_app(
         .await
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
-    // Bersihkan indeks Meilisearch
+    // Cek indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
         let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        let _ = meili_client.create_index(index_name, Some(pk[0])).await;
+        match meili_client.get_index(index_name).await {
+            Ok(_) => {
+                // Index already exists, do nothing
+            }
+            Err(_) => {
+                // Index does not exist, create it
+                let _ = meili_client.create_index(index_name, Some(pk[0])).await;
+            }
+        }
     }
 
     // Clone db_pool and meili_client for moving into the closure
@@ -107,10 +115,18 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String) {
         .await
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
-    // Bersihkan indeks Meilisearch
+    // Cek indeks Meilisearch
     for (index_name, p_key) in &config_app.meilisearch_indexes {
         let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        let _ = meili_client.create_index(index_name, Some(pk[0])).await;
+        match meili_client.get_index(index_name).await {
+            Ok(_) => {
+                // Index already exists, do nothing
+            }
+            Err(_) => {
+                // Index does not exist, create it
+                let _ = meili_client.create_index(index_name, Some(pk[0])).await;
+            }
+        }
     }
 
     // Clone db_pool and meili_client for moving into the closure
