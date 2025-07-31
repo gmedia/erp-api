@@ -7,9 +7,9 @@ use uuid::Uuid;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_order() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -35,11 +35,14 @@ async fn test_create_order() {
 
     assert_eq!(created_order.customer_id, customer_id);
     assert!((created_order.total_amount - total_amount).abs() < 1e-9);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_order_negative_amount() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -59,11 +62,14 @@ async fn test_create_order_negative_amount() {
         .expect("Gagal mengirim request POST");
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_order_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -89,4 +95,7 @@ async fn test_create_order_internal_server_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }

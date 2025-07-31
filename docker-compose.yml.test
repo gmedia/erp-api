@@ -25,7 +25,6 @@ services:
       - .env.test
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./my.cnf:/etc/mysql/my.cnf
     networks:
       - erp-network
     healthcheck:

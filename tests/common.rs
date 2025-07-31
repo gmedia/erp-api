@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpServer, web, dev::ServerHandle};
 use api::v1::{auth, employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
@@ -16,12 +16,11 @@ pub async fn setup_test_app(
     bcrypt_cost: Option<u32>,
     jwt_secret: Option<String>,
     jwt_algorithm: Option<jsonwebtoken::Algorithm>,
-) -> (DatabaseConnection, Client, String) {
+) -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
-    let config_app = config::app::AppConfig::new("test");
     let jwt_secret = jwt_secret.unwrap_or_else(|| "test-secret".to_string());
 
     // Inisialisasi database
@@ -34,25 +33,13 @@ pub async fn setup_test_app(
         .await
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
-    // Cek indeks Meilisearch
-    for (index_name, p_key) in &config_app.meilisearch_indexes {
-        let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        match meili_client.get_index(index_name).await {
-            Ok(_) => {
-                // Index already exists, do nothing
-            }
-            Err(_) => {
-                // Index does not exist, create it
-                let _ = meili_client.create_index(index_name, Some(pk[0])).await;
-            }
-        }
-    }
-
     // Clone db_pool and meili_client for moving into the closure
     let db_pool_for_server = db_pool.clone();
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
+    let bind_addr = "127.0.0.1:0";
+
     let server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(config::app::AppState {
@@ -68,10 +55,11 @@ pub async fn setup_test_app(
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
-    });
+    })
+    .disable_signals()
+    .bind(bind_addr)
+    .expect("Gagal bind server");
 
-    let bind_addr = "127.0.0.1:0";
-    let server = server.bind(bind_addr).expect("Gagal bind server");
     let server_addr = server
         .addrs()
         .first()
@@ -79,14 +67,17 @@ pub async fn setup_test_app(
         .to_owned();
     let server_url = format!("http://{server_addr}");
 
-    // Jalankan server di background
-    tokio::spawn(server.run());
+    let server = server.run();
+    let server_handle = server.handle();
 
-    (db_pool, meili_client, server_url)
+    // Jalankan server di background
+    tokio::spawn(server);
+
+    (db_pool, meili_client, server_url, server_handle)
 }
 
 #[allow(dead_code)]
-pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String) {
+pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
@@ -115,25 +106,13 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String) {
         .await
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
-    // Cek indeks Meilisearch
-    for (index_name, p_key) in &config_app.meilisearch_indexes {
-        let pk: Vec<&str> = p_key.iter().map(|s| s.as_str()).collect();
-        match meili_client.get_index(index_name).await {
-            Ok(_) => {
-                // Index already exists, do nothing
-            }
-            Err(_) => {
-                // Index does not exist, create it
-                let _ = meili_client.create_index(index_name, Some(pk[0])).await;
-            }
-        }
-    }
-
     // Clone db_pool and meili_client for moving into the closure
     let db_pool_for_server = db_pool.clone();
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
+    let bind_addr = "127.0.0.1:0";
+
     let server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(config::app::AppState {
@@ -149,10 +128,11 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String) {
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
-    });
+    })
+    .disable_signals()
+    .bind(bind_addr)
+    .expect("Gagal bind server");
 
-    let bind_addr = "127.0.0.1:0";
-    let server = server.bind(bind_addr).expect("Gagal bind server");
     let server_addr = server
         .addrs()
         .first()
@@ -160,14 +140,17 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String) {
         .to_owned();
     let server_url = format!("http://{server_addr}");
 
-    // Jalankan server di background
-    tokio::spawn(server.run());
+    let server = server.run();
+    let server_handle = server.handle();
 
-    (db_pool, meili_client, server_url)
+    // Jalankan server di background
+    tokio::spawn(server);
+
+    (db_pool, meili_client, server_url, server_handle)
 }
 
 #[allow(dead_code)]
-pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
+pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
@@ -184,6 +167,8 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Jalankan server di port acak
+    let bind_addr = "127.0.0.1:0";
+
     let server = HttpServer::new(move || {
         App::new()
             // app_data sengaja dihilangkan untuk pengujian ini
@@ -191,10 +176,11 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
-    });
+    })
+    .disable_signals()
+    .bind(bind_addr)
+    .expect("Gagal bind server");
 
-    let bind_addr = "127.0.0.1:0";
-    let server = server.bind(bind_addr).expect("Gagal bind server");
     let server_addr = server
         .addrs()
         .first()
@@ -202,14 +188,17 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String) {
         .to_owned();
     let server_url = format!("http://{server_addr}");
 
-    // Jalankan server di background
-    tokio::spawn(server.run());
+    let server = server.run();
+    let server_handle = server.handle();
 
-    (db_pool, meili_client, server_url)
+    // Jalankan server di background
+    tokio::spawn(server);
+
+    (db_pool, meili_client, server_url, server_handle)
 }
 
 #[allow(dead_code)]
-pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String) {
+pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
     let config_db = Db::new("test");
@@ -232,6 +221,8 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
+    let bind_addr = "127.0.0.1:0";
+
     let server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(config::app::AppState {
@@ -247,10 +238,11 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
-    });
+    })
+    .disable_signals()
+    .bind(bind_addr)
+    .expect("Gagal bind server");
 
-    let bind_addr = "127.0.0.1:0";
-    let server = server.bind(bind_addr).expect("Gagal bind server");
     let server_addr = server
         .addrs()
         .first()
@@ -258,10 +250,13 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
         .to_owned();
     let server_url = format!("http://{server_addr}");
 
-    // Jalankan server di background
-    tokio::spawn(server.run());
+    let server = server.run();
+    let server_handle = server.handle();
 
-    (db_pool, meili_client, server_url)
+    // Jalankan server di background
+    tokio::spawn(server);
+
+    (db_pool, meili_client, server_url, server_handle)
 }
 
 #[allow(dead_code)]

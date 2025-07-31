@@ -4,13 +4,14 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 use entity::user::{self, Entity as User};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
+use reqwest::header::{HeaderMap, HeaderValue};
 
 mod common;
-use common::{setup_test_app, setup_test_app_no_state};
+use common::{setup_test_app, setup_test_app_no_state, get_auth_token};
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_register_and_login() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -51,42 +52,16 @@ async fn test_register_and_login() {
         .expect("Failed to parse token response");
 
     assert!(!token_response.token.is_empty());
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let username: String = SafeEmail().fake();
-    let password = "password123";
-
-    // Register and login to get a token
-    let register_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    client
-        .post(format!("{server_url}/v1/auth/register"))
-        .json(&register_req)
-        .send()
-        .await
-        .unwrap();
-
-    let login_req = json!({
-        "username": username,
-        "password": password,
-    });
-
-    let response = client
-        .post(format!("{server_url}/v1/auth/login"))
-        .json(&login_req)
-        .send()
-        .await
-        .unwrap();
-
-    let token_response: TokenResponse = response.json().await.unwrap();
-    let token = token_response.token;
+    let token = get_auth_token(&client, &server_url).await;
 
     // Access protected route with token
     let response = client
@@ -106,11 +81,14 @@ async fn test_access_protected_route() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_register_existing_user() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -139,11 +117,14 @@ async fn test_register_existing_user() {
         .expect("Failed to send second registration request");
 
     assert_eq!(response.status(), reqwest::StatusCode::CONFLICT);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_login_non_existent_user() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -161,11 +142,14 @@ async fn test_login_non_existent_user() {
         .expect("Failed to send login request");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_login_wrong_password() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -198,11 +182,14 @@ async fn test_login_wrong_password() {
         .expect("Failed to send login request");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_invalid_token() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let invalid_token = "this.is.an.invalid.token";
 
@@ -215,11 +202,14 @@ async fn test_access_protected_route_invalid_token() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_login_db_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -257,11 +247,14 @@ async fn test_login_db_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_malformed_header() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
 
     // Access protected route with a malformed token
@@ -273,11 +266,14 @@ async fn test_access_protected_route_malformed_header() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_expired_token() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(Some(1), None, None, None).await; // 1 second token validity
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(Some(1), None, None, None).await; // 1 second token validity
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -322,11 +318,14 @@ async fn test_access_protected_route_expired_token() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_no_app_state() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app_no_state().await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_state().await;
     let client = HttpClient::new();
 
     // Access protected route without app state configured
@@ -341,12 +340,14 @@ async fn test_access_protected_route_no_app_state() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
-use reqwest::header::{HeaderMap, HeaderValue};
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_invalid_utf8_in_header() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -362,13 +363,16 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_register_invalid_bcrypt_cost() {
     // bcrypt cost must be between 4 and 31.
     let invalid_cost = 99;
-    let (_db_pool, _meili_client, server_url) =
+    let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, Some(invalid_cost), None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
@@ -390,11 +394,14 @@ async fn test_register_invalid_bcrypt_cost() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_login_invalid_jwt_secret() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(
         None,
         None,
         Some("".to_string()),
@@ -435,11 +442,14 @@ async fn test_login_invalid_jwt_secret() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_register_db_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -463,11 +473,14 @@ async fn test_register_db_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_login_malformed_hash() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -514,4 +527,7 @@ async fn test_login_malformed_hash() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+    
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }

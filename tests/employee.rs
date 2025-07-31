@@ -9,9 +9,9 @@ use api::v1::employee::models::Employee;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_employee() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
@@ -40,11 +40,14 @@ async fn test_create_employee() {
     assert_eq!(created_employee.name, name);
     assert_eq!(created_employee.role, role);
     assert_eq!(created_employee.email, email);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_employee_invalid_email() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
@@ -65,11 +68,14 @@ async fn test_create_employee_invalid_email() {
         .expect("Gagal mengirim request POST");
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_employee_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Name().fake();
@@ -97,4 +103,7 @@ async fn test_create_employee_internal_server_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }

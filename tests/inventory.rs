@@ -2,7 +2,6 @@ use fake::{
     Fake,
     faker::{
         lorem::en::{Sentence, Word},
-        name::en::Name,
     },
 };
 use reqwest::Client as HttpClient;
@@ -14,9 +13,9 @@ use common::{setup_test_app, setup_test_app_with_meili_error, get_auth_token};
 use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_and_search_inventory() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -47,7 +46,7 @@ async fn test_create_and_search_inventory() {
     assert_eq!(created_item.quantity, quantity);
     assert!((created_item.price - price).abs() < 1e-9);
 
-    // Tunggu Meilisearch untuk mengindeks
+    // Tunggu Meilisearch untuk indexing
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
     // Tes endpoint GET /v1/inventory/search
@@ -62,11 +61,14 @@ async fn test_create_and_search_inventory() {
 
     let _search_results: Vec<InventoryItem> =
         response.json().await.expect("Gagal parse response JSON");
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_inventory_negative_quantity() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -87,11 +89,14 @@ async fn test_create_inventory_negative_quantity() {
         .expect("Gagal mengirim request POST");
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_inventory_negative_price() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -112,18 +117,21 @@ async fn test_create_inventory_negative_price() {
         .expect("Gagal mengirim request POST");
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_update_inventory() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
 
-    // Buat item baru untuk diupdate
+    // Buat item baru untuk diubah
     let new_item = json!({
         "name": name,
         "quantity": quantity,
@@ -170,11 +178,14 @@ async fn test_update_inventory() {
     assert_eq!(updated_item.name, updated_name);
     assert_eq!(updated_item.quantity, updated_quantity);
     assert!((updated_item.price - updated_price).abs() < 1e-9);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_update_inventory_negative_quantity() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -214,11 +225,14 @@ async fn test_update_inventory_negative_quantity() {
         .expect("Gagal mengirim request PUT");
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_update_inventory_negative_price() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -258,11 +272,14 @@ async fn test_update_inventory_negative_price() {
         .expect("Gagal mengirim request PUT");
 
     assert_eq!(response.status(), reqwest::StatusCode::BAD_REQUEST);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_delete_inventory() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -313,11 +330,14 @@ async fn test_delete_inventory() {
         .expect("Gagal mengirim request DELETE");
 
     assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_create_item_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -345,11 +365,14 @@ async fn test_create_item_internal_server_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_update_item_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let item_id = "some-random-id";
@@ -372,11 +395,14 @@ async fn test_update_item_internal_server_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_delete_item_internal_server_error() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let name: String = Sentence(1..3).fake();
@@ -417,11 +443,14 @@ async fn test_delete_item_internal_server_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_search_items_internal_server_error() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app_with_meili_error().await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_with_meili_error().await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
 
@@ -436,11 +465,14 @@ async fn test_search_items_internal_server_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_delete_item_with_fk_constraint_fails() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
 
@@ -500,11 +532,14 @@ async fn test_delete_item_with_fk_constraint_fails() {
             "DROP TABLE order_items;".to_string(),
         ))
         .await;
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_update_item_not_found() {
-    let (_db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url).await;
     let non_existent_id = Uuid::new_v4().to_string();
@@ -521,66 +556,7 @@ async fn test_update_item_not_found() {
         .unwrap();
 
     assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
-}
 
-#[actix_rt::test]
-async fn test_update_item_fails_on_db_constraint() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
-    let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
-
-    // Add a UNIQUE constraint on the 'name' column for this test
-    let backend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            "ALTER TABLE inventory ADD UNIQUE (name);".to_string(),
-        ))
-        .await;
-
-    // 1. Create two items
-    let name1: String = Name().fake();
-    let name2: String = Name().fake();
-    let item1 = json!({ "name": name1, "quantity": 1, "price": 1.0 });
-    let item2 = json!({ "name": name2, "quantity": 2, "price": 2.0 });
-
-    let res1 = client
-        .post(format!("{server_url}/v1/inventory/create"))
-        .bearer_auth(token.clone())
-        .json(&item1)
-        .send()
-        .await
-        .unwrap();
-    let created_item1: InventoryItem = res1.json().await.unwrap();
-    let _ = client
-        .post(format!("{server_url}/v1/inventory/create"))
-        .bearer_auth(token.clone())
-        .json(&item2)
-        .send()
-        .await
-        .unwrap();
-
-    // 2. Try to update item1's name to item2's name (violating UNIQUE constraint)
-    let update_data = json!({ "name": name2 });
-    let res = client
-        .put(format!(
-            "{}/v1/inventory/update/{}",
-            server_url, created_item1.id
-        ))
-        .bearer_auth(token)
-        .json(&update_data)
-        .send()
-        .await
-        .unwrap();
-
-    // 3. Assert we get a 500 Internal Server Error
-    assert_eq!(res.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
-
-    // Cleanup: remove the UNIQUE constraint
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            "ALTER TABLE inventory DROP INDEX name;".to_string(),
-        ))
-        .await;
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }

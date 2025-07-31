@@ -4,9 +4,9 @@ use serde_json::json;
 mod common;
 use common::{setup_test_app, get_auth_token};
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_internal_server_error_response_format() {
-    let (db_pool, _meili_client, server_url) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
 
     // Get a valid token first
@@ -43,4 +43,7 @@ async fn test_internal_server_error_response_format() {
     assert_eq!(body["error"]["code"], 500);
     assert!(body["error"]["message"].as_str().is_some());
     assert_eq!(body["error"]["message"], "Database error");
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }

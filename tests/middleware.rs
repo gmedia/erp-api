@@ -53,10 +53,10 @@ impl Service<ServiceRequest> for MockService {
     }
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url) = setup_test_app(None, None, Some(secret.clone()), None).await;
+    let (_db, _meili, server_url, server_handle) = setup_test_app(None, None, Some(secret.clone()), None).await;
     let client = reqwest::Client::new();
 
     // Test case 1: Valid token
@@ -148,11 +148,14 @@ async fn test_jwt_middleware_logic() {
         .await
         .unwrap();
     assert_eq!(res.status(), 401);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_no_app_state() {
-    let (_db, _meili, server_url) = setup_test_app_no_state().await;
+    let (_db, _meili, server_url, server_handle) = setup_test_app_no_state().await;
     let client = reqwest::Client::new();
 
     let res = client
@@ -163,9 +166,12 @@ async fn test_jwt_middleware_no_app_state() {
         .unwrap();
 
     assert_eq!(res.status(), 500);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_call_logic() {
     dotenv().ok();
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
@@ -265,7 +271,7 @@ async fn test_jwt_middleware_call_logic() {
     assert_eq!(err.as_response_error().status_code(), 500);
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_poll_ready_cover() {
     let middleware = JwtMiddleware::new("Bearer".to_string());
     let service = MockService;
@@ -278,10 +284,10 @@ async fn test_jwt_middleware_poll_ready_cover() {
     assert!(poll_result.is_ready());
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url) = setup_test_app(None, None, Some(secret.clone()), None).await;
+    let (_db, _meili, server_url, server_handle) = setup_test_app(None, None, Some(secret.clone()), None).await;
     let client = reqwest::Client::new();
 
     let mut headers = HeaderMap::new();
@@ -296,9 +302,12 @@ async fn test_jwt_middleware_invalid_utf8_header() {
         .await
         .unwrap();
     assert_eq!(res.status(), 401);
+
+    server_handle.stop(true).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[actix_rt::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {
