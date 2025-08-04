@@ -9,9 +9,9 @@ use common::{setup_test_app, get_auth_token};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_order() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
@@ -42,9 +42,9 @@ async fn test_create_order() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_order_negative_amount() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
 
     // Tes endpoint POST /v1/order/create dengan jumlah negatif
@@ -71,7 +71,7 @@ async fn test_create_order_negative_amount() {
 async fn test_create_order_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 

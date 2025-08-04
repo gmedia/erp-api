@@ -6,13 +6,15 @@ target/
 .gitignore
 
 # Ignore Docker related files
-Dockerfile
+docker/
 docker-compose.yml
-docker-compose.yml.dist
+docker-compose.yml.example
+docker-compose.yml.test
 
 # Ignore documentation and scripts
 README.md
 test.sh
+test-image.sh
 
 # Ignore environment files
 .env*

@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, web, dev::ServerHandle};
+use actix_web::{App, HttpServer, Responder, HttpResponse, web, dev::ServerHandle};
 use api::v1::{auth, employee, inventory, order};
 use config::db::Db;
 use config::meilisearch::Meilisearch;
@@ -10,6 +10,8 @@ use reqwest::Client as HttpClient;
 use fake::{Fake, faker::internet::en::SafeEmail};
 use serde_json::json;
 use api::v1::auth::models::TokenResponse;
+use std::time::Duration;
+use std::net::TcpListener;
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
@@ -38,7 +40,13 @@ pub async fn setup_test_app(
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
-    let bind_addr = "127.0.0.1:0";
+    let listener = TcpListener::bind("0.0.0.0:0")
+        .expect("Failed to bind random port");
+
+    // We retrieve the port assigned to us by the OS
+    let port = listener.local_addr().unwrap().port();
+    // println!("Server is listening on port {}", port);
+    // let bind_addr = "127.0.0.1:0";
 
     let server = HttpServer::new(move || {
         App::new()
@@ -51,27 +59,33 @@ pub async fn setup_test_app(
                 jwt_algorithm: jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
             }))
             // Register your routes here
+            .route("/healthcheck", web::get().to(healthcheck))
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
     })
-    .disable_signals()
-    .bind(bind_addr)
-    .expect("Gagal bind server");
+    .listen(listener)
+    .expect("Failed to listen")
+    .run();
+    // .disable_signals();
+    // .bind(bind_addr)
+    // .expect("Gagal bind server");
 
-    let server_addr = server
-        .addrs()
-        .first()
-        .expect("Gagal mendapatkan alamat server")
-        .to_owned();
-    let server_url = format!("http://{server_addr}");
+    // let server_addr = server
+    //     .addrs()
+    //     .first()
+    //     .expect("Gagal mendapatkan alamat server")
+    //     .to_owned();
+    // let server_url = format!("http://{server_addr}");
+    let server_url = format!("http://127.0.0.1:{}", port);
 
-    let server = server.run();
+    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
     tokio::spawn(server);
+    wait_until_server_ready(&server_url).await;
 
     (db_pool, meili_client, server_url, server_handle)
 }
@@ -111,7 +125,13 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
-    let bind_addr = "127.0.0.1:0";
+    let listener = TcpListener::bind("0.0.0.0:0")
+        .expect("Failed to bind random port");
+
+    // We retrieve the port assigned to us by the OS
+    let port = listener.local_addr().unwrap().port();
+    // println!("Server is listening on port {}", port);
+    // let bind_addr = "127.0.0.1:0";
 
     let server = HttpServer::new(move || {
         App::new()
@@ -124,27 +144,33 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
                 jwt_algorithm: jsonwebtoken::Algorithm::HS256,
             }))
             // Register your routes here
+            .route("/healthcheck", web::get().to(healthcheck))
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
     })
-    .disable_signals()
-    .bind(bind_addr)
-    .expect("Gagal bind server");
+    .listen(listener)
+    .expect("Failed to listen")
+    .run();
+    // .disable_signals();
+    // .bind(bind_addr)
+    // .expect("Gagal bind server");
 
-    let server_addr = server
-        .addrs()
-        .first()
-        .expect("Gagal mendapatkan alamat server")
-        .to_owned();
-    let server_url = format!("http://{server_addr}");
+    // let server_addr = server
+    //     .addrs()
+    //     .first()
+    //     .expect("Gagal mendapatkan alamat server")
+    //     .to_owned();
+    // let server_url = format!("http://{server_addr}");
+    let server_url = format!("http://127.0.0.1:{}", port);
 
-    let server = server.run();
+    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
     tokio::spawn(server);
+    wait_until_server_ready(&server_url).await;
 
     (db_pool, meili_client, server_url, server_handle)
 }
@@ -167,32 +193,44 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Jalankan server di port acak
-    let bind_addr = "127.0.0.1:0";
+    let listener = TcpListener::bind("0.0.0.0:0")
+        .expect("Failed to bind random port");
+
+    // We retrieve the port assigned to us by the OS
+    let port = listener.local_addr().unwrap().port();
+    // println!("Server is listening on port {}", port);
+    // let bind_addr = "127.0.0.1:0";
 
     let server = HttpServer::new(move || {
         App::new()
             // app_data sengaja dihilangkan untuk pengujian ini
+            .route("/healthcheck", web::get().to(healthcheck))
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
     })
-    .disable_signals()
-    .bind(bind_addr)
-    .expect("Gagal bind server");
+    .listen(listener)
+    .expect("Failed to listen")
+    .run();
+    // .disable_signals();
+    // .bind(bind_addr)
+    // .expect("Gagal bind server");
 
-    let server_addr = server
-        .addrs()
-        .first()
-        .expect("Gagal mendapatkan alamat server")
-        .to_owned();
-    let server_url = format!("http://{server_addr}");
+    // let server_addr = server
+    //     .addrs()
+    //     .first()
+    //     .expect("Gagal mendapatkan alamat server")
+    //     .to_owned();
+    // let server_url = format!("http://{server_addr}");
+    let server_url = format!("http://127.0.0.1:{}", port);
 
-    let server = server.run();
+    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
     tokio::spawn(server);
+    wait_until_server_ready(&server_url).await;
 
     (db_pool, meili_client, server_url, server_handle)
 }
@@ -221,7 +259,13 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
-    let bind_addr = "127.0.0.1:0";
+    let listener = TcpListener::bind("0.0.0.0:0")
+        .expect("Failed to bind random port");
+
+    // We retrieve the port assigned to us by the OS
+    let port = listener.local_addr().unwrap().port();
+    // println!("Server is listening on port {}", port);
+    // let bind_addr = "127.0.0.1:0";
 
     let server = HttpServer::new(move || {
         App::new()
@@ -234,35 +278,50 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
                 jwt_algorithm: jsonwebtoken::Algorithm::HS256,
             }))
             // Register your routes here
+            .route("/healthcheck", web::get().to(healthcheck))
             .configure(inventory::routes::init_routes)
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
     })
-    .disable_signals()
-    .bind(bind_addr)
-    .expect("Gagal bind server");
+    .listen(listener)
+    .expect("Failed to listen")
+    .run();
+    // .disable_signals();
+    // .bind(bind_addr)
+    // .expect("Gagal bind server");
 
-    let server_addr = server
-        .addrs()
-        .first()
-        .expect("Gagal mendapatkan alamat server")
-        .to_owned();
-    let server_url = format!("http://{server_addr}");
+    // let server_addr = server
+    //     .addrs()
+    //     .first()
+    //     .expect("Gagal mendapatkan alamat server")
+    //     .to_owned();
+    // let server_url = format!("http://{server_addr}");
+    let server_url = format!("http://127.0.0.1:{}", port);
 
-    let server = server.run();
+    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
     tokio::spawn(server);
+    wait_until_server_ready(&server_url).await;
 
     (db_pool, meili_client, server_url, server_handle)
 }
 
 #[allow(dead_code)]
-pub async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
+pub async fn get_auth_token(client: &HttpClient, server_url: &str, db_pool: &DatabaseConnection) -> String {
     let username: String = SafeEmail().fake();
     let password = "password123";
+
+    // Clean user
+    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+           format!("DELETE FROM user where username = '{}'", username) 
+        ))
+        .await;
 
     let register_req = json!({
         "username": username,
@@ -290,4 +349,36 @@ pub async fn get_auth_token(client: &HttpClient, server_url: &str) -> String {
 
     let token_response: TokenResponse = response.json().await.unwrap();
     token_response.token
+}
+
+async fn wait_until_server_ready(server_url: &str) {
+    const MAX_RETRIES: usize = 20;
+    const DELAY_MS: u64 = 250;
+
+    let client = HttpClient::new();
+    let health_url = format!("{}/healthcheck", server_url);
+
+    for _ in 0..MAX_RETRIES {
+        match client.get(&health_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    return; // Server sudah siap
+                }
+            }
+            Err(_) => {
+                // Masih gagal, coba lagi nanti
+            }
+        }
+
+        tokio::time::sleep(Duration::from_millis(DELAY_MS)).await;
+    }
+
+    panic!(
+        "Server tidak siap setelah menunggu {} ms",
+        MAX_RETRIES as u64 * DELAY_MS
+    );
+}
+
+async fn healthcheck() -> impl Responder {
+    HttpResponse::Ok().json(json!({ "status": "active" }))
 }

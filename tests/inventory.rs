@@ -15,9 +15,9 @@ use uuid::Uuid;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_and_search_inventory() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -47,7 +47,7 @@ async fn test_create_and_search_inventory() {
     assert!((created_item.price - price).abs() < 1e-9);
 
     // Tunggu Meilisearch untuk indexing
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
     // Tes endpoint GET /v1/inventory/search
     let response = client
@@ -68,9 +68,9 @@ async fn test_create_and_search_inventory() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_inventory_negative_quantity() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let price: f64 = (1.0..1000.0).fake();
 
@@ -96,9 +96,9 @@ async fn test_create_inventory_negative_quantity() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_inventory_negative_price() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
 
@@ -124,9 +124,9 @@ async fn test_create_inventory_negative_price() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_inventory() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -185,9 +185,9 @@ async fn test_update_inventory() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_inventory_negative_quantity() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -232,9 +232,9 @@ async fn test_update_inventory_negative_quantity() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_inventory_negative_price() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -279,9 +279,9 @@ async fn test_update_inventory_negative_price() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_delete_inventory() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -339,7 +339,7 @@ async fn test_delete_inventory() {
 async fn test_create_item_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -374,7 +374,7 @@ async fn test_create_item_internal_server_error() {
 async fn test_update_item_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let item_id = "some-random-id";
     let updated_data = json!({
         "name": "some new name"
@@ -404,7 +404,7 @@ async fn test_update_item_internal_server_error() {
 async fn test_delete_item_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -450,9 +450,9 @@ async fn test_delete_item_internal_server_error() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_search_items_internal_server_error() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_with_meili_error().await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app_with_meili_error().await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
 
     let response = client
         .get(format!("{server_url}/v1/inventory/search?q=test"))
@@ -474,11 +474,11 @@ async fn test_search_items_internal_server_error() {
 async fn test_delete_item_with_fk_constraint_fails() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
 
     // Create a temporary table with a foreign key to the inventory table
     // to simulate a constraint violation.
-    let backend = db_pool.get_database_backend();
+    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
@@ -539,9 +539,9 @@ async fn test_delete_item_with_fk_constraint_fails() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_item_not_found() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let non_existent_id = Uuid::new_v4().to_string();
     let updated_data = json!({ "name": "this should fail" });
 

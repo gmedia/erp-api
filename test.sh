@@ -2,7 +2,7 @@
 
 rm -rf tarpaulin-report.html
 
-cargo tarpaulin --force-clean --workspace --out Html \
+cargo tarpaulin --force-clean --workspace --follow-exec --engine llvm --out Html \
     --exclude-files "api/src/openapi.rs" \
     --exclude-files "config/*" \
     --exclude-files "db/*" \

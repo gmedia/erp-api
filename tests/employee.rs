@@ -8,15 +8,25 @@ use serde_json::json;
 use api::v1::employee::models::Employee;
 mod common;
 use common::{setup_test_app, get_auth_token};
+use sea_orm::{Statement, ConnectionTrait};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_employee() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
     let role = "Software Engineer";
+
+    // Clean employee
+    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+           format!("DELETE FROM employee where email = '{}'", email) 
+        ))
+        .await;
 
     // Tes endpoint POST /v1/employee/create
     let new_employee = json!({
@@ -47,9 +57,9 @@ async fn test_create_employee() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_employee_invalid_email() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Name().fake();
     let role = "Product Manager";
 
@@ -77,7 +87,7 @@ async fn test_create_employee_invalid_email() {
 async fn test_create_employee_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
     let role = "Chaos Engineer";

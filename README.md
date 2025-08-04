@@ -77,7 +77,7 @@ Menemukan dependency (crate) yang tidak digunakan → bisa mengurangi attack sur
 Menemukan crate yang memiliki vulnerability (CVE, RCE, dsb).
 1. Install:
    ```bash
-   cargo install cargo-audit --locked --features=fix
+   cargo install cargo-audit --features fix --locked
    ```
 2. Jalankan:
    ```bash

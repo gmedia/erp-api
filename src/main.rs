@@ -31,6 +31,7 @@ use inertia_rust::{
 };
 use serde_json::{Map, Value};
 use std::{sync::Arc};
+use std::net::TcpListener;
 
 async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(json!({ "status": "active" }))
@@ -85,6 +86,12 @@ async fn main() -> std::io::Result<()> {
     let rust_env = env::var("RUST_ENV").unwrap_or_else(|_| "production".to_string());
     let use_secure_cookie = rust_env.as_str() == "production";
 
+    let listener = TcpListener::bind("0.0.0.0:8080")
+        .expect("Failed to bind port 8080");
+    // We retrieve the port assigned to us by the OS
+    let port = listener.local_addr().unwrap().port();
+    println!("Server is listening on port {}", port);
+
     HttpServer::new(move || {
         App::new()
             .route("/healthcheck", web::get().to(healthcheck))
@@ -130,7 +137,8 @@ async fn main() -> std::io::Result<()> {
             )
             .service(actix_files::Files::new("public/", "./public").prefer_utf8(true))
     })
-    .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
+    // .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
+    .listen(listener)?
     .run()
     .await
 }

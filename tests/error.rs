@@ -10,7 +10,7 @@ async fn test_internal_server_error_response_format() {
     let client = HttpClient::new();
 
     // Get a valid token first
-    let token = get_auth_token(&client, &server_url).await;
+    let token = get_auth_token(&client, &server_url, &db_pool).await;
 
     // Now, close the DB pool to force a DB error on the next request
     let _ = db_pool.close().await;
