@@ -20,7 +20,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
    cargo install --locked sea-orm-cli
    sea-orm-cli migrate up
    ```
-5. Jalankan aplikasi:
+6. Jalankan aplikasi:
    ```bash
    cargo run
    ```
@@ -29,7 +29,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
    cargo install --locked watchexec-cli
    watchexec -w src -r cargo run
    ```
-6. Aplikasi akan berjalan di `http://localhost:8080`, MariaDB di `127.0.0.1:3306`, dan Meilisearch di `127.0.0.1:7700`.
+7. Aplikasi akan berjalan di `http://localhost:8080`, MariaDB di `127.0.0.1:3306`, dan Meilisearch di `127.0.0.1:7700`.
 
 ## Mengakses Dokumentasi API
 - Buka Scalar UI di: `http://localhost:8080/scalar`.
@@ -188,3 +188,5 @@ docker-compose down -v --remove-orphans
 ├── docker-compose.yml
 └── README.md
 ```
+
+https://github.com/actix/examples/tree/master/https-tls/openssl

@@ -1,5 +1,5 @@
 use actix_web::{
-    App, HttpResponse, HttpServer, Responder, web,    
+    App, HttpServer, web,    
     cookie::{Key, SameSite},
 };
 use api::{
@@ -15,9 +15,7 @@ use config::{
     vite::ASSETS_VERSION,
 };
 use db::mysql::init_db_pool;
-use dotenvy::dotenv;
 use search::meilisearch::{configure_index, init_meilisearch};
-use serde_json::json;
 use std::env;
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
@@ -30,16 +28,12 @@ use inertia_rust::{
     actix::InertiaMiddleware, hashmap, prop_resolver, InertiaProp, IntoInertiaPropResult,
 };
 use serde_json::{Map, Value};
-use std::{sync::Arc};
-use std::net::TcpListener;
-
-async fn healthcheck() -> impl Responder {
-    HttpResponse::Ok().json(json!({ "status": "active" }))
-}
+use std::{sync::Arc, net::TcpListener};
+use erp_api::healthcheck;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv().ok();
+    dotenvy::dotenv().ok();
     env_logger::init();
 
     let env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
@@ -88,6 +82,7 @@ async fn main() -> std::io::Result<()> {
 
     let listener = TcpListener::bind("0.0.0.0:8080")
         .expect("Failed to bind port 8080");
+
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
     println!("Server is listening on port {}", port);

@@ -1,11 +1,8 @@
 services:
   mariadb:
     image: mariadb:latest
-    environment:
-      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - MARIADB_DATABASE=${DB_DATABASE}
-      - MARIADB_USER=${DB_USER}
-      - MARIADB_PASSWORD=${DB_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "3306:3306"
     volumes:
@@ -24,8 +21,8 @@ services:
 
   meilisearch:
     image: getmeili/meilisearch:latest
-    environment:
-      - MEILI_MASTER_KEY=${MEILISEARCH_API_KEY}
+    env_file:
+      - .env
     ports:
       - "7700:7700"
     volumes:

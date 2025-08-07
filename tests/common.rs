@@ -1,17 +1,19 @@
-use actix_web::{App, HttpServer, Responder, HttpResponse, web, dev::ServerHandle};
+use actix_web::{App, HttpServer, web, dev::ServerHandle};
 use api::v1::{auth, employee, inventory, order};
-use config::db::Db;
-use config::meilisearch::Meilisearch;
+use config::{
+    db::Db,
+    meilisearch::Meilisearch,
+    app::AppState,
+};
 use db::mysql::init_db_pool;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
-use search::Client;
-use search::meilisearch::init_meilisearch;
+use search::{Client, meilisearch::init_meilisearch};
 use reqwest::Client as HttpClient;
 use fake::{Fake, faker::internet::en::SafeEmail};
 use serde_json::json;
 use api::v1::auth::models::TokenResponse;
-use std::time::Duration;
-use std::net::TcpListener;
+use std::{time::Duration, net::TcpListener};
+use erp_api::healthcheck;
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
@@ -21,6 +23,7 @@ pub async fn setup_test_app(
 ) -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
+    
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
     let jwt_secret = jwt_secret.unwrap_or_else(|| "test-secret".to_string());
@@ -45,12 +48,11 @@ pub async fn setup_test_app(
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    // println!("Server is listening on port {}", port);
-    // let bind_addr = "127.0.0.1:0";
+    println!("Server is listening on port {}", port);
 
     let server = HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(config::app::AppState {
+            .app_data(web::Data::new(AppState {
                 db: db_pool_for_server.clone(),
                 meilisearch: meili_client_for_server.clone(),
                 jwt_secret: jwt_secret.clone(),
@@ -68,19 +70,8 @@ pub async fn setup_test_app(
     .listen(listener)
     .expect("Failed to listen")
     .run();
-    // .disable_signals();
-    // .bind(bind_addr)
-    // .expect("Gagal bind server");
 
-    // let server_addr = server
-    //     .addrs()
-    //     .first()
-    //     .expect("Gagal mendapatkan alamat server")
-    //     .to_owned();
-    // let server_url = format!("http://{server_addr}");
     let server_url = format!("http://127.0.0.1:{}", port);
-
-    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -377,8 +368,4 @@ async fn wait_until_server_ready(server_url: &str) {
         "Server tidak siap setelah menunggu {} ms",
         MAX_RETRIES as u64 * DELAY_MS
     );
-}
-
-async fn healthcheck() -> impl Responder {
-    HttpResponse::Ok().json(json!({ "status": "active" }))
 }
