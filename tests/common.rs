@@ -85,6 +85,7 @@ pub async fn setup_test_app(
 pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
+
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
     let config_app = config::app::AppConfig::new("test");
@@ -121,8 +122,7 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    // println!("Server is listening on port {}", port);
-    // let bind_addr = "127.0.0.1:0";
+    println!("Server is listening on port {}", port);
 
     let server = HttpServer::new(move || {
         App::new()
@@ -144,19 +144,8 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
     .listen(listener)
     .expect("Failed to listen")
     .run();
-    // .disable_signals();
-    // .bind(bind_addr)
-    // .expect("Gagal bind server");
 
-    // let server_addr = server
-    //     .addrs()
-    //     .first()
-    //     .expect("Gagal mendapatkan alamat server")
-    //     .to_owned();
-    // let server_url = format!("http://{server_addr}");
     let server_url = format!("http://127.0.0.1:{}", port);
-
-    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -170,6 +159,7 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
 pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
+
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
 
@@ -189,8 +179,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    // println!("Server is listening on port {}", port);
-    // let bind_addr = "127.0.0.1:0";
+    println!("Server is listening on port {}", port);
 
     let server = HttpServer::new(move || {
         App::new()
@@ -204,19 +193,8 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
     .listen(listener)
     .expect("Failed to listen")
     .run();
-    // .disable_signals();
-    // .bind(bind_addr)
-    // .expect("Gagal bind server");
 
-    // let server_addr = server
-    //     .addrs()
-    //     .first()
-    //     .expect("Gagal mendapatkan alamat server")
-    //     .to_owned();
-    // let server_url = format!("http://{server_addr}");
     let server_url = format!("http://127.0.0.1:{}", port);
-
-    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -230,6 +208,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
 pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
+    
     let config_db = Db::new("test");
     let mut config_meilisearch = Meilisearch::new("test");
     config_meilisearch.host = "http://localhost:9999".to_string(); // Bad url
@@ -255,8 +234,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    // println!("Server is listening on port {}", port);
-    // let bind_addr = "127.0.0.1:0";
+    println!("Server is listening on port {}", port);
 
     let server = HttpServer::new(move || {
         App::new()
@@ -278,19 +256,8 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     .listen(listener)
     .expect("Failed to listen")
     .run();
-    // .disable_signals();
-    // .bind(bind_addr)
-    // .expect("Gagal bind server");
 
-    // let server_addr = server
-    //     .addrs()
-    //     .first()
-    //     .expect("Gagal mendapatkan alamat server")
-    //     .to_owned();
-    // let server_url = format!("http://{server_addr}");
     let server_url = format!("http://127.0.0.1:{}", port);
-
-    // let server = server.run();
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -368,4 +335,8 @@ async fn wait_until_server_ready(server_url: &str) {
         "Server tidak siap setelah menunggu {} ms",
         MAX_RETRIES as u64 * DELAY_MS
     );
+}
+
+async fn run() {
+
 }
