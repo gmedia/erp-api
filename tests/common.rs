@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, web, dev::ServerHandle};
+use actix_web::{App, HttpServer, web, dev::{ServerHandle, Server}};
 use api::v1::{auth, employee, inventory, order};
 use config::{
     db::Db,
@@ -50,26 +50,16 @@ pub async fn setup_test_app(
     let port = listener.local_addr().unwrap().port();
     println!("Server is listening on port {}", port);
 
-    let server = HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(AppState {
-                db: db_pool_for_server.clone(),
-                meilisearch: meili_client_for_server.clone(),
-                jwt_secret: jwt_secret.clone(),
-                jwt_expires_in_seconds: jwt_expires_in_seconds.unwrap_or(3600),
-                bcrypt_cost: bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
-                jwt_algorithm: jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
-            }))
-            // Register your routes here
-            .route("/healthcheck", web::get().to(healthcheck))
-            .configure(inventory::routes::init_routes)
-            .configure(employee::routes::init_routes)
-            .configure(order::routes::init_routes)
-            .configure(auth::routes::init_routes)
-    })
-    .listen(listener)
-    .expect("Failed to listen")
-    .run();
+    let app_state = AppState {
+        db: db_pool_for_server.clone(),
+        meilisearch: meili_client_for_server.clone(),
+        jwt_secret: jwt_secret.clone(),
+        jwt_expires_in_seconds: jwt_expires_in_seconds.unwrap_or(3600),
+        bcrypt_cost: bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
+        jwt_algorithm: jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
+    };
+
+    let server = run(app_state, listener).await.unwrap();
 
     let server_url = format!("http://127.0.0.1:{}", port);
     let server_handle = server.handle();
@@ -124,26 +114,16 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
     let port = listener.local_addr().unwrap().port();
     println!("Server is listening on port {}", port);
 
-    let server = HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(config::app::AppState {
-                db: db_pool_for_server.clone(),
-                meilisearch: meili_client_for_server.clone(),
-                jwt_secret: jwt_secret.clone(),
-                jwt_expires_in_seconds: 3600,
-                bcrypt_cost: bcrypt::DEFAULT_COST,
-                jwt_algorithm: jsonwebtoken::Algorithm::HS256,
-            }))
-            // Register your routes here
-            .route("/healthcheck", web::get().to(healthcheck))
-            .configure(inventory::routes::init_routes)
-            .configure(employee::routes::init_routes)
-            .configure(order::routes::init_routes)
-            .configure(auth::routes::init_routes)
-    })
-    .listen(listener)
-    .expect("Failed to listen")
-    .run();
+    let app_state = AppState {
+        db: db_pool_for_server.clone(),
+        meilisearch: meili_client_for_server.clone(),
+        jwt_secret: jwt_secret.clone(),
+        jwt_expires_in_seconds: 3600,
+        bcrypt_cost: bcrypt::DEFAULT_COST,
+        jwt_algorithm: jsonwebtoken::Algorithm::HS256,
+    };
+
+    let server = run(app_state, listener).await.unwrap();
 
     let server_url = format!("http://127.0.0.1:{}", port);
     let server_handle = server.handle();
@@ -208,7 +188,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
 pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
-    
+
     let config_db = Db::new("test");
     let mut config_meilisearch = Meilisearch::new("test");
     config_meilisearch.host = "http://localhost:9999".to_string(); // Bad url
@@ -236,26 +216,16 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     let port = listener.local_addr().unwrap().port();
     println!("Server is listening on port {}", port);
 
-    let server = HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(config::app::AppState {
-                db: db_pool_for_server.clone(),
-                meilisearch: meili_client_for_server.clone(),
-                jwt_secret: jwt_secret.clone(),
-                jwt_expires_in_seconds: 3600,
-                bcrypt_cost: bcrypt::DEFAULT_COST,
-                jwt_algorithm: jsonwebtoken::Algorithm::HS256,
-            }))
-            // Register your routes here
-            .route("/healthcheck", web::get().to(healthcheck))
-            .configure(inventory::routes::init_routes)
-            .configure(employee::routes::init_routes)
-            .configure(order::routes::init_routes)
-            .configure(auth::routes::init_routes)
-    })
-    .listen(listener)
-    .expect("Failed to listen")
-    .run();
+    let app_state = AppState {
+        db: db_pool_for_server.clone(),
+        meilisearch: meili_client_for_server.clone(),
+        jwt_secret: jwt_secret.clone(),
+        jwt_expires_in_seconds: 3600,
+        bcrypt_cost: bcrypt::DEFAULT_COST,
+        jwt_algorithm: jsonwebtoken::Algorithm::HS256,
+    };
+
+    let server = run(app_state, listener).await.unwrap();
 
     let server_url = format!("http://127.0.0.1:{}", port);
     let server_handle = server.handle();
@@ -337,6 +307,23 @@ async fn wait_until_server_ready(server_url: &str) {
     );
 }
 
-async fn run() {
+async fn run(
+    app_state: AppState,
+    listener: TcpListener,
+) -> std::io::Result<Server> {
+    let server = HttpServer::new(move || {
+        App::new()
+            .app_data(web::Data::new(app_state.clone()))
+            // Register your routes here
+            .route("/healthcheck", web::get().to(healthcheck))
+            .configure(inventory::routes::init_routes)
+            .configure(employee::routes::init_routes)
+            .configure(order::routes::init_routes)
+            .configure(auth::routes::init_routes)
+    })
+    .listen(listener)
+    .expect("Failed to listen")
+    .run();
 
+    Ok(server)
 }
