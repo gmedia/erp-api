@@ -2,11 +2,12 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 
 mod common;
-use common::{setup_test_app, get_auth_token};
+use common::{get_auth_token, setup_test_app};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_internal_server_error_response_format() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
 
     // Get a valid token first

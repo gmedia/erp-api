@@ -1,8 +1,6 @@
-use actix_web::{get, Responder, HttpRequest};
-use inertia_rust::{
-    hashmap, Inertia, InertiaFacade, InertiaProp,
-};
-use serde_json::{json};
+use actix_web::{get, HttpRequest, Responder};
+use inertia_rust::{hashmap, Inertia, InertiaFacade, InertiaProp};
+use serde_json::json;
 
 #[get("/v1/contact")]
 pub async fn handle(req: HttpRequest) -> impl Responder {

@@ -1,19 +1,19 @@
-use actix_web::{App, HttpServer, web, dev::{ServerHandle, Server}};
-use api::v1::{auth, employee, inventory, order};
-use config::{
-    db::Db,
-    meilisearch::Meilisearch,
-    app::AppState,
+use actix_web::{
+    App, HttpServer,
+    dev::{Server, ServerHandle},
+    web,
 };
+use api::v1::auth::models::TokenResponse;
+use api::v1::{auth, employee, inventory, order};
+use config::{app::AppState, db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
+use erp_api::healthcheck;
+use fake::{Fake, faker::internet::en::SafeEmail};
+use reqwest::Client as HttpClient;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 use search::{Client, meilisearch::init_meilisearch};
-use reqwest::Client as HttpClient;
-use fake::{Fake, faker::internet::en::SafeEmail};
 use serde_json::json;
-use api::v1::auth::models::TokenResponse;
-use std::{time::Duration, net::TcpListener};
-use erp_api::healthcheck;
+use std::{net::TcpListener, time::Duration};
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
@@ -23,7 +23,7 @@ pub async fn setup_test_app(
 ) -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
-    
+
     let config_db = Db::new("test");
     let config_meilisearch = Meilisearch::new("test");
     let jwt_secret = jwt_secret.unwrap_or_else(|| "test-secret".to_string());
@@ -43,8 +43,7 @@ pub async fn setup_test_app(
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0")
-        .expect("Failed to bind random port");
+    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
@@ -107,8 +106,7 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0")
-        .expect("Failed to bind random port");
+    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
@@ -154,8 +152,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
         .expect("Gagal inisialisasi Meilisearch untuk tes");
 
     // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0")
-        .expect("Failed to bind random port");
+    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
@@ -185,7 +182,8 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
 }
 
 #[allow(dead_code)]
-pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle) {
+pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle)
+{
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
 
@@ -209,8 +207,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     let meili_client_for_server = meili_client.clone();
 
     // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0")
-        .expect("Failed to bind random port");
+    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
@@ -238,7 +235,11 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
 }
 
 #[allow(dead_code)]
-pub async fn get_auth_token(client: &HttpClient, server_url: &str, db_pool: &DatabaseConnection) -> String {
+pub async fn get_auth_token(
+    client: &HttpClient,
+    server_url: &str,
+    db_pool: &DatabaseConnection,
+) -> String {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
@@ -247,7 +248,7 @@ pub async fn get_auth_token(client: &HttpClient, server_url: &str, db_pool: &Dat
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -307,10 +308,7 @@ async fn wait_until_server_ready(server_url: &str) {
     );
 }
 
-async fn run(
-    app_state: AppState,
-    listener: TcpListener,
-) -> std::io::Result<Server> {
+async fn run(app_state: AppState, listener: TcpListener) -> std::io::Result<Server> {
     let server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(app_state.clone()))

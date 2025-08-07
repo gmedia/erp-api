@@ -1,7 +1,7 @@
 //! See: https://github.com/KaioFelps/inertia-rust/tree/v2/examples/actix_ssr
 
-use vite_rust::{Vite, ViteConfig};
 use std::sync::OnceLock;
+use vite_rust::{Vite, ViteConfig};
 
 pub static ASSETS_VERSION: OnceLock<&str> = OnceLock::new();
 

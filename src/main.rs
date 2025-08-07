@@ -1,35 +1,36 @@
+use actix_session::{SessionExt, SessionMiddleware};
 use actix_web::{
-    App, HttpServer, web,    
+    App, HttpServer,
     cookie::{Key, SameSite},
+    web,
 };
 use api::{
-    openapi::{ApiDoc},
+    openapi::ApiDoc,
     v1::{auth, employee, inventory, order},
 };
 use config::{
     app::{AppConfig, AppState},
     db::Db,
-    meilisearch::Meilisearch,
-    inertia::initialize_inertia,
     file_session::FileSessionStore,
+    inertia::initialize_inertia,
+    meilisearch::Meilisearch,
     vite::ASSETS_VERSION,
 };
 use db::mysql::init_db_pool;
+use erp_api::healthcheck;
+use inertia_rust::{
+    InertiaProp, IntoInertiaPropResult, actix::InertiaMiddleware, hashmap, prop_resolver,
+};
+use page::middlewares::{
+    garbage_collector::GarbageCollectorMiddleware,
+    reflash_temporary_session::ReflashTemporarySessionMiddleware,
+};
 use search::meilisearch::{configure_index, init_meilisearch};
+use serde_json::{Map, Value};
 use std::env;
+use std::{net::TcpListener, sync::Arc};
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
-use page::middlewares::{
-    reflash_temporary_session::ReflashTemporarySessionMiddleware,
-    garbage_collector::GarbageCollectorMiddleware,
-};
-use actix_session::{SessionExt, SessionMiddleware};
-use inertia_rust::{
-    actix::InertiaMiddleware, hashmap, prop_resolver, InertiaProp, IntoInertiaPropResult,
-};
-use serde_json::{Map, Value};
-use std::{sync::Arc, net::TcpListener};
-use erp_api::healthcheck;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -80,8 +81,7 @@ async fn main() -> std::io::Result<()> {
     let rust_env = env::var("RUST_ENV").unwrap_or_else(|_| "production".to_string());
     let use_secure_cookie = rust_env.as_str() == "production";
 
-    let listener = TcpListener::bind("0.0.0.0:8080")
-        .expect("Failed to bind port 8080");
+    let listener = TcpListener::bind("0.0.0.0:8080").expect("Failed to bind port 8080");
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();

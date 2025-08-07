@@ -1,17 +1,18 @@
 use api::v1::auth::models::TokenResponse;
+use entity::user::{self, Entity as User};
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
-use serde_json::json;
-use entity::user::{self, Entity as User};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set, Statement, ConnectionTrait};
 use reqwest::header::{HeaderMap, HeaderValue};
+use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, Statement};
+use serde_json::json;
 
 mod common;
-use common::{setup_test_app, setup_test_app_no_state, get_auth_token};
+use common::{get_auth_token, setup_test_app, setup_test_app_no_state};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_register_and_login() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -21,7 +22,7 @@ async fn test_register_and_login() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -68,7 +69,8 @@ async fn test_register_and_login() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -97,7 +99,8 @@ async fn test_access_protected_route() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_register_existing_user() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -107,7 +110,7 @@ async fn test_register_existing_user() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -142,7 +145,8 @@ async fn test_register_existing_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_login_non_existent_user() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = "Not User".to_string();
     let password = "password123";
@@ -152,7 +156,7 @@ async fn test_login_non_existent_user() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -176,7 +180,8 @@ async fn test_login_non_existent_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_login_wrong_password() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -187,7 +192,7 @@ async fn test_login_wrong_password() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -225,7 +230,8 @@ async fn test_login_wrong_password() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_invalid_token() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let invalid_token = "this.is.an.invalid.token";
 
@@ -245,7 +251,8 @@ async fn test_access_protected_route_invalid_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_login_db_error() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -255,7 +262,7 @@ async fn test_login_db_error() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -292,14 +299,15 @@ async fn test_login_db_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_malformed_header() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
 
     // Access protected route with a malformed token
@@ -311,14 +319,15 @@ async fn test_access_protected_route_malformed_header() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_expired_token() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(Some(1), None, None, None).await; // 1 second token validity
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(Some(1), None, None, None).await; // 1 second token validity
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -334,7 +343,7 @@ async fn test_access_protected_route_expired_token() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
@@ -356,14 +365,15 @@ async fn test_access_protected_route_no_app_state() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_access_protected_route_invalid_utf8_in_header() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (_db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -379,7 +389,7 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
         .expect("Failed to send request to protected route");
 
     assert_eq!(response.status(), reqwest::StatusCode::UNAUTHORIZED);
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
@@ -399,7 +409,7 @@ async fn test_register_invalid_bcrypt_cost() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -419,7 +429,7 @@ async fn test_register_invalid_bcrypt_cost() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
@@ -442,7 +452,7 @@ async fn test_login_invalid_jwt_secret() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -476,14 +486,15 @@ async fn test_login_invalid_jwt_secret() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_register_db_error() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -493,7 +504,7 @@ async fn test_register_db_error() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -516,14 +527,15 @@ async fn test_register_db_error() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_login_malformed_hash() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -533,7 +545,7 @@ async fn test_login_malformed_hash() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{username}'") 
+            format!("DELETE FROM user where username = '{username}'"),
         ))
         .await;
 
@@ -579,7 +591,7 @@ async fn test_login_malformed_hash() {
         response.status(),
         reqwest::StatusCode::INTERNAL_SERVER_ERROR
     );
-    
+
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }

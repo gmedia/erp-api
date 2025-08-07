@@ -7,16 +7,16 @@ mod common;
 use actix_web::Error;
 use actix_web::body::BoxBody;
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
+use actix_web::{test, web};
 use api::v1::auth::middleware::JwtMiddleware;
 use common::{setup_test_app, setup_test_app_no_state};
-use futures_util::future::{Ready, ready};
-use futures_util::task::noop_waker;
-use std::task::{Context, Poll};
-use actix_web::{test, web};
 use config::app::AppState;
 use config::{db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
 use dotenvy::dotenv;
+use futures_util::future::{Ready, ready};
+use futures_util::task::noop_waker;
+use std::task::{Context, Poll};
 
 fn create_token(sub: &str, secret: &str, exp: usize) -> String {
     let claims = Claims {
@@ -56,7 +56,8 @@ impl Service<ServiceRequest> for MockService {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url, server_handle) = setup_test_app(None, None, Some(secret.clone()), None).await;
+    let (_db, _meili, server_url, server_handle) =
+        setup_test_app(None, None, Some(secret.clone()), None).await;
     let client = reqwest::Client::new();
 
     // Test case 1: Valid token
@@ -287,7 +288,8 @@ async fn test_jwt_middleware_poll_ready_cover() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url, server_handle) = setup_test_app(None, None, Some(secret.clone()), None).await;
+    let (_db, _meili, server_url, server_handle) =
+        setup_test_app(None, None, Some(secret.clone()), None).await;
     let client = reqwest::Client::new();
 
     let mut headers = HeaderMap::new();

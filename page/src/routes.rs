@@ -1,5 +1,5 @@
+use super::v1::{contact, foo, index, todo, todo_create, todo_store};
 use actix_web::web;
-use super::v1::{index, contact, todo, todo_create, todo_store, foo};
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(index::routes::handle)

@@ -1,4 +1,4 @@
-use actix_web::{get, Responder, HttpRequest};
+use actix_web::{get, HttpRequest, Responder};
 use inertia_rust::{Inertia, InertiaFacade};
 
 #[get("/v1/foo")]

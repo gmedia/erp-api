@@ -1,6 +1,10 @@
 //! See: https://github.com/KaioFelps/inertia-rust/tree/v2/examples/actix_ssr
 use inertia_rust::{
-    template_resolvers::ViteHBSTemplateResolver, Inertia, InertiaConfig, InertiaError, InertiaVersion,
+    template_resolvers::ViteHBSTemplateResolver,
+    Inertia,
+    InertiaConfig,
+    InertiaError,
+    InertiaVersion,
     // SsrClient,
 };
 use std::io;

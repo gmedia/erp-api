@@ -1,15 +1,16 @@
 use api::v1::order::models::Order;
-use fake::{Fake};
+use fake::Fake;
 use reqwest::Client as HttpClient;
 use serde_json::json;
 use uuid::Uuid;
 
 mod common;
-use common::{setup_test_app, get_auth_token};
+use common::{get_auth_token, setup_test_app};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_order() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -42,7 +43,8 @@ async fn test_create_order() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_order_negative_amount() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -69,7 +71,8 @@ async fn test_create_order_negative_amount() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_create_order_internal_server_error() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(None, None, None, None).await;
+    let (db_pool, _meili_client, server_url, server_handle) =
+        setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();

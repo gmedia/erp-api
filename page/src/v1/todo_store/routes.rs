@@ -1,10 +1,12 @@
-use actix_web::{post, Responder, HttpRequest, web::{Json, Redirect}};
-use serde_json::{Map, Value};
-use super::super::todo::task::{models::Task, services::save_task, dtos::StoreTask};
+use super::super::todo::task::{dtos::StoreTask, models::Task, services::save_task};
 use actix_session::SessionExt;
-use inertia_rust::{
-    hashmap, validators::InertiaValidateOrRedirect,
+use actix_web::{
+    post,
+    web::{Json, Redirect},
+    HttpRequest, Responder,
 };
+use inertia_rust::{hashmap, validators::InertiaValidateOrRedirect};
+use serde_json::{Map, Value};
 
 #[post("/v1/todo/store")]
 pub async fn handle(req: HttpRequest, body: Json<StoreTask>) -> impl Responder {

@@ -1,13 +1,10 @@
-use actix_web::{
-    get, web, HttpRequest, Responder,
-};
+use actix_web::{get, web, HttpRequest, Responder};
 
+use super::task::services::get_tasks;
 use inertia_rust::{
-    hashmap, prop_resolver, Inertia, InertiaFacade,
-    InertiaProp, IntoInertiaPropResult,
+    hashmap, prop_resolver, Inertia, InertiaFacade, InertiaProp, IntoInertiaPropResult,
 };
 use serde::Deserialize;
-use super::task::services::{get_tasks};
 
 #[get("/v1/todo")]
 async fn handle(req: HttpRequest, query: web::Query<TodoQuery>) -> impl Responder {
