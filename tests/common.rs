@@ -48,7 +48,7 @@ pub async fn setup_test_app(
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {}", port);
+    println!("Server is listening on port {port}");
 
     let app_state = AppState {
         db: db_pool_for_server.clone(),
@@ -61,7 +61,7 @@ pub async fn setup_test_app(
 
     let server = run(app_state, listener).await.unwrap();
 
-    let server_url = format!("http://127.0.0.1:{}", port);
+    let server_url = format!("http://127.0.0.1:{port}");
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -112,7 +112,7 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {}", port);
+    println!("Server is listening on port {port}");
 
     let app_state = AppState {
         db: db_pool_for_server.clone(),
@@ -125,7 +125,7 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
 
     let server = run(app_state, listener).await.unwrap();
 
-    let server_url = format!("http://127.0.0.1:{}", port);
+    let server_url = format!("http://127.0.0.1:{port}");
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -159,7 +159,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {}", port);
+    println!("Server is listening on port {port}");
 
     let server = HttpServer::new(move || {
         App::new()
@@ -174,7 +174,7 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
     .expect("Failed to listen")
     .run();
 
-    let server_url = format!("http://127.0.0.1:{}", port);
+    let server_url = format!("http://127.0.0.1:{port}");
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -214,7 +214,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {}", port);
+    println!("Server is listening on port {port}");
 
     let app_state = AppState {
         db: db_pool_for_server.clone(),
@@ -227,7 +227,7 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
 
     let server = run(app_state, listener).await.unwrap();
 
-    let server_url = format!("http://127.0.0.1:{}", port);
+    let server_url = format!("http://127.0.0.1:{port}");
     let server_handle = server.handle();
 
     // Jalankan server di background
@@ -247,7 +247,7 @@ pub async fn get_auth_token(client: &HttpClient, server_url: &str, db_pool: &Dat
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -284,7 +284,7 @@ async fn wait_until_server_ready(server_url: &str) {
     const DELAY_MS: u64 = 250;
 
     let client = HttpClient::new();
-    let health_url = format!("{}/healthcheck", server_url);
+    let health_url = format!("{server_url}/healthcheck");
 
     for _ in 0..MAX_RETRIES {
         match client.get(&health_url).send().await {

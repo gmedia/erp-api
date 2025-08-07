@@ -24,7 +24,7 @@ async fn test_create_employee() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM employee where email = '{}'", email) 
+           format!("DELETE FROM employee where email = '{email}'") 
         ))
         .await;
 

@@ -21,7 +21,7 @@ async fn test_register_and_login() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -107,7 +107,7 @@ async fn test_register_existing_user() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -152,7 +152,7 @@ async fn test_login_non_existent_user() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -187,7 +187,7 @@ async fn test_login_wrong_password() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -255,7 +255,7 @@ async fn test_login_db_error() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -399,7 +399,7 @@ async fn test_register_invalid_bcrypt_cost() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -442,7 +442,7 @@ async fn test_login_invalid_jwt_secret() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -493,7 +493,7 @@ async fn test_register_db_error() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 
@@ -533,7 +533,7 @@ async fn test_login_malformed_hash() {
     let _ = db_pool
         .execute(Statement::from_string(
             backend,
-           format!("DELETE FROM user where username = '{}'", username) 
+           format!("DELETE FROM user where username = '{username}'") 
         ))
         .await;
 

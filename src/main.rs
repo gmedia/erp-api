@@ -85,7 +85,7 @@ async fn main() -> std::io::Result<()> {
 
     // We retrieve the port assigned to us by the OS
     let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {}", port);
+    println!("Server is listening on port {port}");
 
     HttpServer::new(move || {
         App::new()
