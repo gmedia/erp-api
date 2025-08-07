@@ -17,7 +17,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
    Pastikan semua service healthy.
 5. Jalankan database migration:
    ```bash
-   cargo install --locked sea-orm-cli
+   cargo install sea-orm-cli --locked
    sea-orm-cli migrate up
    ```
 6. Jalankan aplikasi:
@@ -26,7 +26,7 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
    ```
    Untuk mengaktifkan watch mode dapat dilakukan dengan:
    ```bash
-   cargo install --locked watchexec-cli
+   cargo install watchexec-cli --locked
    watchexec -w src -r cargo run
    ```
 7. Aplikasi akan berjalan di `http://localhost:8080`, MariaDB di `127.0.0.1:3306`, dan Meilisearch di `127.0.0.1:7700`.
@@ -43,7 +43,8 @@ cargo test
 ## Menghasilkan Laporan Code Coverage
 1. Install `cargo-tarpaulin`:
    ```bash
-   cargo install cargo-tarpaulin
+   cargo install cargo-tarpaulin cargo-llvm-cov --locked
+   rustup component add llvm-tools-preview
    ```
 2. Generate laporan coverage:
    ```bash
