@@ -4,7 +4,7 @@ services:
     ports:
       - "8081:8080"
     env_file:
-      - .env.test
+      - .env.build
     depends_on:
       mariadb:
         condition: service_healthy
@@ -22,7 +22,7 @@ services:
   mariadb:
     image: mariadb:latest
     env_file:
-      - .env.test
+      - .env.build
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -40,7 +40,7 @@ services:
   meilisearch:
     image: getmeili/meilisearch:latest
     env_file:
-      - .env.test
+      - .env.build
     volumes:
       - meilisearch_data:/meili_data
     networks:

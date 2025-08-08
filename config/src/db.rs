@@ -5,10 +5,7 @@ pub struct Db {
 }
 
 impl Db {
-    pub fn new(env: &str) -> Self {
-        if env == "test" {
-            dotenvy::from_filename(".env.test").ok();
-        }
+    pub fn new() -> Self {
         let url = env::var("DATABASE_URL")
             .unwrap_or_else(|_| "mysql://user:password@mariadb:3306/erp_db".to_string());
 

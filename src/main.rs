@@ -38,8 +38,8 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     let env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
-    let config_db = Db::new(&env);
-    let config_meilisearch = Meilisearch::new(&env);
+    let config_db = Db::new();
+    let config_meilisearch = Meilisearch::new();
     let config_app = AppConfig::new(&env);
     let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set.");
 

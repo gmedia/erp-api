@@ -24,8 +24,8 @@ pub async fn setup_test_app(
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
 
-    let config_db = Db::new("test");
-    let config_meilisearch = Meilisearch::new("test");
+    let config_db = Db::new();
+    let config_meilisearch = Meilisearch::new();
     let jwt_secret = jwt_secret.unwrap_or_else(|| "test-secret".to_string());
 
     // Inisialisasi database
@@ -75,8 +75,8 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
 
-    let config_db = Db::new("test");
-    let config_meilisearch = Meilisearch::new("test");
+    let config_db = Db::new();
+    let config_meilisearch = Meilisearch::new();
     let config_app = config::app::AppConfig::new("test");
     let jwt_secret = "test-secret".to_string();
 
@@ -138,8 +138,8 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
 
-    let config_db = Db::new("test");
-    let config_meilisearch = Meilisearch::new("test");
+    let config_db = Db::new();
+    let config_meilisearch = Meilisearch::new();
 
     // Inisialisasi database
     let db_pool = init_db_pool(&config_db.url)
@@ -187,8 +187,8 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
 
-    let config_db = Db::new("test");
-    let mut config_meilisearch = Meilisearch::new("test");
+    let config_db = Db::new();
+    let mut config_meilisearch = Meilisearch::new();
     config_meilisearch.host = "http://localhost:9999".to_string(); // Bad url
     let jwt_secret = "test-secret".to_string();
 

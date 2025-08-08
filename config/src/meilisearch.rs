@@ -6,7 +6,7 @@ pub struct Meilisearch {
 }
 
 impl Meilisearch {
-    pub fn new(_env: &str) -> Self {
+    pub fn new() -> Self {
         let host =
             env::var("MEILISEARCH_HOST").unwrap_or_else(|_| "http://meilisearch:7700".to_string());
         let api_key = env::var("MEILISEARCH_API_KEY").unwrap_or_else(|_| "masterKey".to_string());

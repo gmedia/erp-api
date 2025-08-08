@@ -18,6 +18,7 @@ COPY db/Cargo.toml ./db/
 COPY entity/Cargo.toml ./entity/
 COPY migration/Cargo.toml ./migration/
 COPY search/Cargo.toml ./search/
+COPY page/Cargo.toml ./page/
 
 # Create dummy files to build the dependency graph
 RUN mkdir -p src && echo "fn main() {}" > src/main.rs && \
@@ -28,7 +29,8 @@ RUN mkdir -p src && echo "fn main() {}" > src/main.rs && \
     mkdir -p migration/src && \
     echo "fn main() {}" > migration/src/main.rs && \
     echo "pub fn lib() {}" > migration/src/lib.rs && \
-    mkdir -p search/src && echo "pub fn lib() {}" > search/src/lib.rs
+    mkdir -p search/src && echo "pub fn lib() {}" > search/src/lib.rs && \
+    mkdir -p page/src && echo "pub fn lib() {}" > page/src/lib.rs
 
 # Build only the dependencies to cache them
 RUN cargo build --release --workspace
@@ -53,7 +55,7 @@ COPY --from=planner /usr/local/cargo/registry /usr/local/cargo/registry
 COPY . .
 
 # Clean the dummy artifacts of local crates to force recompilation
-RUN cargo clean -p api -p config -p db -p entity -p migration -p search
+RUN cargo clean -p api -p config -p db -p entity -p migration -p search -p page
 
 # Build the application binary, which will use the cached dependencies
 RUN cargo build --release --bin erp-api
@@ -89,6 +91,9 @@ RUN chmod +x /usr/local/bin/wait-for-it.sh
 
 # Copy supervisord configuration file
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy public directory
+COPY ./public /app/public
 
 # Switch to the non-root user
 USER appuser

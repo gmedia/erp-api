@@ -6,7 +6,7 @@ target/
 .gitignore
 
 # Ignore Docker related files
-docker/
+Dockerfile
 docker-compose.yml
 docker-compose.yml.example
 docker-compose.yml.test
@@ -21,3 +21,10 @@ test-image.sh
 
 # Ignore test files
 tests/
+
+# VScode
+.vscode/
+
+# Kilocode
+.kilocode/
+.kilocodemodes

@@ -33,7 +33,7 @@ done
 docker compose down -v
 
 if [[ "$RESTORE" != true ]]; then
-    cp docker-compose.yml.test docker-compose.yml
+    cp docker-compose.yml.build docker-compose.yml
     rm -rf .env
 
     docker login registry.gmedia.id

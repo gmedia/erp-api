@@ -3,6 +3,7 @@
 docker-compose.yml
 tarpaulin-report.html
 tarpaulin-report.json
+build_rs_cov.profraw
 .kilocode
 .kilocodemodes
 node_modules/

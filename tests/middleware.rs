@@ -176,8 +176,8 @@ async fn test_jwt_middleware_no_app_state() {
 async fn test_jwt_middleware_call_logic() {
     dotenv().ok();
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let config_db = Db::new("test");
-    let config_meilisearch = Meilisearch::new("test");
+    let config_db = Db::new();
+    let config_meilisearch = Meilisearch::new();
     let db_pool = init_db_pool(&config_db.url).await.unwrap();
     let meili_client = search::meilisearch::init_meilisearch(
         &config_meilisearch.host,
@@ -313,10 +313,10 @@ async fn test_jwt_middleware_invalid_utf8_header() {
 async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {
-        db: init_db_pool(&Db::new("test").url).await.unwrap(),
+        db: init_db_pool(&Db::new().url).await.unwrap(),
         meilisearch: search::meilisearch::init_meilisearch(
-            &Meilisearch::new("test").host,
-            &Meilisearch::new("test").api_key,
+            &Meilisearch::new().host,
+            &Meilisearch::new().api_key,
         )
         .await
         .unwrap(),
