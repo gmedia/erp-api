@@ -129,7 +129,7 @@ async fn main() -> std::io::Result<()> {
                     .configure(page::routes::init_routes)
                     .app_data(inertia.clone())
             )
-            .service(actix_files::Files::new("bundle/", "./public/bundle").prefer_utf8(true))
+            .service(actix_files::Files::new("/", "./public").prefer_utf8(true))
     })
     // .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .listen(listener)?
