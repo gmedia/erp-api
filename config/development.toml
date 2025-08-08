@@ -1,6 +1,0 @@
-[app]
-tables = ["inventory", "employee", "order"]
-
-[app.meilisearch_indexes]
-inventory = ["name"]
-order = ["item", "customer_name"]

@@ -24,8 +24,8 @@ struct TomlConfig {
 }
 
 impl AppConfig {
-    pub fn new(env: &str) -> Self {
-        let config_path = format!("config/{}.toml", env);
+    pub fn new() -> Self {
+        let config_path = format!("config.toml");
         let config_str = std::fs::read_to_string(&config_path)
             .unwrap_or_else(|_| panic!("Failed to read config file: {}", &config_path));
         let toml_config: TomlConfig =

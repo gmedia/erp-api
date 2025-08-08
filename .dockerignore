@@ -1,5 +1,10 @@
 # Ignore build artifacts
 target/
+node_modules/
+public/bundle/
+public/hot
+dist/
+storage/
 
 # Ignore version control
 .git/
@@ -10,21 +15,24 @@ Dockerfile
 docker-compose.yml
 docker-compose.yml.example
 docker-compose.yml.test
+build_rs_cov.profraw
 
 # Ignore documentation and scripts
 README.md
-test.sh
-test-image.sh
 
 # Ignore environment files
 .env*
 
 # Ignore test files
 tests/
+test.sh
+test-build.sh
+tarpaulin-report.html
+tarpaulin-report.json
 
-# VScode
+# Ignore VScode files
 .vscode/
 
-# Kilocode
+# Ignore Kilocode files
 .kilocode/
 .kilocodemodes

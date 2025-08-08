@@ -77,7 +77,7 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
 
     let config_db = Db::new();
     let config_meilisearch = Meilisearch::new();
-    let config_app = config::app::AppConfig::new("test");
+    let config_app = config::app::AppConfig::new();
     let jwt_secret = "test-secret".to_string();
 
     // Inisialisasi database

@@ -37,10 +37,9 @@ async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
     env_logger::init();
 
-    let env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
     let config_db = Db::new();
     let config_meilisearch = Meilisearch::new();
-    let config_app = AppConfig::new(&env);
+    let config_app = AppConfig::new();
     let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set.");
 
     let db_pool = init_db_pool(&config_db.url)
@@ -130,7 +129,7 @@ async fn main() -> std::io::Result<()> {
                     .configure(page::routes::init_routes)
                     .app_data(inertia.clone())
             )
-            .service(actix_files::Files::new("public/", "./public").prefer_utf8(true))
+            .service(actix_files::Files::new("bundle/", "./public/bundle").prefer_utf8(true))
     })
     // .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .listen(listener)?
