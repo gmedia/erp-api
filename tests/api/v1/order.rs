@@ -7,8 +7,8 @@ use uuid::Uuid;
 
 use crate::common::{get_auth_token, setup_test_app};
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_create_order() {
+#[tokio::test]
+async fn test_create_order() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -41,8 +41,8 @@ pub async fn test_create_order() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_create_order_negative_amount() {
+#[tokio::test]
+async fn test_create_order_negative_amount() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -69,8 +69,8 @@ pub async fn test_create_order_negative_amount() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_create_order_internal_server_error() {
+#[tokio::test]
+async fn test_create_order_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

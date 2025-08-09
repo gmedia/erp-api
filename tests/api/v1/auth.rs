@@ -9,8 +9,8 @@ use serde_json::json;
 
 use crate::common::{get_auth_token, setup_test_app, setup_test_app_no_state};
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_register_and_login() {
+#[tokio::test]
+async fn test_register_and_login() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -67,8 +67,8 @@ pub async fn test_register_and_login() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_access_protected_route() {
+#[tokio::test]
+async fn test_access_protected_route() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -97,8 +97,8 @@ pub async fn test_access_protected_route() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_register_existing_user() {
+#[tokio::test]
+async fn test_register_existing_user() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -143,8 +143,8 @@ pub async fn test_register_existing_user() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_login_non_existent_user() {
+#[tokio::test]
+async fn test_login_non_existent_user() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -178,8 +178,8 @@ pub async fn test_login_non_existent_user() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_login_wrong_password() {
+#[tokio::test]
+async fn test_login_wrong_password() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -228,8 +228,8 @@ pub async fn test_login_wrong_password() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_access_protected_route_invalid_token() {
+#[tokio::test]
+async fn test_access_protected_route_invalid_token() {
     let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -249,8 +249,8 @@ pub async fn test_access_protected_route_invalid_token() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_login_db_error() {
+#[tokio::test]
+async fn test_login_db_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -304,8 +304,8 @@ pub async fn test_login_db_error() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_access_protected_route_malformed_header() {
+#[tokio::test]
+async fn test_access_protected_route_malformed_header() {
     let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -324,8 +324,8 @@ pub async fn test_access_protected_route_malformed_header() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_access_protected_route_expired_token() {
+#[tokio::test]
+async fn test_access_protected_route_expired_token() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(Some(1), None, None, None).await; // 1 second token validity
     let client = HttpClient::new();
@@ -348,8 +348,8 @@ pub async fn test_access_protected_route_expired_token() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_access_protected_route_no_app_state() {
+#[tokio::test]
+async fn test_access_protected_route_no_app_state() {
     let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_state().await;
     let client = HttpClient::new();
 
@@ -370,8 +370,8 @@ pub async fn test_access_protected_route_no_app_state() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_access_protected_route_invalid_utf8_in_header() {
+#[tokio::test]
+async fn test_access_protected_route_invalid_utf8_in_header() {
     let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -394,8 +394,8 @@ pub async fn test_access_protected_route_invalid_utf8_in_header() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_register_invalid_bcrypt_cost() {
+#[tokio::test]
+async fn test_register_invalid_bcrypt_cost() {
     // bcrypt cost must be between 4 and 31.
     let invalid_cost = 99;
     let (db_pool, _meili_client, server_url, server_handle) =
@@ -434,8 +434,8 @@ pub async fn test_register_invalid_bcrypt_cost() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_login_invalid_jwt_secret() {
+#[tokio::test]
+async fn test_login_invalid_jwt_secret() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(
         None,
         None,
@@ -491,8 +491,8 @@ pub async fn test_login_invalid_jwt_secret() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_register_db_error() {
+#[tokio::test]
+async fn test_register_db_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -532,8 +532,8 @@ pub async fn test_register_db_error() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_login_malformed_hash() {
+#[tokio::test]
+async fn test_login_malformed_hash() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

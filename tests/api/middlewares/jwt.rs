@@ -53,8 +53,8 @@ impl Service<ServiceRequest> for MockService {
     }
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_jwt_middleware_logic() {
+#[tokio::test]
+async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url, server_handle) =
         setup_test_app(None, None, Some(secret.clone()), None).await;
@@ -154,8 +154,8 @@ pub async fn test_jwt_middleware_logic() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_jwt_middleware_no_app_state() {
+#[tokio::test]
+async fn test_jwt_middleware_no_app_state() {
     let (_db, _meili, server_url, server_handle) = setup_test_app_no_state().await;
     let client = reqwest::Client::new();
 
@@ -172,8 +172,8 @@ pub async fn test_jwt_middleware_no_app_state() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_jwt_middleware_call_logic() {
+#[tokio::test]
+async fn test_jwt_middleware_call_logic() {
     dotenv().ok();
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let config_db = Db::new();
@@ -272,8 +272,8 @@ pub async fn test_jwt_middleware_call_logic() {
     assert_eq!(err.as_response_error().status_code(), 500);
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_jwt_middleware_poll_ready_cover() {
+#[tokio::test]
+async fn test_jwt_middleware_poll_ready_cover() {
     let middleware = JwtMiddleware::new("Bearer".to_string());
     let service = MockService;
     let middleware_service = middleware.new_transform(service).await.unwrap();
@@ -285,8 +285,8 @@ pub async fn test_jwt_middleware_poll_ready_cover() {
     assert!(poll_result.is_ready());
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_jwt_middleware_invalid_utf8_header() {
+#[tokio::test]
+async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url, server_handle) =
         setup_test_app(None, None, Some(secret.clone()), None).await;
@@ -309,8 +309,8 @@ pub async fn test_jwt_middleware_invalid_utf8_header() {
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-pub async fn test_jwt_middleware_wrong_key_for_alg() {
+#[tokio::test]
+async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {
         db: init_db_pool(&Db::new().url).await.unwrap(),

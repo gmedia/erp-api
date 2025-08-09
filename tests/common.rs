@@ -70,7 +70,6 @@ pub async fn setup_test_app(
     (db_pool, meili_client, server_url, server_handle)
 }
 
-#[allow(dead_code)]
 pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
@@ -133,7 +132,6 @@ pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, Se
     (db_pool, meili_client, server_url, server_handle)
 }
 
-#[allow(dead_code)]
 pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, ServerHandle) {
     dotenvy::dotenv().ok();
     let _ = env_logger::try_init();
@@ -181,7 +179,6 @@ pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, S
     (db_pool, meili_client, server_url, server_handle)
 }
 
-#[allow(dead_code)]
 pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle)
 {
     dotenvy::dotenv().ok();
@@ -234,7 +231,6 @@ pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, S
     (db_pool, meili_client, server_url, server_handle)
 }
 
-#[allow(dead_code)]
 pub async fn get_auth_token(
     client: &HttpClient,
     server_url: &str,
