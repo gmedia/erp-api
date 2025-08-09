@@ -1,4 +1,5 @@
-use crate::v1::auth::{handlers, middleware::JwtMiddleware};
+use crate::v1::auth::{handlers};
+use crate::middlewares::jwt::JwtMiddleware;
 use actix_web::web;
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {

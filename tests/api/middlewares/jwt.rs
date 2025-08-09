@@ -1,15 +1,15 @@
 use actix_web::HttpMessage;
-use api::v1::auth::middleware::Claims;
+use api::middlewares::jwt::Claims;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use reqwest::header::{HeaderMap, HeaderValue};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-mod common;
+
 use actix_web::Error;
 use actix_web::body::BoxBody;
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::{test, web};
-use api::v1::auth::middleware::JwtMiddleware;
-use common::{setup_test_app, setup_test_app_no_state};
+use api::middlewares::jwt::JwtMiddleware;
+use crate::common::{setup_test_app, setup_test_app_no_state};
 use config::app::AppState;
 use config::{db::Db, meilisearch::Meilisearch};
 use db::mysql::init_db_pool;
@@ -54,7 +54,7 @@ impl Service<ServiceRequest> for MockService {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_jwt_middleware_logic() {
+pub async fn test_jwt_middleware_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url, server_handle) =
         setup_test_app(None, None, Some(secret.clone()), None).await;
@@ -155,7 +155,7 @@ async fn test_jwt_middleware_logic() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_jwt_middleware_no_app_state() {
+pub async fn test_jwt_middleware_no_app_state() {
     let (_db, _meili, server_url, server_handle) = setup_test_app_no_state().await;
     let client = reqwest::Client::new();
 
@@ -173,7 +173,7 @@ async fn test_jwt_middleware_no_app_state() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_jwt_middleware_call_logic() {
+pub async fn test_jwt_middleware_call_logic() {
     dotenv().ok();
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let config_db = Db::new();
@@ -273,7 +273,7 @@ async fn test_jwt_middleware_call_logic() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_jwt_middleware_poll_ready_cover() {
+pub async fn test_jwt_middleware_poll_ready_cover() {
     let middleware = JwtMiddleware::new("Bearer".to_string());
     let service = MockService;
     let middleware_service = middleware.new_transform(service).await.unwrap();
@@ -286,7 +286,7 @@ async fn test_jwt_middleware_poll_ready_cover() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_jwt_middleware_invalid_utf8_header() {
+pub async fn test_jwt_middleware_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
     let (_db, _meili, server_url, server_handle) =
         setup_test_app(None, None, Some(secret.clone()), None).await;
@@ -310,7 +310,7 @@ async fn test_jwt_middleware_invalid_utf8_header() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_jwt_middleware_wrong_key_for_alg() {
+pub async fn test_jwt_middleware_wrong_key_for_alg() {
     let secret = "a-simple-secret".to_string();
     let app_state = web::Data::new(AppState {
         db: init_db_pool(&Db::new().url).await.unwrap(),

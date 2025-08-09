@@ -1,4 +1,4 @@
-use crate::v1::auth::middleware::JwtMiddleware;
+use crate::middlewares::jwt::JwtMiddleware;
 use actix_web::web;
 
 use super::handlers::{

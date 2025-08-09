@@ -1,64 +1,80 @@
-use api::v1::order::models::Order;
-use fake::Fake;
+use fake::{
+    Fake,
+    faker::{internet::en::SafeEmail, name::en::Name},
+};
 use reqwest::Client as HttpClient;
 use serde_json::json;
-use uuid::Uuid;
 
-mod common;
-use common::{get_auth_token, setup_test_app};
+use api::v1::employee::models::Employee;
+
+use crate::common::{get_auth_token, setup_test_app};
+use sea_orm::{ConnectionTrait, Statement};
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_create_order() {
+pub async fn test_create_employee() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
-    let customer_id = Uuid::new_v4().to_string();
-    let total_amount: f64 = (1.0..1000.0).fake();
+    let name: String = Name().fake();
+    let email: String = SafeEmail().fake();
+    let role = "Software Engineer";
 
-    // Tes endpoint POST /v1/order/create
-    let new_order = json!({
-        "customer_id": customer_id,
-        "total_amount": total_amount
+    // Clean employee
+    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
+    let _ = db_pool
+        .execute(Statement::from_string(
+            backend,
+            format!("DELETE FROM employee where email = '{email}'"),
+        ))
+        .await;
+
+    // Tes endpoint POST /v1/employee/create
+    let new_employee = json!({
+        "name": name,
+        "role": role,
+        "email": email
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/employee/create"))
         .bearer_auth(token)
-        .json(&new_order)
+        .json(&new_employee)
         .send()
         .await
         .expect("Gagal mengirim request POST");
 
     assert_eq!(response.status(), reqwest::StatusCode::OK);
 
-    let created_order: Order = response.json().await.expect("Gagal parse response JSON");
+    let created_employee: Employee = response.json().await.expect("Gagal parse response JSON");
 
-    assert_eq!(created_order.customer_id, customer_id);
-    assert!((created_order.total_amount - total_amount).abs() < 1e-9);
+    assert_eq!(created_employee.name, name);
+    assert_eq!(created_employee.role, role);
+    assert_eq!(created_employee.email, email);
 
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_create_order_negative_amount() {
+pub async fn test_create_employee_invalid_email() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
-    let customer_id = Uuid::new_v4().to_string();
+    let name: String = Name().fake();
+    let role = "Product Manager";
 
-    // Tes endpoint POST /v1/order/create dengan jumlah negatif
-    let new_order = json!({
-        "customer_id": customer_id,
-        "total_amount": -150.75
+    let new_employee = json!({
+        "name": name,
+        "role": role,
+        "email": "jane.doe"
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/employee/create"))
         .bearer_auth(token)
-        .json(&new_order)
+        .json(&new_employee)
         .send()
         .await
         .expect("Gagal mengirim request POST");
@@ -70,26 +86,28 @@ async fn test_create_order_negative_amount() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_create_order_internal_server_error() {
+pub async fn test_create_employee_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
-    let customer_id = Uuid::new_v4().to_string();
-    let total_amount: f64 = (1.0..1000.0).fake();
+    let name: String = Name().fake();
+    let email: String = SafeEmail().fake();
+    let role = "Chaos Engineer";
 
     // Simulate database connection error by closing the pool
     let _ = db_pool.close().await;
 
-    let new_order = json!({
-        "customer_id": customer_id,
-        "total_amount": total_amount
+    let new_employee = json!({
+        "name": name,
+        "role": role,
+        "email": email
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/employee/create"))
         .bearer_auth(token)
-        .json(&new_order)
+        .json(&new_employee)
         .send()
         .await
         .expect("Gagal mengirim request POST");

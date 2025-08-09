@@ -6,11 +6,11 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, Statement};
 use serde_json::json;
 
-mod common;
-use common::{get_auth_token, setup_test_app, setup_test_app_no_state};
+
+use crate::common::{get_auth_token, setup_test_app, setup_test_app_no_state};
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_register_and_login() {
+pub async fn test_register_and_login() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -68,7 +68,7 @@ async fn test_register_and_login() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_access_protected_route() {
+pub async fn test_access_protected_route() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -98,7 +98,7 @@ async fn test_access_protected_route() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_register_existing_user() {
+pub async fn test_register_existing_user() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -144,7 +144,7 @@ async fn test_register_existing_user() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_login_non_existent_user() {
+pub async fn test_login_non_existent_user() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -179,7 +179,7 @@ async fn test_login_non_existent_user() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_login_wrong_password() {
+pub async fn test_login_wrong_password() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -229,7 +229,7 @@ async fn test_login_wrong_password() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_access_protected_route_invalid_token() {
+pub async fn test_access_protected_route_invalid_token() {
     let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -250,7 +250,7 @@ async fn test_access_protected_route_invalid_token() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_login_db_error() {
+pub async fn test_login_db_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -305,7 +305,7 @@ async fn test_login_db_error() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_access_protected_route_malformed_header() {
+pub async fn test_access_protected_route_malformed_header() {
     let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -325,7 +325,7 @@ async fn test_access_protected_route_malformed_header() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_access_protected_route_expired_token() {
+pub async fn test_access_protected_route_expired_token() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(Some(1), None, None, None).await; // 1 second token validity
     let client = HttpClient::new();
@@ -349,7 +349,7 @@ async fn test_access_protected_route_expired_token() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_access_protected_route_no_app_state() {
+pub async fn test_access_protected_route_no_app_state() {
     let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_state().await;
     let client = HttpClient::new();
 
@@ -371,7 +371,7 @@ async fn test_access_protected_route_no_app_state() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_access_protected_route_invalid_utf8_in_header() {
+pub async fn test_access_protected_route_invalid_utf8_in_header() {
     let (_db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -395,7 +395,7 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_register_invalid_bcrypt_cost() {
+pub async fn test_register_invalid_bcrypt_cost() {
     // bcrypt cost must be between 4 and 31.
     let invalid_cost = 99;
     let (db_pool, _meili_client, server_url, server_handle) =
@@ -435,7 +435,7 @@ async fn test_register_invalid_bcrypt_cost() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_login_invalid_jwt_secret() {
+pub async fn test_login_invalid_jwt_secret() {
     let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(
         None,
         None,
@@ -492,7 +492,7 @@ async fn test_login_invalid_jwt_secret() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_register_db_error() {
+pub async fn test_register_db_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -533,7 +533,7 @@ async fn test_register_db_error() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_login_malformed_hash() {
+pub async fn test_login_malformed_hash() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

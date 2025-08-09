@@ -1,5 +1,5 @@
 use crate::error::ApiError;
-use crate::v1::auth::middleware::Claims;
+use crate::middlewares::jwt::Claims;
 use crate::v1::auth::models::{LoginRequest, RegisterRequest, TokenResponse};
 use actix_web::{web, HttpResponse};
 use bcrypt::{hash, verify};
