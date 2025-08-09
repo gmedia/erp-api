@@ -2,7 +2,7 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 
 
-use crate::common::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, setup_test_app};
 
 #[tokio::test]
 async fn test_internal_server_error_response_format() {

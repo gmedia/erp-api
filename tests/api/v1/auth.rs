@@ -7,7 +7,7 @@ use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, State
 use serde_json::json;
 
 
-use crate::common::{get_auth_token, setup_test_app, setup_test_app_no_state};
+use crate::helper::{get_auth_token, setup_test_app, setup_test_app_no_state};
 
 #[tokio::test]
 async fn test_register_and_login() {

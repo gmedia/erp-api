@@ -7,11 +7,11 @@ use serde_json::json;
 
 use api::v1::employee::models::Employee;
 
-use crate::common::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, setup_test_app};
 use sea_orm::{ConnectionTrait, Statement};
 
 #[tokio::test]
-async fn test_create_employee() {
+async fn test_create() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -57,7 +57,7 @@ async fn test_create_employee() {
 }
 
 #[tokio::test]
-async fn test_create_employee_invalid_email() {
+async fn test_create_invalid_email() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -86,7 +86,7 @@ async fn test_create_employee_invalid_email() {
 }
 
 #[tokio::test]
-async fn test_create_employee_internal_server_error() {
+async fn test_create_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();

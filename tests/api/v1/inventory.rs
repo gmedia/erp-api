@@ -7,12 +7,12 @@ use serde_json::json;
 
 use api::v1::inventory::models::InventoryItem;
 
-use crate::common::{get_auth_token, setup_test_app, setup_test_app_with_meili_error};
+use crate::helper::{get_auth_token, setup_test_app, setup_test_app_with_meili_error};
 use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
 
 #[tokio::test]
-async fn test_create_and_search_inventory() {
+async fn test_create_and_search() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -66,7 +66,7 @@ async fn test_create_and_search_inventory() {
 }
 
 #[tokio::test]
-async fn test_create_inventory_negative_quantity() {
+async fn test_create_negative_quantity() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -95,7 +95,7 @@ async fn test_create_inventory_negative_quantity() {
 }
 
 #[tokio::test]
-async fn test_create_inventory_negative_price() {
+async fn test_create_negative_price() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -124,7 +124,7 @@ async fn test_create_inventory_negative_price() {
 }
 
 #[tokio::test]
-async fn test_update_inventory() {
+async fn test_update() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -186,7 +186,7 @@ async fn test_update_inventory() {
 }
 
 #[tokio::test]
-async fn test_update_inventory_negative_quantity() {
+async fn test_update_negative_quantity() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -234,7 +234,7 @@ async fn test_update_inventory_negative_quantity() {
 }
 
 #[tokio::test]
-async fn test_update_inventory_negative_price() {
+async fn test_update_negative_price() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -282,7 +282,7 @@ async fn test_update_inventory_negative_price() {
 }
 
 #[tokio::test]
-async fn test_delete_inventory() {
+async fn test_delete() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -341,7 +341,7 @@ async fn test_delete_inventory() {
 }
 
 #[tokio::test]
-async fn test_create_item_internal_server_error() {
+async fn test_create_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -377,7 +377,7 @@ async fn test_create_item_internal_server_error() {
 }
 
 #[tokio::test]
-async fn test_update_item_internal_server_error() {
+async fn test_update_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -408,7 +408,7 @@ async fn test_update_item_internal_server_error() {
 }
 
 #[tokio::test]
-async fn test_delete_item_internal_server_error() {
+async fn test_delete_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -457,7 +457,7 @@ async fn test_delete_item_internal_server_error() {
 }
 
 #[tokio::test]
-async fn test_search_items_internal_server_error() {
+async fn test_search_internal_server_error() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app_with_meili_error().await;
     let client = HttpClient::new();
@@ -480,7 +480,7 @@ async fn test_search_items_internal_server_error() {
 }
 
 #[tokio::test]
-async fn test_delete_item_with_fk_constraint_fails() {
+async fn test_delete_with_fk_constraint_fails() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
@@ -548,7 +548,7 @@ async fn test_delete_item_with_fk_constraint_fails() {
 }
 
 #[tokio::test]
-async fn test_update_item_not_found() {
+async fn test_update_not_found() {
     let (db_pool, _meili_client, server_url, server_handle) =
         setup_test_app(None, None, None, None).await;
     let client = HttpClient::new();
