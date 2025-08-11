@@ -4,3 +4,7 @@ use serde_json::json;
 pub async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(json!({ "status": "active" }))
 }
+
+pub async fn notfound() -> impl Responder {
+    HttpResponse::NotFound().body("Not Found")
+}

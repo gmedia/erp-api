@@ -17,7 +17,7 @@ use config::{
     vite::ASSETS_VERSION,
 };
 use db::mysql::init_db_pool;
-use erp_api::healthcheck;
+use erp_api::{healthcheck, notfound};
 use inertia_rust::{
     InertiaProp, IntoInertiaPropResult, actix::InertiaMiddleware, hashmap, prop_resolver,
 };
@@ -130,6 +130,7 @@ async fn main() -> std::io::Result<()> {
                     .app_data(inertia.clone())
             )
             .service(actix_files::Files::new("/", "./public").prefer_utf8(true))
+            .default_service(web::to(notfound))
     })
     // .bind(("0.0.0.0", 8080))? // Mengikat ke semua antarmuka
     .listen(listener)?
