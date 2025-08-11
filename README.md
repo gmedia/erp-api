@@ -40,6 +40,16 @@ API untuk sistem ERP perusahaan menggunakan Actix-Web, MariaDB, dan Meilisearch.
 cargo test
 ```
 
+## Tes menggunakan nextest
+1. Install `cargo-nextest`
+   ```bash
+   cargo install cargo-nextest --locked
+   ```
+2. Jalankan:
+   ```bash
+   cargo nextest run
+   ```
+
 ## Menghasilkan Laporan Code Coverage
 1. Install `cargo-tarpaulin`:
    ```bash
@@ -52,6 +62,16 @@ cargo test
    ./test.sh
    ```
 3. Buka file `tarpaulin-report.html` di browser untuk melihat laporan.
+
+## Tes coverage menggunakan nextest
+1. Install `cargo-llvm-cov`
+   ```bash
+   cargo install cargo-llvm-cov
+   ```
+2. Jalankan:
+   ```bash
+   cargo llvm-cov nextest
+   ```
 
 ## Menjalankan Linter
 1. Menemukan kode yang buruk, tidak idiomatis, boros, atau terlalu verbose:
