@@ -8,10 +8,21 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/v1/auth")
             .route("/register", web::post().to(handlers::register))
             .route("/login", web::post().to(handlers::login))
+            .route("/refresh", web::post().to(handlers::refresh))
             .service(
                 web::resource("/me")
-                    .wrap(jwt_middleware)
+                    .wrap(jwt_middleware.clone())
                     .route(web::get().to(handlers::me)),
+            )
+            .service(
+                web::resource("/logout")
+                    .wrap(jwt_middleware.clone())
+                    .route(web::post().to(handlers::logout)),
+            )
+            .service(
+                web::resource("/logout-all")
+                    .wrap(jwt_middleware)
+                    .route(web::post().to(handlers::logout_all)),
             ),
     );
 }

@@ -17,3 +17,8 @@ pub struct RegisterRequest {
 pub struct TokenResponse {
     pub token: String,
 }
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct RefreshRequest {
+    pub refresh_token: String,
+}

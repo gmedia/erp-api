@@ -10,3 +10,10 @@ pub struct CreateEmployee {
     pub role: String,
     pub email: String,
 }
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct UpdateEmployee {
+    pub name: Option<String>,
+    pub role: Option<String>,
+    pub email: Option<String>,
+}

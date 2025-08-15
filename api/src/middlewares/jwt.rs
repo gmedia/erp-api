@@ -18,6 +18,7 @@ pub struct Claims {
     pub exp: usize,
 }
 
+#[derive(Clone)]
 pub struct JwtMiddleware {
     token_prefix: String,
 }
