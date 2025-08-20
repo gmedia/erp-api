@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cargo clean
 rm -rf tarpaulin-report.html
 
 cargo tarpaulin --force-clean --out Html --engine llvm --follow-exec \

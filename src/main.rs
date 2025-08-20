@@ -27,8 +27,7 @@ use page::middlewares::{
 };
 use search::meilisearch::{configure_index, init_meilisearch};
 use serde_json::{Map, Value};
-use std::env;
-use std::{net::TcpListener, sync::Arc};
+use std::{env, net::TcpListener, sync::Arc};
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 

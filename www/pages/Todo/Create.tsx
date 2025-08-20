@@ -3,7 +3,7 @@ import { FormEvent } from "react";
 
 type FormProps = {
     title: string;
-    content: string;
+    description: string;
 }
 
 export default function CreateTask() {
@@ -47,17 +47,17 @@ export default function CreateTask() {
 
                 <label>
                     <span className="block mb-2 text-sm">Content</span>
-                    {errors.content && (
+                    {errors.description && (
                         <span
                             className="block mb-1 text-red-500 bg-red-400/10 px-1 rounded-md text-sm"
                         >
-                            {errors.content}
+                            {errors.description}
                         </span>
                     )}
                     <input
                         type="text"
                         placeholder="I gotta do..."
-                        onInput={(e) => setData((data) => ({...data, content: (e.target as HTMLInputElement).value}))}
+                        onInput={(e) => setData((data) => ({...data, description: (e.target as HTMLInputElement).value}))}
                         className="
                             bg-white/10 rounded-md px-2 py-1 outline-none ring-0 ring-purple-400 focus:ring-2
                             text-sm w-full

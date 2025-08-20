@@ -2,18 +2,34 @@ use actix_web::{
     App, HttpServer,
     dev::{Server, ServerHandle},
     web,
+    cookie::{Key, SameSite},
 };
 use api::v1::auth::models::TokenResponse;
 use api::v1::{auth, employee, inventory, order};
-use config::{app::AppState, db::Db, meilisearch::Meilisearch};
+use config::{
+    app::AppState,
+    db::Db,
+    meilisearch::Meilisearch,
+    inertia::initialize_inertia,
+    file_session::FileSessionStore,
+    vite::ASSETS_VERSION,
+};
 use db::mysql::init_db_pool;
 use erp_api::healthcheck;
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 use search::{Client, meilisearch::init_meilisearch};
-use serde_json::json;
-use std::{net::TcpListener, time::Duration};
+use std::{env, net::TcpListener, time::Duration, sync::Arc};
+use page::middlewares::{
+    garbage_collector::GarbageCollectorMiddleware,
+    reflash_temporary_session::ReflashTemporarySessionMiddleware,
+};
+use inertia_rust::{
+    InertiaProp, IntoInertiaPropResult, actix::InertiaMiddleware, hashmap, prop_resolver,
+};
+use serde_json::{json, Map, Value};
+use actix_session::{SessionExt, SessionMiddleware};
 
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
@@ -305,6 +321,21 @@ async fn wait_until_server_ready(server_url: &str) {
 }
 
 async fn run(app_state: AppState, listener: TcpListener) -> std::io::Result<Server> {
+    // starts a Inertia manager instance.
+    let inertia = initialize_inertia().await?;
+    let inertia = web::Data::new(inertia);
+
+    let key = Key::from(
+        env::var("APP_KEY")
+            .expect("You must provide a valid APP_KEY environment variable.")
+            .as_bytes(),
+    );
+
+    let storage = FileSessionStore::default();
+
+    let rust_env = env::var("RUST_ENV").unwrap_or_else(|_| "production".to_string());
+    let use_secure_cookie = rust_env.as_str() == "production";
+
     let server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(app_state.clone()))
@@ -314,6 +345,38 @@ async fn run(app_state: AppState, listener: TcpListener) -> std::io::Result<Serv
             .configure(employee::routes::init_routes)
             .configure(order::routes::init_routes)
             .configure(auth::routes::init_routes)
+            .service(
+                web::scope("/page")
+                    .wrap(GarbageCollectorMiddleware::new())
+                    .wrap(                
+                        InertiaMiddleware::new().with_shared_props(Arc::new(move |req| {
+                            let flash = req.get_session()
+                                .get::<Map<String, Value>>("_flash")
+                                .unwrap_or_default()
+                                .unwrap_or_default();
+                            
+                            Box::pin(async move {
+                                hashmap![
+                                    "version" => InertiaProp::always("0.1.0"),
+                                    "assetsVersion" => InertiaProp::lazy(prop_resolver!({ ASSETS_VERSION.get().unwrap().into_inertia_value() })),
+                                    "flash" => InertiaProp::always(flash)
+                                ]
+                            })
+                        })),
+                    )
+                    .wrap(ReflashTemporarySessionMiddleware::new())
+                    .wrap(
+                        SessionMiddleware::builder(storage.clone(), key.clone())
+                            .cookie_domain(Some(env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string())))
+                            .cookie_http_only(true)
+                            .cookie_same_site(SameSite::Strict)
+                            .cookie_name(env::var("SESSION_COOKIE_NAME").unwrap_or_else(|_| "rust_session_id".to_string()))
+                            .cookie_secure(use_secure_cookie)
+                            .build()
+                    )
+                    .configure(page::routes::init_routes)
+                    .app_data(inertia.clone())
+            )
     })
     .listen(listener)
     .expect("Failed to listen")

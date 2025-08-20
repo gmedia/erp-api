@@ -10,11 +10,11 @@ pub struct StoreTask {
     pub title: Option<String>,
 
     #[validate(
-        required(message = "Task content is a mandatory field."),
+        required(message = "Task description is a mandatory field."),
         length(
             min = 10,
-            message = "Task content must be at least 10 characters long."
+            message = "Task description must be at least 10 characters long."
         )
     )]
-    pub content: Option<String>,
+    pub description: Option<String>,
 }

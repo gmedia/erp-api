@@ -21,7 +21,7 @@ pub async fn handle(req: HttpRequest, body: Json<StoreTask>) -> impl Responder {
 
     let task = Task {
         title: title.clone(),
-        description: payload.content.unwrap(),
+        description: payload.description.unwrap(),
         done: false,
     };
 
