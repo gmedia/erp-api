@@ -8,13 +8,20 @@ use uuid::Uuid;
 
 use api::v1::employee::models::Employee;
 
-use crate::helper::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, TestAppBuilder};
 use sea_orm::{ConnectionTrait, Statement};
 
 #[tokio::test]
 async fn test_get_all_employees() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -77,8 +84,15 @@ async fn test_get_all_employees() {
 
 #[tokio::test]
 async fn test_get_employee_by_id() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -123,8 +137,15 @@ async fn test_get_employee_by_id() {
 
 #[tokio::test]
 async fn test_get_employee_by_nonexistent_id() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -146,8 +167,15 @@ async fn test_get_employee_by_nonexistent_id() {
 
 #[tokio::test]
 async fn test_update_employee() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -200,8 +228,15 @@ async fn test_update_employee() {
 
 #[tokio::test]
 async fn test_update_nonexistent_employee() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -229,8 +264,15 @@ async fn test_update_nonexistent_employee() {
 
 #[tokio::test]
 async fn test_update_employee_invalid_email() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -277,8 +319,15 @@ async fn test_update_employee_invalid_email() {
 
 #[tokio::test]
 async fn test_delete_employee() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -326,8 +375,15 @@ async fn test_delete_employee() {
 
 #[tokio::test]
 async fn test_delete_nonexistent_employee() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -349,8 +405,14 @@ async fn test_delete_nonexistent_employee() {
 
 #[tokio::test]
 async fn test_employee_unauthorized_access() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Test GET all without token
@@ -396,8 +458,15 @@ async fn test_employee_unauthorized_access() {
 
 #[tokio::test]
 async fn test_employee_duplicate_email() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 

@@ -234,59 +234,6 @@ impl TestAppBuilder {
     }
 }
 
-// Backward compatibility functions
-pub async fn setup_test_app(
-    jwt_expires_in_seconds: Option<u64>,
-    bcrypt_cost: Option<u32>,
-    jwt_secret: Option<String>,
-    jwt_algorithm: Option<jsonwebtoken::Algorithm>,
-) -> (DatabaseConnection, Client, String, ServerHandle) {
-    let mut builder = TestAppBuilder::new();
-    
-    if let Some(exp) = jwt_expires_in_seconds {
-        builder = builder.jwt_expires_in_seconds(exp);
-    }
-    if let Some(cost) = bcrypt_cost {
-        builder = builder.bcrypt_cost(cost);
-    }
-    if let Some(secret) = jwt_secret {
-        builder = builder.jwt_secret(secret);
-    }
-    if let Some(alg) = jwt_algorithm {
-        builder = builder.jwt_algorithm(alg);
-    }
-
-    let app = builder.build().await.expect("Failed to setup test app");
-    (app.db, app.meilisearch, app.server_url, app.server_handle)
-}
-
-pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, ServerHandle) {
-    let app = TestAppBuilder::new()
-        .clear_tables()
-        .build()
-        .await
-        .expect("Failed to setup test app");
-    (app.db, app.meilisearch, app.server_url, app.server_handle)
-}
-
-pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, ServerHandle) {
-    let app = TestAppBuilder::new()
-        .skip_app_state()
-        .build()
-        .await
-        .expect("Failed to setup test app");
-    (app.db, app.meilisearch, app.server_url, app.server_handle)
-}
-
-pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle) {
-    let app = TestAppBuilder::new()
-        .meili_host("http://localhost:9999".to_string())
-        .build()
-        .await
-        .expect("Failed to setup test app");
-    (app.db, app.meilisearch, app.server_url, app.server_handle)
-}
-
 pub async fn get_auth_token(
     client: &HttpClient,
     server_url: &str,

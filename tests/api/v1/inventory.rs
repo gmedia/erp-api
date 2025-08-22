@@ -7,14 +7,21 @@ use serde_json::json;
 
 use api::v1::inventory::models::InventoryItem;
 
-use crate::helper::{get_auth_token, setup_test_app, setup_test_app_with_meili_error};
+use crate::helper::{get_auth_token, TestAppBuilder};
 use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
 
 #[tokio::test]
 async fn test_create_and_search() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -67,8 +74,15 @@ async fn test_create_and_search() {
 
 #[tokio::test]
 async fn test_create_negative_quantity() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -96,8 +110,15 @@ async fn test_create_negative_quantity() {
 
 #[tokio::test]
 async fn test_create_negative_price() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -125,8 +146,15 @@ async fn test_create_negative_price() {
 
 #[tokio::test]
 async fn test_update() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -187,8 +215,15 @@ async fn test_update() {
 
 #[tokio::test]
 async fn test_update_negative_quantity() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -235,8 +270,15 @@ async fn test_update_negative_quantity() {
 
 #[tokio::test]
 async fn test_update_negative_price() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -283,8 +325,15 @@ async fn test_update_negative_price() {
 
 #[tokio::test]
 async fn test_delete() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -342,8 +391,15 @@ async fn test_delete() {
 
 #[tokio::test]
 async fn test_create_internal_server_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -351,7 +407,7 @@ async fn test_create_internal_server_error() {
     let price: f64 = (1.0..1000.0).fake();
 
     // Simulate database connection error by closing the pool
-    let _ = db_pool.close().await;
+    let _ = app.db.close().await;
 
     let new_item = json!({
         "name": name,
@@ -378,8 +434,15 @@ async fn test_create_internal_server_error() {
 
 #[tokio::test]
 async fn test_update_internal_server_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let item_id = "some-random-id";
@@ -388,7 +451,7 @@ async fn test_update_internal_server_error() {
     });
 
     // Simulate database connection error by closing the pool
-    let _ = db_pool.close().await;
+    let _ = app.db.close().await;
 
     let response = client
         .put(format!("{server_url}/v1/inventory/update/{item_id}"))
@@ -409,8 +472,15 @@ async fn test_update_internal_server_error() {
 
 #[tokio::test]
 async fn test_delete_internal_server_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let name: String = Sentence(1..3).fake();
@@ -434,7 +504,7 @@ async fn test_delete_internal_server_error() {
     let created_item: InventoryItem = response.json().await.unwrap();
 
     // Simulate database connection error by closing the pool
-    let _ = db_pool.close().await;
+    let _ = app.db.close().await;
 
     // Try to delete the item, this should fail on the delete operation
     let response = client
@@ -458,8 +528,16 @@ async fn test_delete_internal_server_error() {
 
 #[tokio::test]
 async fn test_search_internal_server_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app_with_meili_error().await;
+    let app = TestAppBuilder::new()
+        .meili_host("http://localhost:9999".to_string())
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+    
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -481,8 +559,15 @@ async fn test_search_internal_server_error() {
 
 #[tokio::test]
 async fn test_delete_with_fk_constraint_fails() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -549,8 +634,15 @@ async fn test_delete_with_fk_constraint_fails() {
 
 #[tokio::test]
 async fn test_update_not_found() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let non_existent_id = Uuid::new_v4().to_string();

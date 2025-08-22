@@ -1,11 +1,19 @@
 use reqwest::Client as HttpClient;
 use serde_json::Value;
 
-use crate::helper::setup_test_app_no_data;
+use crate::helper::TestAppBuilder;
 
 #[tokio::test]
 async fn test_contact_page_returns_200() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_data().await;
+    let app = TestAppBuilder::new()
+        .clear_tables()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
     
     let response = client
@@ -22,7 +30,15 @@ async fn test_contact_page_returns_200() {
 
 #[tokio::test]
 async fn test_contact_page_renders_correct_inertia_component() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_data().await;
+    let app = TestAppBuilder::new()
+        .clear_tables()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
     
     let response = client
@@ -47,7 +63,15 @@ async fn test_contact_page_renders_correct_inertia_component() {
 
 #[tokio::test]
 async fn test_contact_page_has_correct_props() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_data().await;
+    let app = TestAppBuilder::new()
+        .clear_tables()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
     
     let response = client
@@ -74,7 +98,15 @@ async fn test_contact_page_has_correct_props() {
 
 #[tokio::test]
 async fn test_contact_page_without_inertia_header() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_data().await;
+    let app = TestAppBuilder::new()
+        .clear_tables()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
     
     let response = client

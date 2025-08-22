@@ -2,19 +2,26 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 
 
-use crate::helper::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, TestAppBuilder};
 
 #[tokio::test]
 async fn test_internal_server_error_response_format() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
 
     // Get a valid token first
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
     // Now, close the DB pool to force a DB error on the next request
-    let _ = db_pool.close().await;
+    let _ = app.db.close().await;
 
     let new_item = json!({
         "name": "This will fail",

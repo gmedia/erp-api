@@ -4,12 +4,19 @@ use reqwest::Client as HttpClient;
 use sea_orm::{ConnectionTrait, Statement};
 use serde_json::json;
 
-use crate::helper::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, TestAppBuilder};
 
 #[tokio::test]
 async fn test_logout_success() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+    
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -40,8 +47,14 @@ async fn test_logout_success() {
 
 #[tokio::test]
 async fn test_logout_without_token() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Test POST /v1/auth/logout without token
@@ -59,8 +72,15 @@ async fn test_logout_without_token() {
 
 #[tokio::test]
 async fn test_refresh_token_success() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let old_token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -99,8 +119,14 @@ async fn test_refresh_token_success() {
 
 #[tokio::test]
 async fn test_refresh_token_invalid() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Test POST /v1/auth/refresh with invalid token
@@ -123,8 +149,16 @@ async fn test_refresh_token_invalid() {
 
 #[tokio::test]
 async fn test_refresh_token_expired() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(Some(1), None, None, None).await; // 1 second token validity
+    let app = TestAppBuilder::new()
+        .jwt_expires_in_seconds(1)
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+    
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -152,8 +186,14 @@ async fn test_refresh_token_expired() {
 
 #[tokio::test]
 async fn test_refresh_token_missing() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Test POST /v1/auth/refresh without refresh token
@@ -172,8 +212,15 @@ async fn test_refresh_token_missing() {
 
 #[tokio::test]
 async fn test_refresh_token_reuse() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let old_token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -210,8 +257,15 @@ async fn test_refresh_token_reuse() {
 
 #[tokio::test]
 async fn test_logout_all_sessions() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -310,8 +364,15 @@ async fn test_logout_all_sessions() {
 
 #[tokio::test]
 async fn test_auth_rate_limiting() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -370,8 +431,15 @@ async fn test_auth_rate_limiting() {
 
 #[tokio::test]
 async fn test_auth_db_error_handling() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -402,7 +470,7 @@ async fn test_auth_db_error_handling() {
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
     // Close database connection to simulate error
-    db_pool.close().await.unwrap();
+    app.db.close().await.unwrap();
 
     // Test logout with db error - current implementation handles this gracefully
     let response = client

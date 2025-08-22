@@ -3,7 +3,7 @@ use jsonwebtoken::{EncodingKey, Header, encode};
 use reqwest::header::{HeaderMap, HeaderValue};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use crate::helper::{setup_test_app, setup_test_app_no_state};
+use crate::helper::TestAppBuilder;
 
 fn create_token(sub: &str, secret: &str, exp: usize) -> String {
     let claims = Claims {
@@ -21,8 +21,15 @@ fn create_token(sub: &str, secret: &str, exp: usize) -> String {
 #[tokio::test]
 async fn test_logic() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url, server_handle) =
-        setup_test_app(None, None, Some(secret.clone()), None).await;
+    let app = TestAppBuilder::new()
+        .jwt_secret(secret.clone())
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    
     let client = reqwest::Client::new();
 
     // Test case 1: Valid token
@@ -121,7 +128,15 @@ async fn test_logic() {
 
 #[tokio::test]
 async fn test_no_app_state() {
-    let (_db, _meili, server_url, server_handle) = setup_test_app_no_state().await;
+    let app = TestAppBuilder::new()
+        .skip_app_state()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    
     let client = reqwest::Client::new();
 
     let res = client
@@ -140,8 +155,15 @@ async fn test_no_app_state() {
 #[tokio::test]
 async fn test_invalid_utf8_header() {
     let secret = "my-super-secret-key-that-is-long-enough".to_string();
-    let (_db, _meili, server_url, server_handle) =
-        setup_test_app(None, None, Some(secret.clone()), None).await;
+    let app = TestAppBuilder::new()
+        .jwt_secret(secret.clone())
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    
     let client = reqwest::Client::new();
 
     let mut headers = HeaderMap::new();

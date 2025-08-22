@@ -5,12 +5,19 @@ use serde_json::json;
 use uuid::Uuid;
 
 
-use crate::helper::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, TestAppBuilder};
 
 #[tokio::test]
 async fn test_create_order() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -43,8 +50,15 @@ async fn test_create_order() {
 
 #[tokio::test]
 async fn test_create_negative_amount() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
@@ -71,15 +85,22 @@ async fn test_create_negative_amount() {
 
 #[tokio::test]
 async fn test_create_internal_server_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
     // Simulate database connection error by closing the pool
-    let _ = db_pool.close().await;
+    let _ = app.db.close().await;
 
     let new_order = json!({
         "customer_id": customer_id,

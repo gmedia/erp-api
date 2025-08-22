@@ -7,12 +7,19 @@ use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, State
 use serde_json::json;
 
 
-use crate::helper::{get_auth_token, setup_test_app, setup_test_app_no_state};
+use crate::helper::{get_auth_token, TestAppBuilder};
 
 #[tokio::test]
 async fn test_register_and_login() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -69,8 +76,15 @@ async fn test_register_and_login() {
 
 #[tokio::test]
 async fn test_access_protected_route() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -99,8 +113,15 @@ async fn test_access_protected_route() {
 
 #[tokio::test]
 async fn test_register_existing_user() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -145,8 +166,15 @@ async fn test_register_existing_user() {
 
 #[tokio::test]
 async fn test_login_non_existent_user() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = "Not User".to_string();
     let password = "password123";
@@ -180,8 +208,15 @@ async fn test_login_non_existent_user() {
 
 #[tokio::test]
 async fn test_login_wrong_password() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -230,8 +265,14 @@ async fn test_login_wrong_password() {
 
 #[tokio::test]
 async fn test_access_protected_route_invalid_token() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
     let invalid_token = "this.is.an.invalid.token";
 
@@ -251,8 +292,15 @@ async fn test_access_protected_route_invalid_token() {
 
 #[tokio::test]
 async fn test_login_db_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -280,7 +328,7 @@ async fn test_login_db_error() {
         .unwrap();
 
     // Close the database connection to simulate a database error
-    db_pool.close().await.unwrap();
+    app.db.close().await.unwrap();
 
     // Attempt to login
     let login_req = json!({
@@ -306,8 +354,14 @@ async fn test_login_db_error() {
 
 #[tokio::test]
 async fn test_access_protected_route_malformed_header() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Access protected route with a malformed token
@@ -326,8 +380,16 @@ async fn test_access_protected_route_malformed_header() {
 
 #[tokio::test]
 async fn test_access_protected_route_expired_token() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(Some(1), None, None, None).await; // 1 second token validity
+    let app = TestAppBuilder::new()
+        .jwt_expires_in_seconds(1)
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+    
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -350,7 +412,15 @@ async fn test_access_protected_route_expired_token() {
 
 #[tokio::test]
 async fn test_access_protected_route_no_app_state() {
-    let (_db_pool, _meili_client, server_url, server_handle) = setup_test_app_no_state().await;
+    let app = TestAppBuilder::new()
+        .skip_app_state()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Access protected route without app state configured
@@ -372,8 +442,14 @@ async fn test_access_protected_route_no_app_state() {
 
 #[tokio::test]
 async fn test_access_protected_route_invalid_utf8_in_header() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -396,10 +472,16 @@ async fn test_access_protected_route_invalid_utf8_in_header() {
 
 #[tokio::test]
 async fn test_register_invalid_bcrypt_cost() {
-    // bcrypt cost must be between 4 and 31.
-    let invalid_cost = 99;
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, Some(invalid_cost), None, None).await;
+    let app = TestAppBuilder::new()
+        .bcrypt_cost(99)
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+    
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -436,13 +518,17 @@ async fn test_register_invalid_bcrypt_cost() {
 
 #[tokio::test]
 async fn test_login_invalid_jwt_secret() {
-    let (db_pool, _meili_client, server_url, server_handle) = setup_test_app(
-        None,
-        None,
-        Some("".to_string()),
-        Some(jsonwebtoken::Algorithm::RS256),
-    )
-    .await;
+    let app = TestAppBuilder::new()
+        .jwt_secret("".to_string())
+        .jwt_algorithm(jsonwebtoken::Algorithm::RS256)
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+    
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -493,8 +579,15 @@ async fn test_login_invalid_jwt_secret() {
 
 #[tokio::test]
 async fn test_register_db_error() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -509,7 +602,7 @@ async fn test_register_db_error() {
         .await;
 
     // Close the database connection to simulate a database error
-    db_pool.close().await.unwrap();
+    app.db.close().await.unwrap();
 
     let register_req = json!({
         "username": username,
@@ -534,8 +627,15 @@ async fn test_register_db_error() {
 
 #[tokio::test]
 async fn test_login_malformed_hash() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -565,14 +665,14 @@ async fn test_login_malformed_hash() {
     // Find the user and update the password to a malformed hash
     let user = User::find()
         .filter(user::Column::Username.eq(&username))
-        .one(&db_pool)
+        .one(db_pool)
         .await
         .unwrap()
         .unwrap();
 
     let mut active_user: user::ActiveModel = user.into();
     active_user.password = Set("not_a_real_hash".to_owned());
-    User::update(active_user).exec(&db_pool).await.unwrap();
+    User::update(active_user).exec(db_pool).await.unwrap();
 
     // Attempt to login
     let login_req = json!({

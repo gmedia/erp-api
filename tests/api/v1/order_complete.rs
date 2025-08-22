@@ -4,13 +4,20 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::helper::{get_auth_token, setup_test_app};
+use crate::helper::{get_auth_token, TestAppBuilder};
 use sea_orm::{ConnectionTrait, Statement};
 
 #[tokio::test]
 async fn test_get_all_orders() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -76,8 +83,15 @@ async fn test_get_all_orders() {
 
 #[tokio::test]
 async fn test_get_order_by_id() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -121,8 +135,15 @@ async fn test_get_order_by_id() {
 
 #[tokio::test]
 async fn test_get_order_by_nonexistent_id() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -144,8 +165,15 @@ async fn test_get_order_by_nonexistent_id() {
 
 #[tokio::test]
 async fn test_update_order() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -196,8 +224,15 @@ async fn test_update_order() {
 
 #[tokio::test]
 async fn test_update_nonexistent_order() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -224,8 +259,15 @@ async fn test_update_nonexistent_order() {
 
 #[tokio::test]
 async fn test_update_order_negative_amount() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -270,8 +312,15 @@ async fn test_update_order_negative_amount() {
 
 #[tokio::test]
 async fn test_delete_order() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -320,8 +369,15 @@ async fn test_delete_order() {
 
 #[tokio::test]
 async fn test_delete_nonexistent_order() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
@@ -343,8 +399,14 @@ async fn test_delete_nonexistent_order() {
 
 #[tokio::test]
 async fn test_order_unauthorized_access() {
-    let (_db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+
     let client = HttpClient::new();
 
     // Test GET all without token
@@ -390,8 +452,15 @@ async fn test_order_unauthorized_access() {
 
 #[tokio::test]
 async fn test_order_zero_amount() {
-    let (db_pool, _meili_client, server_url, server_handle) =
-        setup_test_app(None, None, None, None).await;
+    let app = TestAppBuilder::new()
+        .build()
+        .await
+        .expect("Failed to build test app");
+
+    let server_url = &app.server_url;
+    let server_handle = &app.server_handle;
+    let db_pool = &app.db;
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
