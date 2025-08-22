@@ -31,220 +31,260 @@ use inertia_rust::{
 use serde_json::{json, Map, Value};
 use actix_session::{SessionExt, SessionMiddleware};
 
+#[derive(Debug)]
+pub enum TestError {
+    DatabaseInit(String),
+    MeilisearchInit(String),
+    ServerStartup(String),
+    ServerTimeout,
+}
+
+impl std::fmt::Display for TestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TestError::DatabaseInit(msg) => write!(f, "Database initialization failed: {}", msg),
+            TestError::MeilisearchInit(msg) => write!(f, "Meilisearch initialization failed: {}", msg),
+            TestError::ServerStartup(msg) => write!(f, "Server startup failed: {}", msg),
+            TestError::ServerTimeout => write!(f, "Server not ready after timeout"),
+        }
+    }
+}
+
+impl std::error::Error for TestError {}
+
+pub struct TestApp {
+    pub db: DatabaseConnection,
+    pub meilisearch: Client,
+    pub server_url: String,
+    pub server_handle: ServerHandle,
+}
+
+pub struct TestAppBuilder {
+    jwt_expires_in_seconds: Option<u64>,
+    bcrypt_cost: Option<u32>,
+    jwt_secret: Option<String>,
+    jwt_algorithm: Option<jsonwebtoken::Algorithm>,
+    clear_tables: bool,
+    skip_app_state: bool,
+    meili_host: Option<String>,
+}
+
+impl TestAppBuilder {
+    pub fn new() -> Self {
+        Self {
+            jwt_expires_in_seconds: None,
+            bcrypt_cost: None,
+            jwt_secret: None,
+            jwt_algorithm: None,
+            clear_tables: false,
+            skip_app_state: false,
+            meili_host: None,
+        }
+    }
+
+    pub fn jwt_expires_in_seconds(mut self, seconds: u64) -> Self {
+        self.jwt_expires_in_seconds = Some(seconds);
+        self
+    }
+
+    pub fn bcrypt_cost(mut self, cost: u32) -> Self {
+        self.bcrypt_cost = Some(cost);
+        self
+    }
+
+    pub fn jwt_secret(mut self, secret: String) -> Self {
+        self.jwt_secret = Some(secret);
+        self
+    }
+
+    pub fn jwt_algorithm(mut self, algorithm: jsonwebtoken::Algorithm) -> Self {
+        self.jwt_algorithm = Some(algorithm);
+        self
+    }
+
+    pub fn clear_tables(mut self) -> Self {
+        self.clear_tables = true;
+        self
+    }
+
+    pub fn skip_app_state(mut self) -> Self {
+        self.skip_app_state = true;
+        self
+    }
+
+    pub fn meili_host(mut self, host: String) -> Self {
+        self.meili_host = Some(host);
+        self
+    }
+
+    pub async fn build(self) -> Result<TestApp, TestError> {
+        dotenvy::dotenv().ok();
+        let _ = env_logger::try_init();
+
+        let config_db = Db::new();
+        let mut config_meilisearch = Meilisearch::new();
+        
+        if let Some(ref host) = self.meili_host {
+            config_meilisearch.host = host.clone();
+        }
+
+        // Initialize database
+        let db = init_db_pool(&config_db.url)
+            .await
+            .map_err(|e| TestError::DatabaseInit(e.to_string()))?;
+
+        // Clear tables if requested
+        if self.clear_tables {
+            let config_app = config::app::AppConfig::new();
+            for table in &config_app.tables {
+                db.execute(Statement::from_string(
+                    db.get_database_backend(),
+                    format!("TRUNCATE TABLE `{table}`;"),
+                ))
+                .await
+                .map_err(|e| TestError::DatabaseInit(e.to_string()))?;
+            }
+        }
+
+        // Initialize Meilisearch
+        let meilisearch = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
+            .await
+            .map_err(|e| TestError::MeilisearchInit(e.to_string()))?;
+
+        // Start server
+        let listener = TcpListener::bind("0.0.0.0:0")
+            .map_err(|e| TestError::ServerStartup(e.to_string()))?;
+        let port = listener.local_addr()
+            .map_err(|e| TestError::ServerStartup(e.to_string()))?
+            .port();
+        
+        let server_url = format!("http://127.0.0.1:{port}");
+
+        let server = if self.skip_app_state {
+            self.create_server_without_state(listener).await?
+        } else {
+            self.create_server_with_state(listener, db.clone(), meilisearch.clone()).await?
+        };
+
+        let server_handle = server.handle();
+        tokio::spawn(server);
+        self.wait_until_server_ready(&server_url).await?;
+
+        Ok(TestApp {
+            db,
+            meilisearch,
+            server_url,
+            server_handle,
+        })
+    }
+
+    async fn create_server_with_state(
+        &self,
+        listener: TcpListener,
+        db: DatabaseConnection,
+        meilisearch: Client,
+    ) -> Result<Server, TestError> {
+        let app_state = AppState {
+            db,
+            meilisearch,
+            jwt_secret: self.jwt_secret.clone().unwrap_or_else(|| "test-secret".to_string()),
+            jwt_expires_in_seconds: self.jwt_expires_in_seconds.unwrap_or(3600),
+            bcrypt_cost: self.bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
+            jwt_algorithm: self.jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
+        };
+
+        run(app_state, listener).await
+            .map_err(|e| TestError::ServerStartup(e.to_string()))
+    }
+
+    async fn create_server_without_state(
+        &self,
+        listener: TcpListener,
+    ) -> Result<Server, TestError> {
+        let server = HttpServer::new(move || {
+            App::new()
+                .route("/healthcheck", web::get().to(healthcheck))
+                .configure(inventory::routes::init_routes)
+                .configure(employee::routes::init_routes)
+                .configure(order::routes::init_routes)
+                .configure(auth::routes::init_routes)
+        })
+        .listen(listener)
+        .map_err(|e| TestError::ServerStartup(e.to_string()))?
+        .run();
+
+        Ok(server)
+    }
+
+    async fn wait_until_server_ready(&self, server_url: &str) -> Result<(), TestError> {
+        const MAX_RETRIES: usize = 20;
+        const DELAY_MS: u64 = 250;
+
+        let client = HttpClient::new();
+        let health_url = format!("{server_url}/healthcheck");
+
+        for _ in 0..MAX_RETRIES {
+            match client.get(&health_url).send().await {
+                Ok(response) if response.status().is_success() => return Ok(()),
+                _ => tokio::time::sleep(Duration::from_millis(DELAY_MS)).await,
+            }
+        }
+
+        Err(TestError::ServerTimeout)
+    }
+}
+
+// Backward compatibility functions
 pub async fn setup_test_app(
     jwt_expires_in_seconds: Option<u64>,
     bcrypt_cost: Option<u32>,
     jwt_secret: Option<String>,
     jwt_algorithm: Option<jsonwebtoken::Algorithm>,
 ) -> (DatabaseConnection, Client, String, ServerHandle) {
-    dotenvy::dotenv().ok();
-    let _ = env_logger::try_init();
+    let mut builder = TestAppBuilder::new();
+    
+    if let Some(exp) = jwt_expires_in_seconds {
+        builder = builder.jwt_expires_in_seconds(exp);
+    }
+    if let Some(cost) = bcrypt_cost {
+        builder = builder.bcrypt_cost(cost);
+    }
+    if let Some(secret) = jwt_secret {
+        builder = builder.jwt_secret(secret);
+    }
+    if let Some(alg) = jwt_algorithm {
+        builder = builder.jwt_algorithm(alg);
+    }
 
-    let config_db = Db::new();
-    let config_meilisearch = Meilisearch::new();
-    let jwt_secret = jwt_secret.unwrap_or_else(|| "test-secret".to_string());
-
-    // Inisialisasi database
-    let db_pool = init_db_pool(&config_db.url)
-        .await
-        .expect("Gagal inisialisasi pool database");
-
-    // Inisialisasi Meilisearch
-    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-        .await
-        .expect("Gagal inisialisasi Meilisearch untuk tes");
-
-    // Clone db_pool and meili_client for moving into the closure
-    let db_pool_for_server = db_pool.clone();
-    let meili_client_for_server = meili_client.clone();
-
-    // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
-
-    // We retrieve the port assigned to us by the OS
-    let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {port}");
-
-    let app_state = AppState {
-        db: db_pool_for_server.clone(),
-        meilisearch: meili_client_for_server.clone(),
-        jwt_secret: jwt_secret.clone(),
-        jwt_expires_in_seconds: jwt_expires_in_seconds.unwrap_or(3600),
-        bcrypt_cost: bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
-        jwt_algorithm: jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
-    };
-
-    let server = run(app_state, listener).await.unwrap();
-
-    let server_url = format!("http://127.0.0.1:{port}");
-    let server_handle = server.handle();
-
-    // Jalankan server di background
-    tokio::spawn(server);
-    wait_until_server_ready(&server_url).await;
-
-    (db_pool, meili_client, server_url, server_handle)
+    let app = builder.build().await.expect("Failed to setup test app");
+    (app.db, app.meilisearch, app.server_url, app.server_handle)
 }
 
 pub async fn setup_test_app_no_data() -> (DatabaseConnection, Client, String, ServerHandle) {
-    dotenvy::dotenv().ok();
-    let _ = env_logger::try_init();
-
-    let config_db = Db::new();
-    let config_meilisearch = Meilisearch::new();
-    let config_app = config::app::AppConfig::new();
-    let jwt_secret = "test-secret".to_string();
-
-    // Inisialisasi database
-    let db_pool = init_db_pool(&config_db.url)
+    let app = TestAppBuilder::new()
+        .clear_tables()
+        .build()
         .await
-        .expect("Gagal inisialisasi pool database");
-
-    // Bersihkan tabel untuk tes
-    for table in &config_app.tables {
-        db_pool
-            .execute(Statement::from_string(
-                db_pool.get_database_backend(),
-                format!("TRUNCATE TABLE `{table}`;"),
-            ))
-            .await
-            .unwrap();
-    }
-
-    // Inisialisasi Meilisearch
-    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-        .await
-        .expect("Gagal inisialisasi Meilisearch untuk tes");
-
-    // Clone db_pool and meili_client for moving into the closure
-    let db_pool_for_server = db_pool.clone();
-    let meili_client_for_server = meili_client.clone();
-
-    // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
-
-    // We retrieve the port assigned to us by the OS
-    let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {port}");
-
-    let app_state = AppState {
-        db: db_pool_for_server.clone(),
-        meilisearch: meili_client_for_server.clone(),
-        jwt_secret: jwt_secret.clone(),
-        jwt_expires_in_seconds: 3600,
-        bcrypt_cost: bcrypt::DEFAULT_COST,
-        jwt_algorithm: jsonwebtoken::Algorithm::HS256,
-    };
-
-    let server = run(app_state, listener).await.unwrap();
-
-    let server_url = format!("http://127.0.0.1:{port}");
-    let server_handle = server.handle();
-
-    // Jalankan server di background
-    tokio::spawn(server);
-    wait_until_server_ready(&server_url).await;
-
-    (db_pool, meili_client, server_url, server_handle)
+        .expect("Failed to setup test app");
+    (app.db, app.meilisearch, app.server_url, app.server_handle)
 }
 
 pub async fn setup_test_app_no_state() -> (DatabaseConnection, Client, String, ServerHandle) {
-    dotenvy::dotenv().ok();
-    let _ = env_logger::try_init();
-
-    let config_db = Db::new();
-    let config_meilisearch = Meilisearch::new();
-
-    // Inisialisasi database
-    let db_pool = init_db_pool(&config_db.url)
+    let app = TestAppBuilder::new()
+        .skip_app_state()
+        .build()
         .await
-        .expect("Gagal inisialisasi pool database");
-
-    // Inisialisasi Meilisearch
-    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-        .await
-        .expect("Gagal inisialisasi Meilisearch untuk tes");
-
-    // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
-
-    // We retrieve the port assigned to us by the OS
-    let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {port}");
-
-    let server = HttpServer::new(move || {
-        App::new()
-            // app_data sengaja dihilangkan untuk pengujian ini
-            .route("/healthcheck", web::get().to(healthcheck))
-            .configure(inventory::routes::init_routes)
-            .configure(employee::routes::init_routes)
-            .configure(order::routes::init_routes)
-            .configure(auth::routes::init_routes)
-    })
-    .listen(listener)
-    .expect("Failed to listen")
-    .run();
-
-    let server_url = format!("http://127.0.0.1:{port}");
-    let server_handle = server.handle();
-
-    // Jalankan server di background
-    tokio::spawn(server);
-    wait_until_server_ready(&server_url).await;
-
-    (db_pool, meili_client, server_url, server_handle)
+        .expect("Failed to setup test app");
+    (app.db, app.meilisearch, app.server_url, app.server_handle)
 }
 
-pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle)
-{
-    dotenvy::dotenv().ok();
-    let _ = env_logger::try_init();
-
-    let config_db = Db::new();
-    let mut config_meilisearch = Meilisearch::new();
-    config_meilisearch.host = "http://localhost:9999".to_string(); // Bad url
-    let jwt_secret = "test-secret".to_string();
-
-    // Inisialisasi database
-    let db_pool = init_db_pool(&config_db.url)
+pub async fn setup_test_app_with_meili_error() -> (DatabaseConnection, Client, String, ServerHandle) {
+    let app = TestAppBuilder::new()
+        .meili_host("http://localhost:9999".to_string())
+        .build()
         .await
-        .expect("Gagal inisialisasi pool database");
-
-    // Inisialisasi Meilisearch
-    let meili_client = init_meilisearch(&config_meilisearch.host, &config_meilisearch.api_key)
-        .await
-        .expect("Gagal inisialisasi Meilisearch untuk tes");
-
-    // Clone db_pool and meili_client for moving into the closure
-    let db_pool_for_server = db_pool.clone();
-    let meili_client_for_server = meili_client.clone();
-
-    // Jalankan server di port acak
-    let listener = TcpListener::bind("0.0.0.0:0").expect("Failed to bind random port");
-
-    // We retrieve the port assigned to us by the OS
-    let port = listener.local_addr().unwrap().port();
-    println!("Server is listening on port {port}");
-
-    let app_state = AppState {
-        db: db_pool_for_server.clone(),
-        meilisearch: meili_client_for_server.clone(),
-        jwt_secret: jwt_secret.clone(),
-        jwt_expires_in_seconds: 3600,
-        bcrypt_cost: bcrypt::DEFAULT_COST,
-        jwt_algorithm: jsonwebtoken::Algorithm::HS256,
-    };
-
-    let server = run(app_state, listener).await.unwrap();
-
-    let server_url = format!("http://127.0.0.1:{port}");
-    let server_handle = server.handle();
-
-    // Jalankan server di background
-    tokio::spawn(server);
-    wait_until_server_ready(&server_url).await;
-
-    (db_pool, meili_client, server_url, server_handle)
+        .expect("Failed to setup test app");
+    (app.db, app.meilisearch, app.server_url, app.server_handle)
 }
 
 pub async fn get_auth_token(
@@ -290,34 +330,6 @@ pub async fn get_auth_token(
 
     let token_response: TokenResponse = response.json().await.unwrap();
     token_response.token
-}
-
-async fn wait_until_server_ready(server_url: &str) {
-    const MAX_RETRIES: usize = 20;
-    const DELAY_MS: u64 = 250;
-
-    let client = HttpClient::new();
-    let health_url = format!("{server_url}/healthcheck");
-
-    for _ in 0..MAX_RETRIES {
-        match client.get(&health_url).send().await {
-            Ok(response) => {
-                if response.status().is_success() {
-                    return; // Server sudah siap
-                }
-            }
-            Err(_) => {
-                // Masih gagal, coba lagi nanti
-            }
-        }
-
-        tokio::time::sleep(Duration::from_millis(DELAY_MS)).await;
-    }
-
-    panic!(
-        "Server tidak siap setelah menunggu {} ms",
-        MAX_RETRIES as u64 * DELAY_MS
-    );
 }
 
 async fn run(app_state: AppState, listener: TcpListener) -> std::io::Result<Server> {
