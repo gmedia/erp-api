@@ -36,7 +36,7 @@ async fn test_create() {
         ))
         .await;
 
-    // Tes endpoint POST /v1/employee/create
+    // Tes endpoint POST /v1/employee
     let new_employee = json!({
         "name": name,
         "role": role,
@@ -44,7 +44,7 @@ async fn test_create() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(token)
         .json(&new_employee)
         .send()
@@ -86,7 +86,7 @@ async fn test_create_invalid_email() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(token)
         .json(&new_employee)
         .send()
@@ -126,7 +126,7 @@ async fn test_create_internal_server_error() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(token)
         .json(&new_employee)
         .send()

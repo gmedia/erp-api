@@ -9,10 +9,10 @@ use serde_json::json;
 
 #[utoipa::path(
     post,
-    path = "/v1/employee/create",
+    path = "/v1/employee",
     request_body = CreateEmployee,
     responses(
-        (status = 200, description = "Employee created successfully", body = Employee),
+        (status = 201, description = "Employee created successfully", body = Employee),
         (status = 400, description = "Validation error"),
         (status = 500, description = "Internal server error")
     ),

@@ -6,14 +6,11 @@ edition = "2024"
 [dependencies]
 actix-web = { version = "4.11.0", features = ["macros"] }
 actix-server = "2.6.0"
+actix-session = { version = "0.10.1", features = ["cookie-session"] }
+actix-files = "0.6.6"
 sea-orm = { version = "1.1.13", features = [ "sqlx-mysql", "runtime-actix-native-tls", "macros", "with-chrono" ] }
-dotenvy = "0.15.7"
-env_logger = "0.11.8"
-jsonwebtoken = "9.3.1"
-log = "0.4.27"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-tokio = { version = "1.45.1", features = ["full"] }
 chrono = { version = "0.4", features = ["serde"] }
 utoipa = { version = "5.3.1", features = ["actix_extras", "chrono"] }
 utoipa-scalar = { version = "0.3.0", features = ["actix-web"] }
@@ -24,23 +21,22 @@ search = { path = "./search" }
 config = { path = "./config" }
 api = { path = "./api" }
 page = { path = "./page" }
-bcrypt = "0.15.1"
 inertia-rust = { version = "2", features = ["actix", "vite-hbs-template-resolver"] }
 vite-rust = { version = "0.2" }
-actix-session = { version = "0.10.1", features = ["cookie-session"] }
-actix-files = "0.6.6"
+bcrypt = "0.15.1"
+jsonwebtoken = "9.3.1"
+dotenvy = "0.15.7"
+env_logger = "0.11.8"
+log = "0.4.27"
 
 [dev-dependencies]
 reqwest = { version = "0.12.19", features = ["json", "cookies"] }
 serial_test = "3.2.0"
 fake = "2.5.0"
 rand = "0.8.5"
-uuid = { version = "1.17.0", features = ["v4"] }
-sea-orm = { version = "1.1.13", features = ["runtime-actix-native-tls", "sqlx-mysql"] }
-futures-util = "0.3.31"
-actix-rt = "2.10.0"
 tempfile = "3.10.1"
 regex = "1.10.5"
+actix-rt = "2.10.0"
 tokio = { version = "1.45.1", features = ["full"] }
 
 [workspace]
@@ -50,5 +46,6 @@ members = [
     "search",
     "config",
     "migration",
-    "api"
+    "api",
+    "page"
 ]

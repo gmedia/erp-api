@@ -23,14 +23,14 @@ async fn test_create_order() {
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
-    // Tes endpoint POST /v1/order/create
+    // Tes endpoint POST /v1/order
     let new_order = json!({
         "customer_id": customer_id,
         "total_amount": total_amount
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(token)
         .json(&new_order)
         .send()
@@ -63,14 +63,14 @@ async fn test_create_negative_amount() {
     let token = get_auth_token(&client, &server_url, &db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
 
-    // Tes endpoint POST /v1/order/create dengan jumlah negatif
+    // Tes endpoint POST /v1/order dengan jumlah negatif
     let new_order = json!({
         "customer_id": customer_id,
         "total_amount": -150.75
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(token)
         .json(&new_order)
         .send()
@@ -108,7 +108,7 @@ async fn test_create_internal_server_error() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(token)
         .json(&new_order)
         .send()

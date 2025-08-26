@@ -49,7 +49,7 @@ async fn test_get_all_employees() {
 
     // Create first employee
     let _ = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&employee1)
         .send()
@@ -58,7 +58,7 @@ async fn test_get_all_employees() {
 
     // Create second employee
     let _ = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&employee2)
         .send()
@@ -106,7 +106,7 @@ async fn test_get_employee_by_id() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&new_employee)
         .send()
@@ -189,7 +189,7 @@ async fn test_update_employee() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&new_employee)
         .send()
@@ -286,7 +286,7 @@ async fn test_update_employee_invalid_email() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&new_employee)
         .send()
@@ -339,7 +339,7 @@ async fn test_delete_employee() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&new_employee)
         .send()
@@ -489,7 +489,7 @@ async fn test_employee_duplicate_email() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&employee1)
         .send()
@@ -506,7 +506,7 @@ async fn test_employee_duplicate_email() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/employee/create"))
+        .post(format!("{server_url}/v1/employee"))
         .bearer_auth(&token)
         .json(&employee2)
         .send()

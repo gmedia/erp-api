@@ -48,7 +48,7 @@ async fn test_get_all_orders() {
 
     // Create first order
     let _ = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&order1)
         .send()
@@ -57,7 +57,7 @@ async fn test_get_all_orders() {
 
     // Create second order
     let _ = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&order2)
         .send()
@@ -104,7 +104,7 @@ async fn test_get_order_by_id() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&new_order)
         .send()
@@ -186,7 +186,7 @@ async fn test_update_order() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&new_order)
         .send()
@@ -280,7 +280,7 @@ async fn test_update_order_negative_amount() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&new_order)
         .send()
@@ -333,7 +333,7 @@ async fn test_delete_order() {
     });
 
     let create_response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&new_order)
         .send()
@@ -471,7 +471,7 @@ async fn test_order_zero_amount() {
     });
 
     let response = client
-        .post(format!("{server_url}/v1/order/create"))
+        .post(format!("{server_url}/v1/order"))
         .bearer_auth(&token)
         .json(&new_order)
         .send()

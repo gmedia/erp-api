@@ -21,10 +21,12 @@ impl Modify for SecurityAddon {
 #[openapi(
     paths(
         // Register your handlers here
-        crate::v1::inventory::handlers::create_item::create_item,
-        crate::v1::inventory::handlers::search_items::search_items,
-        crate::v1::inventory::handlers::update_item::update_item,
-        crate::v1::inventory::handlers::delete_item::delete_item,
+        crate::v1::inventory::handlers::create_item,
+        crate::v1::inventory::handlers::search_items,
+        crate::v1::inventory::handlers::get_all_items,
+        crate::v1::inventory::handlers::get_item_by_id,
+        crate::v1::inventory::handlers::update_item,
+        crate::v1::inventory::handlers::delete_item,
         crate::v1::employee::handlers::create_employee,
         crate::v1::order::handlers::create_order,
     ),

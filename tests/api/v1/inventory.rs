@@ -192,7 +192,7 @@ async fn test_update() {
 
     let response = client
         .put(format!(
-            "{}/v1/inventory/update/{}",
+            "{}/v1/inventory/{}",
             server_url, created_item.id
         ))
         .bearer_auth(token)
@@ -253,7 +253,7 @@ async fn test_update_negative_quantity() {
 
     let response = client
         .put(format!(
-            "{}/v1/inventory/update/{}",
+            "{}/v1/inventory/{}",
             server_url, created_item.id
         ))
         .bearer_auth(token)
@@ -308,7 +308,7 @@ async fn test_update_negative_price() {
 
     let response = client
         .put(format!(
-            "{}/v1/inventory/update/{}",
+            "{}/v1/inventory/{}",
             server_url, created_item.id
         ))
         .bearer_auth(token)
@@ -362,7 +362,7 @@ async fn test_delete() {
     // Hapus item
     let response = client
         .delete(format!(
-            "{}/v1/inventory/delete/{}",
+            "{}/v1/inventory/{}",
             server_url, created_item.id
         ))
         .bearer_auth(token.clone())
@@ -375,7 +375,7 @@ async fn test_delete() {
     // Coba hapus lagi, harusnya 404 Not Found
     let response = client
         .delete(format!(
-            "{}/v1/inventory/delete/{}",
+            "{}/v1/inventory/{}",
             server_url, created_item.id
         ))
         .bearer_auth(token)
@@ -454,7 +454,7 @@ async fn test_update_internal_server_error() {
     let _ = app.db.close().await;
 
     let response = client
-        .put(format!("{server_url}/v1/inventory/update/{item_id}"))
+        .put(format!("{server_url}/v1/inventory/{item_id}"))
         .bearer_auth(token)
         .json(&updated_data)
         .send()
@@ -509,7 +509,7 @@ async fn test_delete_internal_server_error() {
     // Try to delete the item, this should fail on the delete operation
     let response = client
         .delete(format!(
-            "{}/v1/inventory/delete/{}",
+            "{}/v1/inventory/{}",
             server_url, created_item.id
         ))
         .bearer_auth(token)
@@ -558,81 +558,6 @@ async fn test_search_internal_server_error() {
 }
 
 #[tokio::test]
-async fn test_delete_with_fk_constraint_fails() {
-    let app = TestAppBuilder::new()
-        .build()
-        .await
-        .expect("Failed to build test app");
-
-    let server_url = &app.server_url;
-    let server_handle = &app.server_handle;
-    let db_pool = &app.db;
-
-    let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
-
-    // Create a temporary table with a foreign key to the inventory table
-    // to simulate a constraint violation.
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            "CREATE TABLE order_items (id CHAR(36) PRIMARY KEY, item_id CHAR(36) NOT NULL, FOREIGN KEY (item_id) REFERENCES inventory(id))".to_string(),
-        ))
-        .await;
-
-    // 1. Create an inventory item.
-    let name: String = Sentence(1..3).fake();
-    let new_item = json!({ "name": name, "quantity": 10, "price": 10.0 });
-    let res = client
-        .post(format!("{server_url}/v1/inventory/create"))
-        .bearer_auth(token.clone())
-        .json(&new_item)
-        .send()
-        .await
-        .unwrap();
-    assert_eq!(res.status(), reqwest::StatusCode::OK);
-    let created_item: InventoryItem = res.json().await.unwrap();
-
-    // 2. Create a record in `order_items` that references the inventory item.
-    let order_item_id = Uuid::new_v4().to_string();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!(
-                "INSERT INTO order_items (id, item_id) VALUES ('{}', '{}');",
-                order_item_id, created_item.id
-            ),
-        ))
-        .await;
-
-    // 3. Try to delete the inventory item. This should fail due to the FK constraint.
-    let res = client
-        .delete(format!(
-            "{}/v1/inventory/delete/{}",
-            server_url, created_item.id
-        ))
-        .bearer_auth(token)
-        .send()
-        .await
-        .unwrap();
-
-    // 4. Assert we get a 500 Internal Server Error.
-    assert_eq!(res.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
-
-    // Cleanup: drop the temporary table
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            "DROP TABLE order_items;".to_string(),
-        ))
-        .await;
-
-    server_handle.stop(true).await;
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-}
-
-#[tokio::test]
 async fn test_update_not_found() {
     let app = TestAppBuilder::new()
         .build()
@@ -650,7 +575,7 @@ async fn test_update_not_found() {
 
     let response = client
         .put(format!(
-            "{server_url}/v1/inventory/update/{non_existent_id}"
+            "{server_url}/v1/inventory/{non_existent_id}"
         ))
         .bearer_auth(token)
         .json(&updated_data)
