@@ -8,7 +8,6 @@ use serde_json::json;
 use api::v1::inventory::models::InventoryItem;
 
 use crate::helper::{get_auth_token, TestAppBuilder};
-use sea_orm::{ConnectionTrait, Statement};
 use uuid::Uuid;
 
 #[tokio::test]
