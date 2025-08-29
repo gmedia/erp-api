@@ -5,7 +5,8 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::helper::{get_auth_token, TestAppBuilder};
-use sea_orm::{ConnectionTrait, Statement};
+use entity::order::{Entity as OrderEntity};
+use sea_orm::{EntityTrait};
 
 #[tokio::test]
 async fn test_get_all_orders() {
@@ -21,14 +22,8 @@ async fn test_get_all_orders() {
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
-    // Clean up existing orders
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            "DELETE FROM `order`".to_string(),
-        ))
-        .await;
+    // Clean up existing orders using entity-based approach
+    let _ = OrderEntity::delete_many().exec(db_pool).await;
 
     // Create test orders
     let customer_id1 = Uuid::new_v4().to_string();

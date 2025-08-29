@@ -9,7 +9,8 @@ use uuid::Uuid;
 use api::v1::employee::models::Employee;
 
 use crate::helper::{get_auth_token, TestAppBuilder};
-use sea_orm::{ConnectionTrait, Statement};
+use entity::employee::{Entity as EmployeeEntity, Column as EmployeeColumn};
+use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
 
 #[tokio::test]
 async fn test_get_all_employees() {
@@ -25,14 +26,8 @@ async fn test_get_all_employees() {
     let client = HttpClient::new();
     let token = get_auth_token(&client, &server_url, &db_pool).await;
 
-    // Clean up existing employees
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            "DELETE FROM employee".to_string(),
-        ))
-        .await;
+    // Clean up existing employees using entity-based approach
+    let _ = EmployeeEntity::delete_many().exec(db_pool).await;
 
     // Create test employees
     let employee1 = json!({
@@ -472,13 +467,10 @@ async fn test_employee_duplicate_email() {
 
     let email = SafeEmail().fake::<String>();
     
-    // Clean up
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM employee where email = '{email}'"),
-        ))
+    // Clean up using entity-based approach
+    let _ = EmployeeEntity::delete_many()
+        .filter(EmployeeColumn::Email.eq(&email))
+        .exec(db_pool)
         .await;
 
     // Create first employee

@@ -1,7 +1,8 @@
 use api::v1::auth::models::TokenResponse;
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
-use sea_orm::{ConnectionTrait, Statement};
+use entity::user::{Entity as UserEntity, Column as UserColumn};
+use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
 use serde_json::json;
 
 use crate::helper::{get_auth_token, TestAppBuilder};
@@ -270,13 +271,10 @@ async fn test_logout_all_sessions() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = UserEntity::delete_many()
+        .filter(UserColumn::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user
@@ -377,13 +375,10 @@ async fn test_auth_rate_limiting() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = UserEntity::delete_many()
+        .filter(UserColumn::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user
@@ -444,13 +439,10 @@ async fn test_auth_db_error_handling() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = UserEntity::delete_many()
+        .filter(UserColumn::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user

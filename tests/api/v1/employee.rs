@@ -8,7 +8,8 @@ use serde_json::json;
 use api::v1::employee::models::Employee;
 
 use crate::helper::{get_auth_token, TestAppBuilder};
-use sea_orm::{ConnectionTrait, Statement};
+use entity::employee::{Entity as EmployeeEntity, Column as EmployeeColumn};
+use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
 
 #[tokio::test]
 async fn test_create() {
@@ -27,13 +28,10 @@ async fn test_create() {
     let email: String = SafeEmail().fake();
     let role = "Software Engineer";
 
-    // Clean employee
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM employee where email = '{email}'"),
-        ))
+    // Clean employee using entity-based approach
+    let _ = EmployeeEntity::delete_many()
+        .filter(EmployeeColumn::Email.eq(&email))
+        .exec(db_pool)
         .await;
 
     // Tes endpoint POST /v1/employee

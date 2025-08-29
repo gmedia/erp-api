@@ -6,7 +6,6 @@ use crate::helper::TestAppBuilder;
 #[tokio::test]
 async fn test_foo_page_returns_200() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -31,7 +30,6 @@ async fn test_foo_page_returns_200() {
 #[tokio::test]
 async fn test_foo_page_renders_correct_inertia_component() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -64,7 +62,6 @@ async fn test_foo_page_renders_correct_inertia_component() {
 #[tokio::test]
 async fn test_foo_page_has_correct_props() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -99,7 +96,6 @@ async fn test_foo_page_has_correct_props() {
 #[tokio::test]
 async fn test_foo_page_without_inertia_header() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");

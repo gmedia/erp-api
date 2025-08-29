@@ -18,9 +18,10 @@ use db::mysql::init_db_pool;
 use erp_api::healthcheck;
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
-use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
+use sea_orm::DatabaseConnection;
 use search::{Client, meilisearch::init_meilisearch};
 use std::{env, net::TcpListener, time::Duration, sync::Arc};
+// Entity imports are moved to the test_db_utils module
 use page::middlewares::{
     garbage_collector::GarbageCollectorMiddleware,
     reflash_temporary_session::ReflashTemporarySessionMiddleware,
@@ -51,6 +52,129 @@ impl std::fmt::Display for TestError {
 }
 
 impl std::error::Error for TestError {}
+
+/// Safe database operations for testing
+pub mod test_db_utils {
+    use super::*;
+    use sea_orm::{DatabaseConnection, DeleteResult, QueryFilter, ColumnTrait, TransactionTrait, PaginatorTrait, EntityTrait};
+    use entity::prelude::{Order, Employee, User, Inventory};
+
+    /// Clean all test data from specific tables using Entity-based deletion
+    pub async fn clean_all_tables(db: &DatabaseConnection) -> Result<(), TestError> {
+        // Delete in dependency-aware order to avoid foreign key constraints
+        // Order table depends on other tables, so delete first
+        Order::delete_many()
+            .exec(db)
+            .await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean orders: {}", e)))?;
+        
+        // Then delete other tables
+        Inventory::delete_many()
+            .exec(db)
+            .await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean inventory: {}", e)))?;
+        
+        Employee::delete_many()
+            .exec(db)
+            .await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean employees: {}", e)))?;
+        
+        User::delete_many()
+            .exec(db)
+            .await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean users: {}", e)))?;
+
+        Ok(())
+    }
+
+    /// Delete specific user by username safely
+    pub async fn delete_user_by_username(
+        db: &DatabaseConnection,
+        username: &str
+    ) -> Result<DeleteResult, TestError> {
+        User::delete_many()
+            .filter(entity::user::Column::Username.eq(username))
+            .exec(db)
+            .await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to delete user: {}", e)))
+    }
+
+    /// Check if user exists by username
+    pub async fn user_exists(
+        db: &DatabaseConnection,
+        username: &str
+    ) -> Result<bool, TestError> {
+        User::find()
+            .filter(entity::user::Column::Username.eq(username))
+            .one(db)
+            .await
+            .map(|opt| opt.is_some())
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to check user existence: {}", e)))
+    }
+
+    /// Clean tables within a transaction for test isolation
+    pub async fn clean_tables_with_transaction(
+        db: &DatabaseConnection
+    ) -> Result<(), TestError> {
+        let txn = db.begin().await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to start transaction: {}", e)))?;
+        
+        // Delete in dependency-aware order to avoid foreign key constraints
+        let result = async {
+            // Order table depends on other tables, so delete first
+            Order::delete_many().exec(&txn).await?;
+            
+            // Then delete other tables
+            Inventory::delete_many().exec(&txn).await?;
+            Employee::delete_many().exec(&txn).await?;
+            User::delete_many().exec(&txn).await?;
+            
+            Ok::<(), sea_orm::DbErr>(())
+        }.await;
+
+        match result {
+            Ok(_) => {
+                txn.commit().await
+                    .map_err(|e| TestError::DatabaseInit(format!("Failed to commit transaction: {}", e)))?;
+                Ok(())
+            }
+            Err(e) => {
+                txn.rollback().await
+                    .map_err(|e| TestError::DatabaseInit(format!("Failed to rollback transaction: {}", e)))?;
+                Err(TestError::DatabaseInit(format!("Transaction failed: {}", e)))
+            }
+        }
+    }
+
+    /// Batch delete users by usernames
+    pub async fn delete_users_batch(
+        db: &DatabaseConnection,
+        usernames: &[&str]
+    ) -> Result<DeleteResult, TestError> {
+        User::delete_many()
+            .filter(entity::user::Column::Username.is_in(usernames.to_vec()))
+            .exec(db)
+            .await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to batch delete users: {}", e)))
+    }
+
+    /// Get count of records in a table for verification
+    pub async fn get_table_counts(db: &DatabaseConnection) -> Result<(u64, u64, u64, u64), TestError> {
+        let user_count = User::find().count(db).await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count users: {}", e)))?;
+            
+        let employee_count = Employee::find().count(db).await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count employees: {}", e)))?;
+            
+        let inventory_count = Inventory::find().count(db).await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count inventory: {}", e)))?;
+            
+        let order_count = Order::find().count(db).await
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count orders: {}", e)))?;
+            
+        Ok((user_count, employee_count, inventory_count, order_count))
+    }
+}
 
 pub struct TestApp {
     pub db: DatabaseConnection,
@@ -135,15 +259,7 @@ impl TestAppBuilder {
 
         // Clear tables if requested
         if self.clear_tables {
-            let config_app = config::app::AppConfig::new();
-            for table in &config_app.tables {
-                db.execute(Statement::from_string(
-                    db.get_database_backend(),
-                    format!("TRUNCATE TABLE `{table}`;"),
-                ))
-                .await
-                .map_err(|e| TestError::DatabaseInit(e.to_string()))?;
-            }
+            test_db_utils::clean_all_tables(&db).await?;
         }
 
         // Initialize Meilisearch
@@ -242,14 +358,8 @@ pub async fn get_auth_token(
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
-        .await;
+    // Clean user safely using Entity
+    let _ = test_db_utils::delete_user_by_username(db_pool, &username).await;
 
     let register_req = json!({
         "username": username,

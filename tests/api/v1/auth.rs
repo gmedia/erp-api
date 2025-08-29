@@ -3,7 +3,7 @@ use entity::user::{self, Entity as User};
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use reqwest::header::{HeaderMap, HeaderValue};
-use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, Statement};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde_json::json;
 
 
@@ -24,13 +24,10 @@ async fn test_register_and_login() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Test registration
@@ -126,13 +123,10 @@ async fn test_register_existing_user() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     let register_req = json!({
@@ -179,13 +173,10 @@ async fn test_login_non_existent_user() {
     let username: String = "Not User".to_string();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     let login_req = json!({
@@ -222,13 +213,10 @@ async fn test_login_wrong_password() {
     let password = "password123";
     let wrong_password = "wrongpassword";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user
@@ -305,13 +293,10 @@ async fn test_login_db_error() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user
@@ -486,13 +471,10 @@ async fn test_register_invalid_bcrypt_cost() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     let register_req = json!({
@@ -533,13 +515,10 @@ async fn test_login_invalid_jwt_secret() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user
@@ -592,13 +571,10 @@ async fn test_register_db_error() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Close the database connection to simulate a database error
@@ -640,13 +616,10 @@ async fn test_login_malformed_hash() {
     let username: String = SafeEmail().fake();
     let password = "password123";
 
-    // Clean user
-    let backend: sea_orm::DatabaseBackend = db_pool.get_database_backend();
-    let _ = db_pool
-        .execute(Statement::from_string(
-            backend,
-            format!("DELETE FROM user where username = '{username}'"),
-        ))
+    // Clean user using entity-based approach
+    let _ = User::delete_many()
+        .filter(user::Column::Username.eq(&username))
+        .exec(db_pool)
         .await;
 
     // Register user

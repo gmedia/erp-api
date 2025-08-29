@@ -6,7 +6,6 @@ use crate::helper::TestAppBuilder;
 #[tokio::test]
 async fn test_todo_store_success() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -38,7 +37,6 @@ async fn test_todo_store_success() {
 #[tokio::test]
 async fn test_todo_store_validation_error() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -70,7 +68,6 @@ async fn test_todo_store_validation_error() {
 #[tokio::test]
 async fn test_todo_store_with_inertia_header() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -111,7 +108,6 @@ async fn test_todo_store_with_inertia_header() {
 #[tokio::test]
 async fn test_todo_store_validation_error_with_inertia() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
@@ -144,7 +140,6 @@ async fn test_todo_store_validation_error_with_inertia() {
 #[tokio::test]
 async fn test_todo_store_method_not_allowed() {
     let app = TestAppBuilder::new()
-        .clear_tables()
         .build()
         .await
         .expect("Failed to build test app");
