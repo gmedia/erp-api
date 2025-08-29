@@ -2,6 +2,7 @@
 .env
 docker-compose.yml
 tarpaulin-report.html
+tarpaulin-report.html.save
 tarpaulin-report.json
 build_rs_cov.profraw
 .kilocode
