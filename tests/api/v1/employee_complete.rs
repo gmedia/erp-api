@@ -24,7 +24,7 @@ async fn test_get_all_employees() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Clean up existing employees using entity-based approach
     let _ = EmployeeEntity::delete_many().exec(db_pool).await;
@@ -89,7 +89,7 @@ async fn test_get_employee_by_id() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test employee
     let name: String = Name().fake();
@@ -142,7 +142,7 @@ async fn test_get_employee_by_nonexistent_id() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let nonexistent_id = Uuid::new_v4().to_string();
 
@@ -172,7 +172,7 @@ async fn test_update_employee() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test employee
     let name: String = Name().fake();
@@ -214,7 +214,7 @@ async fn test_update_employee() {
 
     let updated_employee: Employee = response.json().await.expect("Failed to parse response");
     assert_eq!(updated_employee.id, employee_id);
-    assert_eq!(updated_employee.name, format!("{} Updated", name));
+    assert_eq!(updated_employee.name, format!("{name} Updated"));
     assert_eq!(updated_employee.role, "Senior Frontend Developer");
 
     server_handle.stop(true).await;
@@ -233,7 +233,7 @@ async fn test_update_nonexistent_employee() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let nonexistent_id = Uuid::new_v4().to_string();
     let updated_data = json!({
@@ -269,7 +269,7 @@ async fn test_update_employee_invalid_email() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test employee
     let name: String = Name().fake();
@@ -324,7 +324,7 @@ async fn test_delete_employee() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test employee
     let new_employee = json!({
@@ -380,7 +380,7 @@ async fn test_delete_nonexistent_employee() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let nonexistent_id = Uuid::new_v4().to_string();
 
@@ -463,7 +463,7 @@ async fn test_employee_duplicate_email() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let email = SafeEmail().fake::<String>();
     

@@ -22,7 +22,7 @@ async fn test_create_and_search() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -83,7 +83,7 @@ async fn test_create_negative_quantity() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let price: f64 = (1.0..1000.0).fake();
 
@@ -119,7 +119,7 @@ async fn test_create_negative_price() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
 
@@ -155,7 +155,7 @@ async fn test_update() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -224,7 +224,7 @@ async fn test_update_negative_quantity() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -279,7 +279,7 @@ async fn test_update_negative_price() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -334,7 +334,7 @@ async fn test_delete() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -400,7 +400,7 @@ async fn test_create_internal_server_error() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -443,7 +443,7 @@ async fn test_update_internal_server_error() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let item_id = "some-random-id";
     let updated_data = json!({
         "name": "some new name"
@@ -481,7 +481,7 @@ async fn test_delete_internal_server_error() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Sentence(1..3).fake();
     let quantity: i32 = (1..100).fake();
     let price: f64 = (1.0..1000.0).fake();
@@ -538,7 +538,7 @@ async fn test_search_internal_server_error() {
     let db_pool = &app.db;
     
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let response = client
         .get(format!("{server_url}/v1/inventory/search?q=test"))
@@ -568,7 +568,7 @@ async fn test_update_not_found() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let non_existent_id = Uuid::new_v4().to_string();
     let updated_data = json!({ "name": "this should fail" });
 

@@ -22,13 +22,13 @@ async fn test_index_page_returns_200() {
         .expect("Failed to send request");
     
     let status = response.status();
-    println!("Response status: {}", status);
+    println!("Response status: {status}");
     println!("Response headers: {:?}", response.headers());
     
     if !status.is_success() {
         let body = response.text().await.unwrap_or_else(|_| "Failed to read body".to_string());
-        println!("Response body: {}", body);
-        panic!("Expected success status, got: {}", status);
+        println!("Response body: {body}");
+        panic!("Expected success status, got: {status}");
     }
     
     assert!(status.is_success());

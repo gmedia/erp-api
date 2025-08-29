@@ -20,7 +20,7 @@ async fn test_get_all_orders() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Clean up existing orders using entity-based approach
     let _ = OrderEntity::delete_many().exec(db_pool).await;
@@ -88,7 +88,7 @@ async fn test_get_order_by_id() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test order
     let customer_id = Uuid::new_v4().to_string();
@@ -140,7 +140,7 @@ async fn test_get_order_by_nonexistent_id() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let nonexistent_id = Uuid::new_v4().to_string();
 
@@ -170,7 +170,7 @@ async fn test_update_order() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test order
     let customer_id = Uuid::new_v4().to_string();
@@ -229,7 +229,7 @@ async fn test_update_nonexistent_order() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let nonexistent_id = Uuid::new_v4().to_string();
     let updated_data = json!({
@@ -264,7 +264,7 @@ async fn test_update_order_negative_amount() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test order
     let customer_id = Uuid::new_v4().to_string();
@@ -317,7 +317,7 @@ async fn test_delete_order() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Create test order
     let customer_id = Uuid::new_v4().to_string();
@@ -374,7 +374,7 @@ async fn test_delete_nonexistent_order() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let nonexistent_id = Uuid::new_v4().to_string();
 
@@ -457,7 +457,7 @@ async fn test_order_zero_amount() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     let customer_id = Uuid::new_v4().to_string();
     let new_order = json!({

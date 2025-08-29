@@ -118,7 +118,7 @@ async fn test_contact_page_without_inertia_header() {
         .await
         .expect("Failed to read response body");
     
-    println!("Response body: {}", body);
+    println!("Response body: {body}");
     println!("Body length: {}", body.len());
 
     // Should contain the HTML structure

@@ -23,7 +23,7 @@ async fn test_create() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
     let role = "Software Engineer";
@@ -73,7 +73,7 @@ async fn test_create_invalid_email() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Name().fake();
     let role = "Product Manager";
 
@@ -109,7 +109,7 @@ async fn test_create_internal_server_error() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let name: String = Name().fake();
     let email: String = SafeEmail().fake();
     let role = "Chaos Engineer";

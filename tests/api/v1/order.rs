@@ -19,7 +19,7 @@ async fn test_create_order() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 
@@ -60,7 +60,7 @@ async fn test_create_negative_amount() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
 
     // Tes endpoint POST /v1/order dengan jumlah negatif
@@ -95,7 +95,7 @@ async fn test_create_internal_server_error() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
     let customer_id = Uuid::new_v4().to_string();
     let total_amount: f64 = (1.0..1000.0).fake();
 

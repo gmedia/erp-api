@@ -83,7 +83,7 @@ async fn test_access_protected_route() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Access protected route with token
     let response = client
@@ -376,7 +376,7 @@ async fn test_access_protected_route_expired_token() {
     let db_pool = &app.db;
     
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Wait for the token to expire
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;

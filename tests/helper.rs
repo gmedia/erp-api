@@ -43,9 +43,9 @@ pub enum TestError {
 impl std::fmt::Display for TestError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TestError::DatabaseInit(msg) => write!(f, "Database initialization failed: {}", msg),
-            TestError::MeilisearchInit(msg) => write!(f, "Meilisearch initialization failed: {}", msg),
-            TestError::ServerStartup(msg) => write!(f, "Server startup failed: {}", msg),
+            TestError::DatabaseInit(msg) => write!(f, "Database initialization failed: {msg}"),
+            TestError::MeilisearchInit(msg) => write!(f, "Meilisearch initialization failed: {msg}"),
+            TestError::ServerStartup(msg) => write!(f, "Server startup failed: {msg}"),
             TestError::ServerTimeout => write!(f, "Server not ready after timeout"),
         }
     }
@@ -66,23 +66,23 @@ pub mod test_db_utils {
         Order::delete_many()
             .exec(db)
             .await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean orders: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean orders: {e}")))?;
         
         // Then delete other tables
         Inventory::delete_many()
             .exec(db)
             .await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean inventory: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean inventory: {e}")))?;
         
         Employee::delete_many()
             .exec(db)
             .await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean employees: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean employees: {e}")))?;
         
         User::delete_many()
             .exec(db)
             .await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean users: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to clean users: {e}")))?;
 
         Ok(())
     }
@@ -96,7 +96,7 @@ pub mod test_db_utils {
             .filter(entity::user::Column::Username.eq(username))
             .exec(db)
             .await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to delete user: {}", e)))
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to delete user: {e}")))
     }
 
     /// Check if user exists by username
@@ -109,7 +109,7 @@ pub mod test_db_utils {
             .one(db)
             .await
             .map(|opt| opt.is_some())
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to check user existence: {}", e)))
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to check user existence: {e}")))
     }
 
     /// Clean tables within a transaction for test isolation
@@ -117,7 +117,7 @@ pub mod test_db_utils {
         db: &DatabaseConnection
     ) -> Result<(), TestError> {
         let txn = db.begin().await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to start transaction: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to start transaction: {e}")))?;
         
         // Delete in dependency-aware order to avoid foreign key constraints
         let result = async {
@@ -135,13 +135,13 @@ pub mod test_db_utils {
         match result {
             Ok(_) => {
                 txn.commit().await
-                    .map_err(|e| TestError::DatabaseInit(format!("Failed to commit transaction: {}", e)))?;
+                    .map_err(|e| TestError::DatabaseInit(format!("Failed to commit transaction: {e}")))?;
                 Ok(())
             }
             Err(e) => {
                 txn.rollback().await
-                    .map_err(|e| TestError::DatabaseInit(format!("Failed to rollback transaction: {}", e)))?;
-                Err(TestError::DatabaseInit(format!("Transaction failed: {}", e)))
+                    .map_err(|e| TestError::DatabaseInit(format!("Failed to rollback transaction: {e}")))?;
+                Err(TestError::DatabaseInit(format!("Transaction failed: {e}")))
             }
         }
     }
@@ -155,22 +155,22 @@ pub mod test_db_utils {
             .filter(entity::user::Column::Username.is_in(usernames.to_vec()))
             .exec(db)
             .await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to batch delete users: {}", e)))
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to batch delete users: {e}")))
     }
 
     /// Get count of records in a table for verification
     pub async fn get_table_counts(db: &DatabaseConnection) -> Result<(u64, u64, u64, u64), TestError> {
         let user_count = User::find().count(db).await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to count users: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count users: {e}")))?;
             
         let employee_count = Employee::find().count(db).await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to count employees: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count employees: {e}")))?;
             
         let inventory_count = Inventory::find().count(db).await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to count inventory: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count inventory: {e}")))?;
             
         let order_count = Order::find().count(db).await
-            .map_err(|e| TestError::DatabaseInit(format!("Failed to count orders: {}", e)))?;
+            .map_err(|e| TestError::DatabaseInit(format!("Failed to count orders: {e}")))?;
             
         Ok((user_count, employee_count, inventory_count, order_count))
     }
@@ -191,6 +191,12 @@ pub struct TestAppBuilder {
     clear_tables: bool,
     skip_app_state: bool,
     meili_host: Option<String>,
+}
+
+impl Default for TestAppBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TestAppBuilder {

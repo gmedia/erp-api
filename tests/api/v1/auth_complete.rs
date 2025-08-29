@@ -19,7 +19,7 @@ async fn test_logout_success() {
     let db_pool = &app.db;
     
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Test POST /v1/auth/logout
     let response = client
@@ -83,7 +83,7 @@ async fn test_refresh_token_success() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let old_token = get_auth_token(&client, &server_url, &db_pool).await;
+    let old_token = get_auth_token(&client, server_url, db_pool).await;
 
     // Test POST /v1/auth/refresh
     let refresh_data = json!({
@@ -161,7 +161,7 @@ async fn test_refresh_token_expired() {
     let db_pool = &app.db;
     
     let client = HttpClient::new();
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Wait for token to expire
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
@@ -223,7 +223,7 @@ async fn test_refresh_token_reuse() {
     let db_pool = &app.db;
 
     let client = HttpClient::new();
-    let old_token = get_auth_token(&client, &server_url, &db_pool).await;
+    let old_token = get_auth_token(&client, server_url, db_pool).await;
 
     // First refresh
     let refresh_data = json!({
@@ -459,7 +459,7 @@ async fn test_auth_db_error_handling() {
         .unwrap();
 
     // Get token
-    let token = get_auth_token(&client, &server_url, &db_pool).await;
+    let token = get_auth_token(&client, server_url, db_pool).await;
 
     // Close database connection to simulate error
     app.db.close().await.unwrap();
