@@ -118,10 +118,7 @@ pub async fn get_all_items(
         .all(&data.db)
         .await?;
 
-    let item_responses: Vec<InventoryItem> = items
-        .into_iter()
-        .map(|item| item.into())
-        .collect();
+    let item_responses: Vec<InventoryItem> = items.into_iter().map(|item| item.into()).collect();
 
     Ok(HttpResponse::Ok().json(item_responses))
 }

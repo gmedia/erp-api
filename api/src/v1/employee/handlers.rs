@@ -63,10 +63,7 @@ pub async fn get_all_employees(
         .all(&data.db)
         .await?;
 
-    let employee_responses: Vec<Employee> = employees
-        .into_iter()
-        .map(|e| e.into())
-        .collect();
+    let employee_responses: Vec<Employee> = employees.into_iter().map(|e| e.into()).collect();
 
     Ok(HttpResponse::Ok().json(employee_responses))
 }
@@ -116,14 +113,14 @@ pub async fn update_employee(
     employee: web::Json<UpdateEmployee>,
 ) -> Result<HttpResponse, ApiError> {
     let employee_id = id.into_inner();
-    
+
     let existing_employee = employee::Entity::find_by_id(&employee_id)
         .one(&data.db)
         .await?
         .ok_or(ApiError::NotFound("Employee not found".to_string()))?;
 
     let mut employee_model: employee::ActiveModel = existing_employee.into();
-    
+
     if let Some(name) = &employee.name {
         employee_model.name = Set(name.clone());
     }

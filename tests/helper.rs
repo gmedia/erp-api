@@ -1,18 +1,14 @@
 use actix_web::{
     App, HttpServer,
+    cookie::{Key, SameSite},
     dev::{Server, ServerHandle},
     web,
-    cookie::{Key, SameSite},
 };
 use api::v1::auth::models::TokenResponse;
 use api::v1::{auth, employee, inventory, order};
 use config::{
-    app::AppState,
-    db::Db,
-    meilisearch::Meilisearch,
-    inertia::initialize_inertia,
-    file_session::FileSessionStore,
-    vite::ASSETS_VERSION,
+    app::AppState, db::Db, file_session::FileSessionStore, inertia::initialize_inertia,
+    meilisearch::Meilisearch, vite::ASSETS_VERSION,
 };
 use db::mysql::init_db_pool;
 use erp_api::healthcheck;
@@ -20,17 +16,17 @@ use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
 use sea_orm::DatabaseConnection;
 use search::{Client, meilisearch::init_meilisearch};
-use std::{env, net::TcpListener, time::Duration, sync::Arc};
+use std::{env, net::TcpListener, sync::Arc, time::Duration};
 // Entity imports are moved to the test_db_utils module
+use actix_session::{SessionExt, SessionMiddleware};
+use inertia_rust::{
+    InertiaProp, IntoInertiaPropResult, actix::InertiaMiddleware, hashmap, prop_resolver,
+};
 use page::middlewares::{
     garbage_collector::GarbageCollectorMiddleware,
     reflash_temporary_session::ReflashTemporarySessionMiddleware,
 };
-use inertia_rust::{
-    InertiaProp, IntoInertiaPropResult, actix::InertiaMiddleware, hashmap, prop_resolver,
-};
-use serde_json::{json, Map, Value};
-use actix_session::{SessionExt, SessionMiddleware};
+use serde_json::{Map, Value, json};
 
 #[derive(Debug)]
 pub enum TestError {
@@ -44,7 +40,9 @@ impl std::fmt::Display for TestError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TestError::DatabaseInit(msg) => write!(f, "Database initialization failed: {msg}"),
-            TestError::MeilisearchInit(msg) => write!(f, "Meilisearch initialization failed: {msg}"),
+            TestError::MeilisearchInit(msg) => {
+                write!(f, "Meilisearch initialization failed: {msg}")
+            }
             TestError::ServerStartup(msg) => write!(f, "Server startup failed: {msg}"),
             TestError::ServerTimeout => write!(f, "Server not ready after timeout"),
         }
@@ -56,8 +54,11 @@ impl std::error::Error for TestError {}
 /// Safe database operations for testing
 pub mod test_db_utils {
     use super::*;
-    use sea_orm::{DatabaseConnection, DeleteResult, QueryFilter, ColumnTrait, TransactionTrait, PaginatorTrait, EntityTrait};
-    use entity::prelude::{Order, Employee, User, Inventory};
+    use entity::prelude::{Employee, Inventory, Order, User};
+    use sea_orm::{
+        ColumnTrait, DatabaseConnection, DeleteResult, EntityTrait, PaginatorTrait, QueryFilter,
+        TransactionTrait,
+    };
 
     /// Clean all test data from specific tables using Entity-based deletion
     pub async fn clean_all_tables(db: &DatabaseConnection) -> Result<(), TestError> {
@@ -67,18 +68,18 @@ pub mod test_db_utils {
             .exec(db)
             .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to clean orders: {e}")))?;
-        
+
         // Then delete other tables
         Inventory::delete_many()
             .exec(db)
             .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to clean inventory: {e}")))?;
-        
+
         Employee::delete_many()
             .exec(db)
             .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to clean employees: {e}")))?;
-        
+
         User::delete_many()
             .exec(db)
             .await
@@ -90,7 +91,7 @@ pub mod test_db_utils {
     /// Delete specific user by username safely
     pub async fn delete_user_by_username(
         db: &DatabaseConnection,
-        username: &str
+        username: &str,
     ) -> Result<DeleteResult, TestError> {
         User::delete_many()
             .filter(entity::user::Column::Username.eq(username))
@@ -100,10 +101,7 @@ pub mod test_db_utils {
     }
 
     /// Check if user exists by username
-    pub async fn user_exists(
-        db: &DatabaseConnection,
-        username: &str
-    ) -> Result<bool, TestError> {
+    pub async fn user_exists(db: &DatabaseConnection, username: &str) -> Result<bool, TestError> {
         User::find()
             .filter(entity::user::Column::Username.eq(username))
             .one(db)
@@ -113,34 +111,37 @@ pub mod test_db_utils {
     }
 
     /// Clean tables within a transaction for test isolation
-    pub async fn clean_tables_with_transaction(
-        db: &DatabaseConnection
-    ) -> Result<(), TestError> {
-        let txn = db.begin().await
+    pub async fn clean_tables_with_transaction(db: &DatabaseConnection) -> Result<(), TestError> {
+        let txn = db
+            .begin()
+            .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to start transaction: {e}")))?;
-        
+
         // Delete in dependency-aware order to avoid foreign key constraints
         let result = async {
             // Order table depends on other tables, so delete first
             Order::delete_many().exec(&txn).await?;
-            
+
             // Then delete other tables
             Inventory::delete_many().exec(&txn).await?;
             Employee::delete_many().exec(&txn).await?;
             User::delete_many().exec(&txn).await?;
-            
+
             Ok::<(), sea_orm::DbErr>(())
-        }.await;
+        }
+        .await;
 
         match result {
             Ok(_) => {
-                txn.commit().await
-                    .map_err(|e| TestError::DatabaseInit(format!("Failed to commit transaction: {e}")))?;
+                txn.commit().await.map_err(|e| {
+                    TestError::DatabaseInit(format!("Failed to commit transaction: {e}"))
+                })?;
                 Ok(())
             }
             Err(e) => {
-                txn.rollback().await
-                    .map_err(|e| TestError::DatabaseInit(format!("Failed to rollback transaction: {e}")))?;
+                txn.rollback().await.map_err(|e| {
+                    TestError::DatabaseInit(format!("Failed to rollback transaction: {e}"))
+                })?;
                 Err(TestError::DatabaseInit(format!("Transaction failed: {e}")))
             }
         }
@@ -149,7 +150,7 @@ pub mod test_db_utils {
     /// Batch delete users by usernames
     pub async fn delete_users_batch(
         db: &DatabaseConnection,
-        usernames: &[&str]
+        usernames: &[&str],
     ) -> Result<DeleteResult, TestError> {
         User::delete_many()
             .filter(entity::user::Column::Username.is_in(usernames.to_vec()))
@@ -159,19 +160,29 @@ pub mod test_db_utils {
     }
 
     /// Get count of records in a table for verification
-    pub async fn get_table_counts(db: &DatabaseConnection) -> Result<(u64, u64, u64, u64), TestError> {
-        let user_count = User::find().count(db).await
+    pub async fn get_table_counts(
+        db: &DatabaseConnection,
+    ) -> Result<(u64, u64, u64, u64), TestError> {
+        let user_count = User::find()
+            .count(db)
+            .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to count users: {e}")))?;
-            
-        let employee_count = Employee::find().count(db).await
+
+        let employee_count = Employee::find()
+            .count(db)
+            .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to count employees: {e}")))?;
-            
-        let inventory_count = Inventory::find().count(db).await
+
+        let inventory_count = Inventory::find()
+            .count(db)
+            .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to count inventory: {e}")))?;
-            
-        let order_count = Order::find().count(db).await
+
+        let order_count = Order::find()
+            .count(db)
+            .await
             .map_err(|e| TestError::DatabaseInit(format!("Failed to count orders: {e}")))?;
-            
+
         Ok((user_count, employee_count, inventory_count, order_count))
     }
 }
@@ -253,7 +264,7 @@ impl TestAppBuilder {
 
         let config_db = Db::new();
         let mut config_meilisearch = Meilisearch::new();
-        
+
         if let Some(ref host) = self.meili_host {
             config_meilisearch.host = host.clone();
         }
@@ -274,18 +285,20 @@ impl TestAppBuilder {
             .map_err(|e| TestError::MeilisearchInit(e.to_string()))?;
 
         // Start server
-        let listener = TcpListener::bind("0.0.0.0:0")
-            .map_err(|e| TestError::ServerStartup(e.to_string()))?;
-        let port = listener.local_addr()
+        let listener =
+            TcpListener::bind("0.0.0.0:0").map_err(|e| TestError::ServerStartup(e.to_string()))?;
+        let port = listener
+            .local_addr()
             .map_err(|e| TestError::ServerStartup(e.to_string()))?
             .port();
-        
+
         let server_url = format!("http://127.0.0.1:{port}");
 
         let server = if self.skip_app_state {
             self.create_server_without_state(listener).await?
         } else {
-            self.create_server_with_state(listener, db.clone(), meilisearch.clone()).await?
+            self.create_server_with_state(listener, db.clone(), meilisearch.clone())
+                .await?
         };
 
         let server_handle = server.handle();
@@ -309,13 +322,17 @@ impl TestAppBuilder {
         let app_state = AppState {
             db,
             meilisearch,
-            jwt_secret: self.jwt_secret.clone().unwrap_or_else(|| "test-secret".to_string()),
+            jwt_secret: self
+                .jwt_secret
+                .clone()
+                .unwrap_or_else(|| "test-secret".to_string()),
             jwt_expires_in_seconds: self.jwt_expires_in_seconds.unwrap_or(3600),
             bcrypt_cost: self.bcrypt_cost.unwrap_or(bcrypt::DEFAULT_COST),
             jwt_algorithm: self.jwt_algorithm.unwrap_or(jsonwebtoken::Algorithm::HS256),
         };
 
-        run(app_state, listener).await
+        run(app_state, listener)
+            .await
             .map_err(|e| TestError::ServerStartup(e.to_string()))
     }
 

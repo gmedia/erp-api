@@ -29,7 +29,7 @@ async fn test_logic() {
 
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
-    
+
     let client = reqwest::Client::new();
 
     // Test case 1: Valid token
@@ -136,7 +136,7 @@ async fn test_no_app_state() {
 
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
-    
+
     let client = reqwest::Client::new();
 
     let res = client
@@ -163,7 +163,7 @@ async fn test_invalid_utf8_header() {
 
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
-    
+
     let client = reqwest::Client::new();
 
     let mut headers = HeaderMap::new();

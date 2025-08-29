@@ -1,11 +1,11 @@
 use api::v1::auth::models::TokenResponse;
+use entity::user::{Column as UserColumn, Entity as UserEntity};
 use fake::{Fake, faker::internet::en::SafeEmail};
 use reqwest::Client as HttpClient;
-use entity::user::{Entity as UserEntity, Column as UserColumn};
-use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde_json::json;
 
-use crate::helper::{get_auth_token, TestAppBuilder};
+use crate::helper::{TestAppBuilder, get_auth_token};
 
 #[tokio::test]
 async fn test_logout_success() {
@@ -17,7 +17,7 @@ async fn test_logout_success() {
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
     let db_pool = &app.db;
-    
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, server_url, db_pool).await;
 
@@ -159,7 +159,7 @@ async fn test_refresh_token_expired() {
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
     let db_pool = &app.db;
-    
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, server_url, db_pool).await;
 
@@ -417,8 +417,10 @@ async fn test_auth_rate_limiting() {
         .expect("Failed to send login request");
 
     // Should be rate limited (429) or continue with 401
-    assert!(response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS || 
-            response.status() == reqwest::StatusCode::UNAUTHORIZED);
+    assert!(
+        response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS
+            || response.status() == reqwest::StatusCode::UNAUTHORIZED
+    );
 
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;

@@ -65,10 +65,7 @@ pub async fn get_all_orders(
         .all(&data.db)
         .await?;
 
-    let order_responses: Vec<Order> = orders
-        .into_iter()
-        .map(|o| o.into())
-        .collect();
+    let order_responses: Vec<Order> = orders.into_iter().map(|o| o.into()).collect();
 
     Ok(HttpResponse::Ok().json(order_responses))
 }
@@ -118,14 +115,14 @@ pub async fn update_order(
     order: web::Json<UpdateOrder>,
 ) -> Result<HttpResponse, ApiError> {
     let order_id = id.into_inner();
-    
+
     let existing_order = order::Entity::find_by_id(&order_id)
         .one(&data.db)
         .await?
         .ok_or(ApiError::NotFound("Order not found".to_string()))?;
 
     let mut order_model: order::ActiveModel = existing_order.into();
-    
+
     if let Some(customer_id) = &order.customer_id {
         order_model.customer_id = Set(customer_id.clone());
     }

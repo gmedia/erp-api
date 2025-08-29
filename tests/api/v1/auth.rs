@@ -6,8 +6,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde_json::json;
 
-
-use crate::helper::{get_auth_token, TestAppBuilder};
+use crate::helper::{TestAppBuilder, get_auth_token};
 
 #[tokio::test]
 async fn test_register_and_login() {
@@ -374,7 +373,7 @@ async fn test_access_protected_route_expired_token() {
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
     let db_pool = &app.db;
-    
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, server_url, db_pool).await;
 
@@ -466,7 +465,7 @@ async fn test_register_invalid_bcrypt_cost() {
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
     let db_pool = &app.db;
-    
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";
@@ -510,7 +509,7 @@ async fn test_login_invalid_jwt_secret() {
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
     let db_pool = &app.db;
-    
+
     let client = HttpClient::new();
     let username: String = SafeEmail().fake();
     let password = "password123";

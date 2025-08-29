@@ -1,14 +1,14 @@
 use crate::error::ApiError;
 use crate::middlewares::jwt::Claims;
-use crate::v1::auth::models::{LoginRequest, RegisterRequest, TokenResponse, RefreshRequest};
+use crate::v1::auth::models::{LoginRequest, RefreshRequest, RegisterRequest, TokenResponse};
 use actix_web::{web, HttpResponse};
 use bcrypt::{hash, verify};
 use config::app::AppState;
 use entity::user::{self, Entity as User};
-use jsonwebtoken::{encode, decode, EncodingKey, DecodingKey, Header, Validation};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter};
-use uuid::Uuid;
 use serde_json::json;
+use uuid::Uuid;
 
 #[utoipa::path(
     post,
@@ -178,16 +178,17 @@ pub async fn refresh(
     req: web::Json<RefreshRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let token = &req.refresh_token;
-    
+
     // Decode and validate the refresh token
     let token_data = decode::<Claims>(
         token,
         &DecodingKey::from_secret(data.jwt_secret.as_ref()),
         &Validation::new(data.jwt_algorithm),
-    ).map_err(|_| ApiError::Unauthorized("Invalid refresh token".to_string()))?;
+    )
+    .map_err(|_| ApiError::Unauthorized("Invalid refresh token".to_string()))?;
 
     let claims = token_data.claims;
-    
+
     // Check if user still exists
     let user = User::find_by_id(&claims.sub)
         .one(&data.db)

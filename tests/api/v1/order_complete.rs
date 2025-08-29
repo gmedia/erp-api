@@ -4,9 +4,9 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::helper::{get_auth_token, TestAppBuilder};
-use entity::order::{Entity as OrderEntity};
-use sea_orm::{EntityTrait};
+use crate::helper::{TestAppBuilder, get_auth_token};
+use entity::order::Entity as OrderEntity;
+use sea_orm::EntityTrait;
 
 #[tokio::test]
 async fn test_get_all_orders() {

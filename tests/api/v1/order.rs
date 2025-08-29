@@ -4,8 +4,7 @@ use reqwest::Client as HttpClient;
 use serde_json::json;
 use uuid::Uuid;
 
-
-use crate::helper::{get_auth_token, TestAppBuilder};
+use crate::helper::{TestAppBuilder, get_auth_token};
 
 #[tokio::test]
 async fn test_create_order() {

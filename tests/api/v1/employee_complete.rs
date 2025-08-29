@@ -8,9 +8,9 @@ use uuid::Uuid;
 
 use api::v1::employee::models::Employee;
 
-use crate::helper::{get_auth_token, TestAppBuilder};
-use entity::employee::{Entity as EmployeeEntity, Column as EmployeeColumn};
-use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
+use crate::helper::{TestAppBuilder, get_auth_token};
+use entity::employee::{Column as EmployeeColumn, Entity as EmployeeEntity};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 #[tokio::test]
 async fn test_get_all_employees() {
@@ -466,7 +466,7 @@ async fn test_employee_duplicate_email() {
     let token = get_auth_token(&client, server_url, db_pool).await;
 
     let email = SafeEmail().fake::<String>();
-    
+
     // Clean up using entity-based approach
     let _ = EmployeeEntity::delete_many()
         .filter(EmployeeColumn::Email.eq(&email))
@@ -506,7 +506,10 @@ async fn test_employee_duplicate_email() {
         .expect("Failed to send second create request");
 
     // Current implementation has database constraint on email, so expect 500
-    assert_eq!(response.status(), reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        response.status(),
+        reqwest::StatusCode::INTERNAL_SERVER_ERROR
+    );
 
     server_handle.stop(true).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;

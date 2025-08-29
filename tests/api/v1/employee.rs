@@ -7,9 +7,9 @@ use serde_json::json;
 
 use api::v1::employee::models::Employee;
 
-use crate::helper::{get_auth_token, TestAppBuilder};
-use entity::employee::{Entity as EmployeeEntity, Column as EmployeeColumn};
-use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
+use crate::helper::{TestAppBuilder, get_auth_token};
+use entity::employee::{Column as EmployeeColumn, Entity as EmployeeEntity};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 #[tokio::test]
 async fn test_create() {

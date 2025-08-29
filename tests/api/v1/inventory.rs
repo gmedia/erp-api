@@ -7,7 +7,7 @@ use serde_json::json;
 
 use api::v1::inventory::models::InventoryItem;
 
-use crate::helper::{get_auth_token, TestAppBuilder};
+use crate::helper::{TestAppBuilder, get_auth_token};
 use uuid::Uuid;
 
 #[tokio::test]
@@ -190,10 +190,7 @@ async fn test_update() {
     });
 
     let response = client
-        .put(format!(
-            "{}/v1/inventory/{}",
-            server_url, created_item.id
-        ))
+        .put(format!("{}/v1/inventory/{}", server_url, created_item.id))
         .bearer_auth(token)
         .json(&updated_data)
         .send()
@@ -251,10 +248,7 @@ async fn test_update_negative_quantity() {
     });
 
     let response = client
-        .put(format!(
-            "{}/v1/inventory/{}",
-            server_url, created_item.id
-        ))
+        .put(format!("{}/v1/inventory/{}", server_url, created_item.id))
         .bearer_auth(token)
         .json(&updated_data)
         .send()
@@ -306,10 +300,7 @@ async fn test_update_negative_price() {
     });
 
     let response = client
-        .put(format!(
-            "{}/v1/inventory/{}",
-            server_url, created_item.id
-        ))
+        .put(format!("{}/v1/inventory/{}", server_url, created_item.id))
         .bearer_auth(token)
         .json(&updated_data)
         .send()
@@ -360,10 +351,7 @@ async fn test_delete() {
 
     // Hapus item
     let response = client
-        .delete(format!(
-            "{}/v1/inventory/{}",
-            server_url, created_item.id
-        ))
+        .delete(format!("{}/v1/inventory/{}", server_url, created_item.id))
         .bearer_auth(token.clone())
         .send()
         .await
@@ -373,10 +361,7 @@ async fn test_delete() {
 
     // Coba hapus lagi, harusnya 404 Not Found
     let response = client
-        .delete(format!(
-            "{}/v1/inventory/{}",
-            server_url, created_item.id
-        ))
+        .delete(format!("{}/v1/inventory/{}", server_url, created_item.id))
         .bearer_auth(token)
         .send()
         .await
@@ -507,10 +492,7 @@ async fn test_delete_internal_server_error() {
 
     // Try to delete the item, this should fail on the delete operation
     let response = client
-        .delete(format!(
-            "{}/v1/inventory/{}",
-            server_url, created_item.id
-        ))
+        .delete(format!("{}/v1/inventory/{}", server_url, created_item.id))
         .bearer_auth(token)
         .send()
         .await
@@ -536,7 +518,7 @@ async fn test_search_internal_server_error() {
     let server_url = &app.server_url;
     let server_handle = &app.server_handle;
     let db_pool = &app.db;
-    
+
     let client = HttpClient::new();
     let token = get_auth_token(&client, server_url, db_pool).await;
 
@@ -573,9 +555,7 @@ async fn test_update_not_found() {
     let updated_data = json!({ "name": "this should fail" });
 
     let response = client
-        .put(format!(
-            "{server_url}/v1/inventory/{non_existent_id}"
-        ))
+        .put(format!("{server_url}/v1/inventory/{non_existent_id}"))
         .bearer_auth(token)
         .json(&updated_data)
         .send()

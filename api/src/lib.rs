@@ -1,5 +1,5 @@
 pub mod error;
-pub mod openapi;
-pub mod v1;
 pub mod middlewares;
+pub mod openapi;
 pub mod shared;
+pub mod v1;
