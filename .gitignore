@@ -4,6 +4,7 @@ docker-compose.yml
 tarpaulin-report.html
 tarpaulin-report.html.save
 tarpaulin-report.json
+tarpaulin.output
 build_rs_cov.profraw
 .kilocode
 .kilocodemodes
